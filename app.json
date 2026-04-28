@@ -13,15 +13,29 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.logiterre.netscan",
+      "infoPlist": {
+        "NSCameraUsageDescription": "L'application a besoin d'accéder à la caméra pour scanner les QR codes des badges."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
+      "package": "com.logiterre.netscan",
+      "permissions": ["CAMERA"],
       "edgeToEdgeEnabled": true
     },
+    "plugins": [
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow NetScan to access your camera"
+        }
+      ]
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
     }
