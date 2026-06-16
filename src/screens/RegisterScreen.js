@@ -63,7 +63,7 @@ const SectionHeader = ({ title }) => (
 
 export default function RegisterScreen({ navigation }) {
     const insets = useSafeAreaInsets();
-    const { signIn } = useAuth();
+    const { applySession } = useAuth();
     const [step, setStep] = useState('role'); // 'role' | 'form'
     const [role, setRole] = useState(null);
     const [loading, setLoading] = useState(false);
@@ -96,7 +96,7 @@ export default function RegisterScreen({ navigation }) {
         setLoading(true);
         setErrorMsg(null);
         try {
-            await register({
+            const res = await register({
                 name: name.trim(),
                 email: email.trim(),
                 password,
@@ -108,7 +108,7 @@ export default function RegisterScreen({ navigation }) {
                 pays: pays.trim() || undefined,
                 secteur_activite: secteur.trim() || undefined,
             });
-            await signIn(email.trim(), password);
+            await applySession(res.data);
         } catch (e) {
             const msg = e?.response?.data?.message
                 || (e?.response?.data?.errors ? Object.values(e.response.data.errors)[0][0] : null)

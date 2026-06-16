@@ -1,10 +1,10 @@
 // For local development, set this to your computer's current IPv4 address
 const API_IP = '192.168.11.116';
 
-export const BASE_URL = `http://${API_IP}:8000/api/v1`;
+// export const BASE_URL = `http://${API_IP}:8000/api/v1`;
 
 // Other options (for reference):
-// export const BASE_URL = 'https://syslogiterre.logiterre-expo.com/api/v1'; // Production
+export const BASE_URL = 'https://admin.logiterre-expo.com/api/v1'; // Production
 // export const BASE_URL = 'http://10.0.2.2:8000/api/v1'; // Android Emulator
 
 export const ENDPOINTS = {

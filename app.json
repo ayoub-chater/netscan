@@ -1,22 +1,24 @@
 {
   "expo": {
-    "name": "netscan",
-    "slug": "netscan",
-    "version": "1.0.0",
+    "name": "LOGITERRE",
+    "slug": "logiterre",
+    "version": "1.5.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "resizeMode": "cover",
+      "backgroundColor": "#2e368e"
     },
     "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.logiterre.netscan",
+      "supportsTablet": false,
+      "bundleIdentifier": "com.logiterre",
+      "buildNumber": "4",
       "infoPlist": {
-        "NSCameraUsageDescription": "L'application a besoin d'accéder à la caméra pour scanner les QR codes des badges."
+        "NSCameraUsageDescription": "L'application a besoin d'accéder à la caméra pour scanner les QR codes des badges.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
@@ -24,20 +26,31 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.logiterre.netscan",
-      "permissions": ["CAMERA"],
-      "edgeToEdgeEnabled": true
+      "package": "com.logiterre",
+      "versionCode": 12,
+      "permissions": [
+        "CAMERA",
+        "android.permission.CAMERA"
+      ],
+      "edgeToEdgeEnabled": true,
+      "supportsTablet": false
     },
     "plugins": [
       [
         "expo-camera",
         {
-          "cameraPermission": "Allow NetScan to access your camera"
+          "cameraPermission": "Allow LOGITERRE to access your camera"
         }
       ]
     ],
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "49d9e8d2-d8fa-4666-9e20-64d5b467c63d"
+      }
+    },
+    "owner": "mzlouafi"
   }
 }

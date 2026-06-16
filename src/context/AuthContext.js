@@ -66,39 +66,27 @@ export function AuthProvider({ children }) {
         return () => { if (timerRef.current) clearTimeout(timerRef.current); };
     }, []);
 
-    const signIn = async (email, password) => {
-        console.log(`[AuthContext] signIn called for email: ${email}`);
-        const res = await apiLogin(email, password);
-        console.log('[AuthContext] apiLogin result:', res?.status, res?.data);
-        
-        const t = res?.data?.token || res?.data?.data?.token || res?.data?.api_token;
-        if (!t) {
-            console.error('[AuthContext] Token not extracted from response', res?.data);
-            throw new Error('Token non trouvé');
-        }
-        
-        const sc = res?.data?.user || res?.data?.scanner || res?.data?.data?.user || null;
-        const ev = res?.data?.event || res?.data?.data?.event || null;
-        
-        // Even more aggressive badge extraction
-        let badge = sc?.badge_number || sc?.badge || sc?.person?.badge_number || 
-                    sc?.barcode || sc?.qr_code || res?.data?.badge_number || null;
-        
-        console.log('[AuthContext] Extracted badge:', badge);
-
+    const applyAuthResponse = async (data) => {
+        const t = data?.token || data?.data?.token || data?.api_token;
+        if (!t) throw new Error('Token non trouvé');
+        const sc = data?.user || data?.scanner || data?.data?.user || null;
+        const ev = data?.event || data?.data?.event || null;
+        let badge = sc?.badge_number || sc?.badge || sc?.person?.badge_number ||
+                    sc?.barcode || sc?.qr_code || data?.badge_number || null;
         await saveSession(t, sc, ev);
-        if (badge) {
-            await saveBadgeNumber(badge);
-        }
-        
+        if (badge) await saveBadgeNumber(badge);
         setToken(t);
         setScanner(sc);
         setBadgeNumber(badge);
         setEventInfo(ev);
         setExhibitorId(sc?.exhibitor_id ?? null);
         setApiToken(t);
-        
         return { token: t, scanner: sc, eventInfo: ev };
+    };
+
+    const signIn = async (email, password) => {
+        const res = await apiLogin(email, password);
+        return applyAuthResponse(res.data);
     };
 
 
@@ -128,6 +116,7 @@ export function AuthProvider({ children }) {
             signIn,
             signOut,
             updateBadgeNumber,
+            applySession: applyAuthResponse,
         }}>
             {children}
         </AuthContext.Provider>
