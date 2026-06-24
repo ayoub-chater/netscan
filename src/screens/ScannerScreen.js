@@ -71,6 +71,7 @@ export default function ScannerScreen({ navigation }) {
         }
 
         const targetBadge = extractBadgeNumber(data);
+        if (__DEV__) console.log('📷 [SCAN] raw:', data, '→ target:', targetBadge, '| me:', badgeNumber);
         if (!targetBadge) {
             Alert.alert('Badge inconnu', 'Ce QR Code ne semble pas être un badge valide.');
             return;
@@ -102,10 +103,14 @@ export default function ScannerScreen({ navigation }) {
             await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
             const status = e.response?.status;
             const msg = e.response?.data?.message;
-            if (msg) {
+            if (status === 401) {
+                Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
+            } else if (status === 404) {
+                Alert.alert('Badge introuvable', msg || 'Ce badge n\'est pas reconnu dans le système.');
+            } else if (msg) {
                 Alert.alert(status === 422 ? 'Info' : 'Oups', msg);
             } else {
-                Alert.alert('Erreur réseau', 'Veuillez vérifier votre connexion USB ou WiFi.');
+                Alert.alert('Erreur réseau', `Code: ${status ?? 'inconnu'} — Vérifiez votre connexion.`);
             }
         } finally { setLoading(false); }
     };

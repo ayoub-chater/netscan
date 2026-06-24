@@ -41,7 +41,8 @@
         {
           "cameraPermission": "Allow LOGITERRE to access your camera"
         }
-      ]
+      ],
+      "expo-font"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

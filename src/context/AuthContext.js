@@ -2,7 +2,7 @@ import React, {
     createContext, useContext, useEffect, useRef, useState,
 } from 'react';
 import { Alert } from 'react-native';
-import { login as apiLogin, logout as apiLogout, setApiToken, setOnUnauthorized } from '../services/api';
+import { login as apiLogin, logout as apiLogout, fetchMe, setApiToken, setOnUnauthorized } from '../services/api';
 import { loadSession, saveSession, clearSession, loadBadgeNumber, saveBadgeNumber } from '../services/auth';
 import { SESSION_MAX_AGE_MS } from '../constants/api';
 
@@ -50,11 +50,20 @@ export function AuthProvider({ children }) {
                     if (age <= SESSION_MAX_AGE_MS) {
                         setToken(session.token);
                         setScanner(session.scanner);
-                        setBadgeNumber(session.badgeNumber);
                         setEventInfo(session.eventInfo);
                         setExhibitorId(session.scanner?.exhibitor_id ?? null);
                         setApiToken(session.token);
                         scheduleAutoLogout(session.issuedAt);
+
+                        let badge = session.badgeNumber;
+                        if (!badge) {
+                            try {
+                                const meRes = await fetchMe();
+                                badge = meRes?.data?.badge_number || null;
+                                if (badge) await saveBadgeNumber(badge);
+                            } catch { }
+                        }
+                        setBadgeNumber(badge);
                     } else {
                         await clearSession();
                     }

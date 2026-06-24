@@ -7,10 +7,12 @@ const API_IP = '192.168.11.116';
 export const BASE_URL = 'https://admin.logiterre-expo.com/api/v1'; // Production
 // export const BASE_URL = 'http://10.0.2.2:8000/api/v1'; // Android Emulator
 
+export const EVENT_SLUG = 'logiterre-expo';
+
 export const ENDPOINTS = {
     login: `${BASE_URL}/login`,
     logout: `${BASE_URL}/logout`,
-    scanBadge: (badge) => `${BASE_URL}/scan/badge/${encodeURIComponent(badge)}`,
+    me: `${BASE_URL}/me?event_slug=${EVENT_SLUG}`,
     badgeLookup: (badge) => `${BASE_URL}/badge/${encodeURIComponent(badge)}`,
     networkingScan: `${BASE_URL}/networking/scan`,
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,

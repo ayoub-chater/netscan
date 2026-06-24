@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { ENDPOINTS } from '../constants/api';
+import { ENDPOINTS, EVENT_SLUG } from '../constants/api';
 import { clearSession } from './auth';
 
 // Shared Axios instance
@@ -20,13 +20,28 @@ api.interceptors.request.use((config) => {
     if (_token) {
         config.headers = { ...config.headers, Authorization: `Bearer ${_token}` };
     }
+    if (__DEV__) {
+        const url = `${config.baseURL ?? ''}${config.url ?? ''}`;
+        console.log(`➡️ [API] ${config.method?.toUpperCase()} ${url}`, config.data ?? '');
+    }
     return config;
 });
 
 // Response interceptor — handle 401
 api.interceptors.response.use(
-    (res) => res,
+    (res) => {
+        if (__DEV__) {
+            console.log(`✅ [API] ${res.status} ${res.config?.url}`, res.data);
+        }
+        return res;
+    },
     async (error) => {
+        if (__DEV__) {
+            console.log(
+                `❌ [API] ${error?.response?.status ?? 'NETWORK ERROR'} ${error?.config?.url ?? ''}`,
+                error?.response?.data ?? error.message
+            );
+        }
         if (error?.response?.status === 401) {
             await clearSession();
             _token = null;
@@ -38,13 +53,15 @@ api.interceptors.response.use(
 
 // ─── Auth ────────────────────────────────────────────────────────────────────
 export const login = (email, password) =>
-    axios.post(ENDPOINTS.login, { email, password }, {
+    axios.post(ENDPOINTS.login, { email, password, event_slug: EVENT_SLUG }, {
         timeout: 12000,
         headers: { Accept: 'application/json' },
     });
 
 export const logout = () =>
     api.post(ENDPOINTS.logout, {}).catch(() => { });
+
+export const fetchMe = () => api.get(ENDPOINTS.me);
 
 // ─── Badge lookup ─────────────────────────────────────────────────────────────
 export const lookupBadge = (badgeNumber) => api.get(ENDPOINTS.badgeLookup(badgeNumber));
@@ -54,6 +71,7 @@ export const networkingScan = (scannerBadgeNumber, targetBadgeNumber) =>
     api.post(ENDPOINTS.networkingScan, {
         scanner_badge_number: scannerBadgeNumber,
         target_badge_number: targetBadgeNumber,
+        event_slug: EVENT_SLUG,
     });
 
 
@@ -68,7 +86,7 @@ export const getExposants = () => api.get(ENDPOINTS.exposants);
 
 // ─── Register ─────────────────────────────────────────────────────────────────
 export const register = (data) =>
-    axios.post(ENDPOINTS.register, data, {
+    axios.post(ENDPOINTS.register, { ...data, event_slug: EVENT_SLUG }, {
         timeout: 12000,
         headers: { Accept: 'application/json' },
     });
