@@ -83,6 +83,9 @@ export const networkingScan = (scannerBadgeNumber, targetBadgeNumber) =>
 // ─── Networking history ───────────────────────────────────────────────────────
 export const networkingHistory = (badgeNumber) => api.get(ENDPOINTS.networkingHistory(badgeNumber));
 
+export const deleteNetworkingRecord = (scanId, badgeNumber) =>
+    api.delete(ENDPOINTS.networkingDelete(scanId, badgeNumber));
+
 
 
 // ─── Exposants ────────────────────────────────────────────────────────────────

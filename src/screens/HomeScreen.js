@@ -325,7 +325,7 @@ export default function HomeScreen({ navigation }) {
                 </Chip>
               )}
             </View>
-            <Pressable onPress={() => navigation.navigate('Journal')} hitSlop={8}>
+            <Pressable onPress={() => navigation.navigate('History')} hitSlop={8}>
               <Text className="text-sm font-semibold text-accent">Voir tout</Text>
             </Pressable>
           </View>

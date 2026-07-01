@@ -17,6 +17,7 @@ export const ENDPOINTS = {
     badgeLookup: (badge) => `${BASE_URL}/badge/${encodeURIComponent(badge)}`,
     networkingScan: `${BASE_URL}/networking/scan`,
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,
+    networkingDelete: (id, badge) => `${BASE_URL}/networking/history/${id}?badge_number=${encodeURIComponent(badge)}`,
     exposants: `${BASE_URL}/exposants`,
     register: `${BASE_URL}/register`,
     team: `${BASE_URL}/team`,

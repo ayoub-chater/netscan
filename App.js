@@ -19,10 +19,11 @@ import RegisterScreen from './src/screens/RegisterScreen';
 import TeamScreen from './src/screens/TeamScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ScannerScreen from './src/screens/ScannerScreen';
-import HistoryScreen from './src/screens/HistoryScreen';
+import PlanScreen from './src/screens/PlanScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import WebsiteScreen from './src/screens/WebsiteScreen';
 import ExposantsScreen from './src/screens/ExposantsScreen';
+import HistoryScreen from './src/screens/HistoryScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -79,7 +80,7 @@ function MainTabs() {
           let icon;
           if (route.name === 'Dashboard') icon = focused ? 'home' : 'home-outline';
           else if (route.name === 'ScannerTab') icon = focused ? 'qr-code' : 'qr-code-outline';
-          else if (route.name === 'Journal') icon = focused ? 'time' : 'time-outline';
+          else if (route.name === 'Plan') icon = focused ? 'map' : 'map-outline';
           else if (route.name === 'Expos') icon = focused ? 'globe' : 'globe-outline';
           else if (route.name === 'Exposants') icon = focused ? 'storefront' : 'storefront-outline';
           else if (route.name === 'Détails') icon = focused ? 'person' : 'person-outline';
@@ -89,7 +90,7 @@ function MainTabs() {
     >
       <Tab.Screen name="Dashboard" component={HomeScreen} />
       <Tab.Screen name="ScannerTab" component={ScannerScreen} />
-      <Tab.Screen name="Journal" component={HistoryScreen} />
+      <Tab.Screen name="Plan" component={PlanScreen} />
       <Tab.Screen name="Expos" component={WebsiteScreen} />
       <Tab.Screen name="Exposants" component={ExposantsScreen} />
       <Tab.Screen name="Détails" component={ProfileScreen} />
@@ -115,6 +116,7 @@ function NavigationRoot() {
             <Stack.Screen name="Main" component={MainTabs} />
             <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'fullScreenModal' }} />
             <Stack.Screen name="Team" component={TeamScreen} />
+            <Stack.Screen name="History" component={HistoryScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -131,114 +131,117 @@ export default function ScannerScreen({ navigation }) {
     }
   };
 
-  // ── Welcome state ────────────────────────────────────────────────────────────
-  if (!scanning && !result) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center px-8">
-        <StatusBar style="light" />
-
-        <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-8">
-          <Ionicons name="camera-outline" size={38} color="#2db067" />
+  // ── Single render tree — NetworkingModal always mounted so BottomSheet
+  // gets the false→true isOpen transition instead of mounting with isOpen=true.
+  return (
+    <>
+      {scanning ? (
+        // ── Camera / scan state ─────────────────────────────────────────────
+        <View style={styles.root}>
+          <StatusBar hidden style="light" />
+          <CameraView
+            style={StyleSheet.absoluteFillObject}
+            facing="back"
+            barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+            onBarcodeScanned={loading ? undefined : handleBarcodeScanned}
+          />
+          <View style={styles.overlay}>
+            <View style={styles.vignetteTop} />
+            <View style={styles.frameContainer}>
+              <View style={styles.sideVignette} />
+              {/* Blue scan frame */}
+              <View style={styles.frame}>
+                <View style={[styles.corner, styles.tl]} />
+                <View style={[styles.corner, styles.tr]} />
+                <View style={[styles.corner, styles.bl]} />
+                <View style={[styles.corner, styles.br]} />
+                <Animated.View style={[styles.glowLine, ambientStyle]} />
+              </View>
+              <View style={styles.sideVignette} />
+            </View>
+            <View style={styles.vignetteBottom}>
+              <Text style={styles.hintText}>Centrez le badge ici</Text>
+              <Pressable onPress={() => setScanning(false)} style={styles.closeCircle}>
+                <Ionicons name="close" size={22} color="#fff" />
+              </Pressable>
+            </View>
+          </View>
         </View>
+      ) : (
+        // ── Welcome / loading state ─────────────────────────────────────────
+        <View className="flex-1 bg-background items-center justify-center px-8">
+          <StatusBar style="light" />
 
-        <Text className="text-2xl font-extrabold text-foreground text-center mb-3">
-          Prêt pour une rencontre ?
-        </Text>
-        <Text className="text-base text-muted text-center mb-10 leading-6">
-          Ouvrez votre caméra et scannez le badge de votre futur collaborateur.
-        </Text>
+          {loading ? (
+            <>
+              <ActivityIndicator color={BLUE} size="large" />
+              <Text className="mt-4 text-base text-muted font-semibold">
+                Connexion en cours...
+              </Text>
+            </>
+          ) : (
+            <>
+              <View className="w-20 h-20 rounded-full bg-surface items-center justify-center mb-8">
+                <Ionicons name="camera-outline" size={38} color="#2db067" />
+              </View>
 
-        <Button
-          variant="primary"
-          size="lg"
-          className="rounded-2xl w-full"
-          onPress={async () => {
-            if (!permission?.granted) {
-              const res = await requestPermission();
-              if (!res.granted) {
-                Alert.alert(
-                  'Caméra requise',
-                  "Veuillez autoriser l'accès à la caméra dans les réglages de votre téléphone."
-                );
-                return;
-              }
-            }
-            setScanning(true);
-          }}
-        >
-          <Button.Label>Lancer le scanner</Button.Label>
-        </Button>
+              <Text className="text-2xl font-extrabold text-foreground text-center mb-3">
+                Prêt pour une rencontre ?
+              </Text>
+              <Text className="text-base text-muted text-center mb-10 leading-6">
+                Ouvrez votre caméra et scannez le badge de votre futur collaborateur.
+              </Text>
 
-        <Pressable onPress={() => navigation.goBack()} className="mt-6 p-2" hitSlop={8}>
-          <Text className="text-sm text-muted font-semibold">Plus tard</Text>
-        </Pressable>
-      </View>
-    );
-  }
+              <Button
+                variant="primary"
+                size="lg"
+                className="rounded-2xl w-full"
+                onPress={async () => {
+                  if (!permission?.granted) {
+                    const res = await requestPermission();
+                    if (!res.granted) {
+                      Alert.alert(
+                        'Caméra requise',
+                        "Veuillez autoriser l'accès à la caméra dans les réglages de votre téléphone."
+                      );
+                      return;
+                    }
+                  }
+                  setScanning(true);
+                }}
+              >
+                <Button.Label>Lancer le scanner</Button.Label>
+              </Button>
 
-  // ── Loading state ────────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <StatusBar style="light" />
-        <ActivityIndicator color={BLUE} size="large" />
-        <Text className="mt-4 text-base text-muted font-semibold">
-          Connexion en cours...
-        </Text>
-      </View>
-    );
-  }
+              <Pressable
+                onPress={() => {
+                  if (navigation.canGoBack()) navigation.goBack();
+                }}
+                className="mt-6 p-2"
+                hitSlop={8}
+              >
+                <Text className="text-sm text-muted font-semibold">Plus tard</Text>
+              </Pressable>
+            </>
+          )}
+        </View>
+      )}
 
-  // ── Result state ─────────────────────────────────────────────────────────────
-  if (result) {
-    return (
+      {/* Always mounted — BottomSheet needs the false→true transition to open */}
       <NetworkingModal
-        visible
+        visible={!!result}
         result={result}
         onClose={() => {
           setResult(null);
-          navigation.goBack();
+          setScanning(false);
+          if (navigation.canGoBack()) navigation.goBack();
         }}
         onScanAgain={() => {
           setResult(null);
           setScanning(true);
         }}
       />
-    );
-  }
-
-  // ── Camera / scan state ──────────────────────────────────────────────────────
-  return (
-    <View style={styles.root}>
-      <StatusBar hidden style="light" />
-      <CameraView
-        style={StyleSheet.absoluteFillObject}
-        facing="back"
-        barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
-        onBarcodeScanned={loading ? undefined : handleBarcodeScanned}
-      />
-      <View style={styles.overlay}>
-        <View style={styles.vignetteTop} />
-        <View style={styles.frameContainer}>
-          <View style={styles.sideVignette} />
-          {/* Blue scan frame */}
-          <View style={styles.frame}>
-            <View style={[styles.corner, styles.tl]} />
-            <View style={[styles.corner, styles.tr]} />
-            <View style={[styles.corner, styles.bl]} />
-            <View style={[styles.corner, styles.br]} />
-            <Animated.View style={[styles.glowLine, ambientStyle]} />
-          </View>
-          <View style={styles.sideVignette} />
-        </View>
-        <View style={styles.vignetteBottom}>
-          <Text style={styles.hintText}>Centrez le badge ici</Text>
-          <Pressable onPress={() => setScanning(false)} style={styles.closeCircle}>
-            <Ionicons name="close" size={22} color="#fff" />
-          </Pressable>
-        </View>
-      </View>
-    </View>
+    </>
   );
 }
 

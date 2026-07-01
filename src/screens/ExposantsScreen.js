@@ -5,6 +5,7 @@ import {
   FlatList,
   RefreshControl,
   Linking,
+  Alert,
 } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { StatusBar } from 'expo-status-bar';
@@ -25,7 +26,7 @@ import {
   Surface,
   TagGroup,
 } from 'heroui-native';
-import { getExposants, networkingHistory } from '../services/api';
+import { getExposants, networkingHistory, deleteNetworkingRecord } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const StyledIonicons = withUniwind(Ionicons);
@@ -84,7 +85,8 @@ function ExposantCard({ item, isMine, onPress }) {
 export default function ExposantsScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { exhibitorId, badgeNumber } = useAuth();
-  const [connectedEmails, setConnectedEmails] = useState(new Set());
+  const [connectedMap, setConnectedMap] = useState(new Map()); // email → scan_id
+  const [deletingConnection, setDeletingConnection] = useState(false);
   const [exposants, setExposants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -107,13 +109,14 @@ export default function ExposantsScreen({ navigation }) {
       }
 
       if (historyRes.status === 'fulfilled' && historyRes.value?.data?.history) {
-        const emails = new Set(
-          historyRes.value.data.history
-            .map(h => h?.person?.email)
-            .filter(Boolean)
-            .map(e => e.toLowerCase())
-        );
-        setConnectedEmails(emails);
+        const map = new Map();
+        historyRes.value.data.history.forEach(h => {
+          const email = h?.person?.email?.toLowerCase();
+          if (email && !map.has(email)) {
+            map.set(email, h.id);
+          }
+        });
+        setConnectedMap(map);
       }
     } finally {
       setLoading(false);
@@ -146,6 +149,40 @@ export default function ExposantsScreen({ navigation }) {
     Linking.openURL(prefixed).catch(() => {});
   };
 
+  const handleDeleteConnection = () => {
+    const email = sheetExposant?.email?.toLowerCase();
+    const scanId = email ? connectedMap.get(email) : null;
+    if (!scanId) return;
+
+    Alert.alert(
+      'Retirer du journal ?',
+      `Supprimer la connexion avec ${sheetExposant.company || sheetExposant.name} ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            setDeletingConnection(true);
+            try {
+              await deleteNetworkingRecord(scanId, badgeNumber);
+              setConnectedMap(prev => {
+                const next = new Map(prev);
+                next.delete(email);
+                return next;
+              });
+              setSheetOpen(false);
+            } catch {
+              Alert.alert('Erreur', 'Impossible de supprimer cette connexion.');
+            } finally {
+              setDeletingConnection(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const filtered = (() => {
     let list = exposants;
     if (search.trim()) {
@@ -162,7 +199,7 @@ export default function ExposantsScreen({ navigation }) {
     }
     const rank = (item) => {
       if (isMineCheck(item)) return 2;
-      if (item.email && connectedEmails.has(item.email.toLowerCase())) return 1;
+      if (item.email && connectedMap.has(item.email.toLowerCase())) return 1;
       return 0;
     };
     return [...list].sort((a, b) => rank(b) - rank(a));
@@ -172,6 +209,9 @@ export default function ExposantsScreen({ navigation }) {
   const displayName = sheetExposant ? (sheetExposant.company || sheetExposant.name) : '';
   const sheetInitials = displayName ? displayName.slice(0, 2).toUpperCase() : '??';
   const isMine = sheetExposant ? isMineCheck(sheetExposant) : false;
+  const isConnected = sheetExposant?.email
+    ? connectedMap.has(sheetExposant.email.toLowerCase())
+    : false;
 
   const contactItems = sheetExposant
     ? [
@@ -396,6 +436,24 @@ export default function ExposantsScreen({ navigation }) {
                     }}
                   >
                     <Button.Label>Mon Équipe</Button.Label>
+                  </Button>
+                ) : null}
+                {isConnected && !isMine ? (
+                  <Button
+                    variant="tertiary"
+                    size="lg"
+                    className="rounded-2xl"
+                    onPress={handleDeleteConnection}
+                    disabled={deletingConnection}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={18}
+                      color="#EF4444"
+                    />
+                    <Button.Label style={{ color: '#EF4444' }}>
+                      {deletingConnection ? 'Suppression…' : 'Retirer du journal'}
+                    </Button.Label>
                   </Button>
                 ) : null}
                 <Button

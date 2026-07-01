@@ -4,6 +4,8 @@ import {
   Text,
   ScrollView,
   RefreshControl,
+  Alert,
+  Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
@@ -19,7 +21,7 @@ import {
   Skeleton,
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
-import { networkingHistory } from '../services/api';
+import { networkingHistory, deleteNetworkingRecord } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
 
 const StyledIonicons = withUniwind(Ionicons);
@@ -32,6 +34,7 @@ export default function HistoryScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [query, setQuery] = useState('');
+  const [deleting, setDeleting] = useState(null);
 
   const fetchHistory = async () => {
     if (!badgeNumber) {
@@ -58,6 +61,31 @@ export default function HistoryScreen() {
   const onRefresh = () => {
     setRefreshing(true);
     fetchHistory();
+  };
+
+  const handleDelete = (item) => {
+    Alert.alert(
+      'Supprimer cette rencontre ?',
+      `Retirer ${item?.person?.name || 'ce contact'} de votre journal ?`,
+      [
+        { text: 'Annuler', style: 'cancel' },
+        {
+          text: 'Supprimer',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(item.id);
+            try {
+              await deleteNetworkingRecord(item.id, badgeNumber);
+              setHistory(prev => prev.filter(h => h.id !== item.id));
+            } catch {
+              Alert.alert('Erreur', 'Impossible de supprimer cette entrée.');
+            } finally {
+              setDeleting(null);
+            }
+          },
+        },
+      ]
+    );
   };
 
   const filtered = query.trim()
@@ -181,17 +209,31 @@ export default function HistoryScreen() {
                       <ListGroup.ItemDescription>{company}</ListGroup.ItemDescription>
                     </ListGroup.ItemContent>
                     <ListGroup.ItemSuffix>
-                      <View className="items-end" style={{ gap: 4 }}>
-                        <Chip
-                          size="sm"
-                          variant="soft"
-                          color={isExposant ? 'success' : 'default'}
+                      <View className="flex-row items-center" style={{ gap: 10 }}>
+                        <View className="items-end" style={{ gap: 4 }}>
+                          <Chip
+                            size="sm"
+                            variant="soft"
+                            color={isExposant ? 'success' : 'default'}
+                          >
+                            <Chip.Label>{role}</Chip.Label>
+                          </Chip>
+                          <Text className="text-[10px] text-muted font-medium">
+                            {dateStr} {timeStr}
+                          </Text>
+                        </View>
+                        <Pressable
+                          onPress={() => handleDelete(item)}
+                          hitSlop={8}
+                          disabled={deleting === item.id}
+                          className="w-8 h-8 rounded-xl bg-surface-secondary items-center justify-center"
                         >
-                          <Chip.Label>{role}</Chip.Label>
-                        </Chip>
-                        <Text className="text-[10px] text-muted font-medium">
-                          {dateStr} {timeStr}
-                        </Text>
+                          <Ionicons
+                            name="trash-outline"
+                            size={15}
+                            color={deleting === item.id ? '#9CA3AF' : '#EF4444'}
+                          />
+                        </Pressable>
                       </View>
                     </ListGroup.ItemSuffix>
                   </ListGroup.Item>
