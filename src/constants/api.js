@@ -13,6 +13,7 @@ export const ENDPOINTS = {
     login: `${BASE_URL}/login`,
     logout: `${BASE_URL}/logout`,
     me: `${BASE_URL}/me?event_slug=${EVENT_SLUG}`,
+    event: `${BASE_URL}/event?slug=${EVENT_SLUG}`,
     badgeLookup: (badge) => `${BASE_URL}/badge/${encodeURIComponent(badge)}`,
     networkingScan: `${BASE_URL}/networking/scan`,
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,

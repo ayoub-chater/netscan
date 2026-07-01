@@ -1,227 +1,214 @@
 import React, { useState, useCallback } from 'react';
 import {
-    View, Text, StyleSheet, FlatList, TouchableOpacity,
-    ActivityIndicator, RefreshControl,
+  View,
+  Text,
+  ScrollView,
+  RefreshControl,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Ionicons } from '@expo/vector-icons';
+import { withUniwind } from 'uniwind';
+import {
+  Avatar,
+  Chip,
+  ListGroup,
+  SearchField,
+  Separator,
+  Skeleton,
+} from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { networkingHistory } from '../services/api';
-import { COLORS, SPACING, RADIUS, SHADOWS, BG_GRADIENT, getRoleColor } from '../constants/theme';
 import NetworkingModal from '../components/NetworkingModal';
 
-const HistoryItem = ({ item, onPress }) => {
-    const role = item?.person?.role || 'Visiteur';
-    const roleColor = getRoleColor(role);
-
-    return (
-        <TouchableOpacity style={styles.itemCard} onPress={() => onPress(item)}>
-            <View style={[styles.avatar, { backgroundColor: roleColor + '15' }]}>
-                <Text style={[styles.avatarText, { color: roleColor }]}>
-                    {(item?.person?.name || '?')[0].toUpperCase()}
-                </Text>
-            </View>
-
-            <View style={styles.content}>
-                <Text style={styles.name}>{item?.person?.name || 'Inconnu'}</Text>
-                <Text style={styles.company}>
-                    {item?.person?.company ? `${item.person.company} • ` : ''}
-                    <Text style={{ color: roleColor, fontWeight: '700' }}>{role}</Text>
-                </Text>
-            </View>
-
-            <View style={styles.meta}>
-                <Text style={styles.date}>
-                    {new Date(item.scanned_at).toLocaleDateString('fr-FR', {
-                        day: '2-digit', month: 'short'
-                    })}
-                </Text>
-                <Text style={styles.time}>
-                    {new Date(item.scanned_at).toLocaleTimeString('fr-FR', {
-                        hour: '2-digit', minute: '2-digit'
-                    })}
-                </Text>
-            </View>
-        </TouchableOpacity>
-    );
-};
+const StyledIonicons = withUniwind(Ionicons);
 
 export default function HistoryScreen() {
-    const { badgeNumber } = useAuth();
-    const insets = useSafeAreaInsets();
-    const [history, setHistory] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [selectedItem, setSelectedItem] = useState(null);
+  const { badgeNumber } = useAuth();
+  const insets = useSafeAreaInsets();
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [query, setQuery] = useState('');
 
-    const fetchHistory = async () => {
-        if (!badgeNumber) {
-            setLoading(false);
-            return;
+  const fetchHistory = async () => {
+    if (!badgeNumber) {
+      setLoading(false);
+      return;
+    }
+    try {
+      const res = await networkingHistory(badgeNumber);
+      setHistory(res?.data?.history || []);
+    } catch {}
+    finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      setLoading(true);
+      fetchHistory();
+    }, [badgeNumber])
+  );
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchHistory();
+  };
+
+  const filtered = query.trim()
+    ? history.filter(item => {
+        const q = query.toLowerCase();
+        return (
+          item?.person?.name?.toLowerCase().includes(q) ||
+          item?.person?.company?.toLowerCase().includes(q) ||
+          item?.person?.role?.toLowerCase().includes(q)
+        );
+      })
+    : history;
+
+  return (
+    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+      <StatusBar style="light" />
+
+      {/* ── Header ─────────────────────────────────── */}
+      <View className="px-6 pt-5 pb-4 flex-row items-center justify-between">
+        <Text className="text-2xl font-extrabold text-foreground">Journal</Text>
+        {history.length > 0 && (
+          <Chip size="sm" variant="soft" color="default">
+            <Chip.Label>{history.length} rencontres</Chip.Label>
+          </Chip>
+        )}
+      </View>
+
+      {/* ── Search ─────────────────────────────────── */}
+      <View className="px-6 mb-4">
+        <SearchField value={query} onChange={setQuery}>
+          <SearchField.Group>
+            <SearchField.SearchIcon />
+            <SearchField.Input placeholder="Nom, entreprise, rôle..." />
+            <SearchField.ClearButton />
+          </SearchField.Group>
+        </SearchField>
+      </View>
+
+      {/* ── List ───────────────────────────────────── */}
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#286EAD" />
         }
-        try {
-            const res = await networkingHistory(badgeNumber);
-            setHistory(res?.data?.history || []);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setLoading(false);
-            setRefreshing(false);
-        }
-    };
-
-    useFocusEffect(
-        useCallback(() => {
-            setLoading(true);
-            fetchHistory();
-        }, [badgeNumber])
-    );
-
-    const onRefresh = () => {
-        setRefreshing(true);
-        fetchHistory();
-    };
-
-    return (
-        <LinearGradient colors={BG_GRADIENT.colors} start={BG_GRADIENT.start} end={BG_GRADIENT.end} style={styles.root}>
-            <View style={{ height: insets.top, backgroundColor: '#000000' }} />
-            <StatusBar style="light" backgroundColor="#000000" />
-
-            <View style={[styles.header]}>
-                <Text style={styles.title}>Journal</Text>
-                <View style={styles.badgeCount}>
-                    <Text style={styles.badgeCountText}>{history.length} Rencontres</Text>
-                </View>
+        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+      >
+        {loading ? (
+          [0, 1, 2, 3, 4].map(i => (
+            <View
+              key={i}
+              className="flex-row items-center bg-surface rounded-xl px-4 py-3.5 mb-2"
+            >
+              <Skeleton isLoading variant="shimmer">
+                <View className="w-10 h-10 rounded-full bg-surface-secondary" />
+              </Skeleton>
+              <View className="flex-1 ml-3" style={{ gap: 8 }}>
+                <Skeleton isLoading variant="shimmer">
+                  <View
+                    className="h-3.5 rounded-full bg-surface-secondary"
+                    style={{ width: 140 }}
+                  />
+                </Skeleton>
+                <Skeleton isLoading variant="shimmer">
+                  <View
+                    className="h-3 rounded-full bg-surface-secondary"
+                    style={{ width: 100 }}
+                  />
+                </Skeleton>
+              </View>
             </View>
+          ))
+        ) : filtered.length === 0 ? (
+          <View className="items-center py-16">
+            <Ionicons name="people-outline" size={48} color="#2db067" />
+            <Text className="text-base font-bold text-foreground mt-4 mb-2">
+              {query ? 'Aucun résultat' : 'Encore aucune rencontre'}
+            </Text>
+            <Text className="text-sm text-muted text-center leading-5 px-8">
+              {query
+                ? `Aucun contact correspondant à "${query}".`
+                : 'Votre réseau commencera à grandir ici dès votre premier scan.'}
+            </Text>
+          </View>
+        ) : (
+          <ListGroup>
+            {filtered.map((item, index) => {
+              const role = item?.person?.role || 'Visiteur';
+              const name = item?.person?.name || 'Inconnu';
+              const company = item?.person?.company || 'Indépendant';
+              const initial = name[0]?.toUpperCase() || '?';
+              const isExposant = role === 'Exposant';
 
-            {loading ? (
-                <View style={styles.center}>
-                    <ActivityIndicator size="small" color={COLORS.secondary} />
-                </View>
-            ) : (
-                <FlatList
-                    data={history}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={({ item }) => <HistoryItem item={item} onPress={setSelectedItem} />}
-                    contentContainerStyle={styles.list}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={COLORS.secondary} />
-                    }
-                    ListEmptyComponent={
-                        <View style={styles.empty}>
-                            <Text style={styles.emptyText}>Encore aucune racine</Text>
-                            <Text style={styles.emptySub}>Votre réseau commencera à grandir ici dès votre premier scan.</Text>
-                        </View>
-                    }
-                />
-            )}
+              const dateStr = item.scanned_at
+                ? new Date(item.scanned_at).toLocaleDateString('fr-FR', {
+                    day: '2-digit',
+                    month: 'short',
+                  })
+                : '';
+              const timeStr = item.scanned_at
+                ? new Date(item.scanned_at).toLocaleTimeString('fr-FR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })
+                : '';
 
-            <NetworkingModal
-                visible={!!selectedItem}
-                result={selectedItem}
-                viewOnly={true}
-                onClose={() => setSelectedItem(null)}
-            />
-        </LinearGradient>
-    );
+              return (
+                <React.Fragment key={item.id || index}>
+                  {index > 0 && <Separator className="mx-4" />}
+                  <ListGroup.Item onPress={() => setSelectedItem(item)}>
+                    <ListGroup.ItemPrefix>
+                      <Avatar
+                        size="sm"
+                        color={isExposant ? 'success' : 'default'}
+                        variant="soft"
+                      >
+                        <Avatar.Fallback>{initial}</Avatar.Fallback>
+                      </Avatar>
+                    </ListGroup.ItemPrefix>
+                    <ListGroup.ItemContent>
+                      <ListGroup.ItemTitle>{name}</ListGroup.ItemTitle>
+                      <ListGroup.ItemDescription>{company}</ListGroup.ItemDescription>
+                    </ListGroup.ItemContent>
+                    <ListGroup.ItemSuffix>
+                      <View className="items-end" style={{ gap: 4 }}>
+                        <Chip
+                          size="sm"
+                          variant="soft"
+                          color={isExposant ? 'success' : 'default'}
+                        >
+                          <Chip.Label>{role}</Chip.Label>
+                        </Chip>
+                        <Text className="text-[10px] text-muted font-medium">
+                          {dateStr} {timeStr}
+                        </Text>
+                      </View>
+                    </ListGroup.ItemSuffix>
+                  </ListGroup.Item>
+                </React.Fragment>
+              );
+            })}
+          </ListGroup>
+        )}
+      </ScrollView>
+
+      {/* ── Detail Modal ───────────────────────────── */}
+      <NetworkingModal
+        visible={!!selectedItem}
+        result={selectedItem}
+        viewOnly
+        onClose={() => setSelectedItem(null)}
+      />
+    </View>
+  );
 }
-
-const styles = StyleSheet.create({
-    root: { flex: 1 },
-    center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-    header: {
-        paddingTop: SPACING.md,
-        paddingHorizontal: SPACING.lg,
-        paddingBottom: SPACING.lg,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-    },
-    title: {
-        fontSize: 28,
-        fontWeight: '800',
-        color: COLORS.textPrimary,
-    },
-    badgeCount: {
-        backgroundColor: COLORS.bgCard,
-        paddingHorizontal: 12, paddingVertical: 6,
-        borderRadius: RADIUS.full, ...SHADOWS.soft
-    },
-    badgeCountText: {
-        fontSize: 12,
-        color: COLORS.secondary,
-        fontWeight: '800',
-        textTransform: 'uppercase',
-    },
-    list: {
-        padding: SPACING.lg,
-        paddingBottom: 120,
-    },
-    itemCard: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        padding: SPACING.md,
-        backgroundColor: COLORS.bgCard,
-        borderRadius: RADIUS.md,
-        marginBottom: SPACING.sm,
-        ...SHADOWS.soft,
-    },
-    avatar: {
-        width: 44,
-        height: 44,
-        borderRadius: RADIUS.sm,
-        alignItems: 'center',
-        justifyContent: 'center',
-    },
-    avatarText: {
-        fontSize: 18,
-        fontWeight: '800',
-    },
-    content: {
-        flex: 1,
-        marginLeft: SPACING.md,
-    },
-    name: {
-        fontSize: 16,
-        fontWeight: '700',
-        color: COLORS.textPrimary,
-    },
-    company: {
-        fontSize: 12,
-        color: COLORS.textSecondary,
-        marginTop: 2,
-    },
-    meta: {
-        alignItems: 'flex-end',
-    },
-    date: {
-        fontSize: 12,
-        color: COLORS.textPrimary,
-        fontWeight: '700',
-    },
-    time: {
-        fontSize: 11,
-        color: COLORS.textMuted,
-        marginTop: 2,
-    },
-    empty: {
-        alignItems: 'center',
-        marginTop: 80,
-    },
-    emptyEmoji: { fontSize: 48, marginBottom: SPACING.md },
-    emptyText: {
-        fontSize: 18,
-        fontWeight: '800',
-        color: COLORS.textSecondary,
-    },
-    emptySub: {
-        fontSize: 14,
-        color: COLORS.textMuted,
-        textAlign: 'center',
-        marginTop: 8,
-        paddingHorizontal: 40,
-        lineHeight: 20
-    },
-});

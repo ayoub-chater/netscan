@@ -1,57 +1,69 @@
-// NetScan — Cold Luxury Design System (Logiterre Professional Aesthetic)
+// Logiterre — Logistics Event Management Design System
 export const COLORS = {
-    // Backgrounds - Clean & Crisp
-    bg: '#F8FAFC',         // Slate White (Professional & Cold)
-    bgCard: '#FFFFFF',     // Pure White
-    bgSurface: '#FDFCFB',
-    bgInput: '#FFFFFF',
+    // Backgrounds — Industrial Navy (dark-first)
+    bg: '#0B1120',
+    bgCard: '#111827',
+    bgSurface: '#1A2236',
+    bgInput: '#1E2A3D',
 
-    // Neutral colors
-    gray100: '#F1F5F9',
-    gray200: '#E2E8F0',
-    gray300: '#CBD5E1',
-    gray400: '#94A3B8',
-    gray500: '#64748B',
-    gray600: '#475569',
-    gray700: '#334155',
-    gray800: '#1E293B',
-    gray900: '#0F172A',
+    // Navy shades
+    navy50: '#F0F4FF',
+    navy100: '#DDE6FF',
+    navy200: '#BAC8FF',
+    navy300: '#8DA3FF',
+    navy400: '#617AFF',
+    navy500: '#3B52DB',
+    navy600: '#2A3BAA',
+    navy700: '#1E2A7A',
+    navy800: '#141D52',
+    navy900: '#0B1120',
 
-    // Brand - Professional Cold
-    primary: '#0E4DA4',     // Logiterre Blue
-    secondary: '#1A934E',   // Logiterre Green
-    accent: '#334155',      // Slate Blue/Gray
+    // Neutral grays (cool-tinted)
+    gray100: '#F1F5FB',
+    gray200: '#E2E8F4',
+    gray300: '#BCC5D6',
+    gray400: '#8A96AE',
+    gray500: '#60708A',
+    gray600: '#435068',
+    gray700: '#2E3A50',
+    gray800: '#1E2A3D',
+    gray900: '#111827',
+
+    // Brand — Logistics Amber
+    primary: '#F59E0B',       // Electric Amber (accent)
+    secondary: '#3B6EFF',     // Steel Blue (secondary actions)
+    accent: '#F59E0B',
 
     // UI States
-    success: '#1A934E',
+    success: '#22C55E',
     danger: '#EF4444',
     warning: '#F59E0B',
     info: '#3B82F6',
 
-    // Text (Cold Slate Grays)
-    textPrimary: '#1E293B',
-    textSecondary: '#475569',
-    textMuted: '#94A3B8',
-    textInvert: '#FFFFFF',
+    // Text
+    textPrimary: '#F0F4FF',
+    textSecondary: '#8A96AE',
+    textMuted: '#60708A',
+    textInvert: '#0B1120',
 
     // Border
-    border: '#E2E8F0',
-    borderLight: '#F1F5F9',
-    borderStrong: '#CBD5E1',
+    border: '#2E3A50',
+    borderLight: '#1E2A3D',
+    borderStrong: '#435068',
 
-    // Role Mapping
-    exposant: '#0E4DA4',    // Blue
-    visiteur: '#1A934E',    // Green
-    other: '#64748B',
+    // Role Mapping — logistics color coding
+    exposant: '#F59E0B',      // Amber for exhibitors
+    visiteur: '#3B6EFF',      // Steel blue for visitors
+    other: '#60708A',
 
     // Gradients
-    gradientDark: ['#1E293B', '#0F172A'],
-    gradientPrimary: ['#2563EB', '#0E4DA4'], // Deep Blue Gradient
-    gradientSecondary: ['#22C55E', '#1A934E'], // Professional Green Gradient
-    gradientSuccess: ['#22C55E', '#1A934E'],
+    gradientDark: ['#1A2236', '#0B1120'],
+    gradientPrimary: ['#FBBF24', '#F59E0B'],   // Amber gradient
+    gradientSecondary: ['#60A5FA', '#3B6EFF'], // Blue gradient
+    gradientSuccess: ['#4ADE80', '#22C55E'],
     gradientDanger: ['#F87171', '#EF4444'],
-    gradientExposant: ['#2563EB', '#0E4DA4'],
-    gradientVisiteur: ['#22C55E', '#1A934E']
+    gradientExposant: ['#FBBF24', '#F59E0B'],  // Amber
+    gradientVisiteur: ['#60A5FA', '#3B6EFF'],  // Steel blue
 };
 
 export const FONTS = {
@@ -84,12 +96,24 @@ export const RADIUS = {
 };
 
 export const SHADOWS = {
-    soft: {},
-    medium: {},
+    soft: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.2,
+        shadowRadius: 8,
+        elevation: 4,
+    },
+    medium: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 16,
+        elevation: 8,
+    },
 };
 
 export const BG_GRADIENT = {
-    colors: ['#F5F9FF', '#E8F5F0', '#C8E8DC'],
+    colors: ['#0B1120', '#111827', '#1A2236'],
     start: { x: 0, y: 0 },
     end: { x: 0, y: 1 },
 };
@@ -105,5 +129,5 @@ export const getRoleGradient = (role = '') => {
     const r = role.toLowerCase();
     if (r === 'exposant') return COLORS.gradientExposant;
     if (r === 'visiteur') return COLORS.gradientVisiteur;
-    return ['#FDFCFB', '#F5F3F1'];
+    return ['#1A2236', '#111827'];
 };

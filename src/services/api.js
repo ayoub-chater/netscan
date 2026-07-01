@@ -58,6 +58,10 @@ export const login = (email, password) =>
         headers: { Accept: 'application/json' },
     });
 
+// ─── Event info (public) ─────────────────────────────────────────────────────
+export const getEventInfo = () =>
+    axios.get(ENDPOINTS.event, { timeout: 10000, headers: { Accept: 'application/json' } });
+
 export const logout = () =>
     api.post(ENDPOINTS.logout, {}).catch(() => { });
 

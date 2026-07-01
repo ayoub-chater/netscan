@@ -1,0 +1,118 @@
+@import 'tailwindcss';
+@import 'uniwind';
+
+@import 'heroui-native/styles';
+@import 'heroui-native/styles/vibrant';
+
+/* Path to heroui-native lib relative to this global.css at project root */
+@source './node_modules/heroui-native/lib';
+
+/* ─── Logistics Theme ─────────────────────────────────────────────────────── */
+
+@layer theme {
+  @variant light {
+    /* Backgrounds */
+    --background: oklch(0.97 0.005 240);
+    --foreground: oklch(0.12 0.025 240);
+
+    /* Surfaces */
+    --surface: oklch(0.99 0.002 240);
+    --surface-foreground: oklch(0.15 0.025 240);
+    --surface-secondary: oklch(0.96 0.008 240);
+    --surface-secondary-foreground: oklch(0.2 0.025 240);
+    --surface-tertiary: oklch(0.93 0.01 240);
+    --surface-tertiary-foreground: oklch(0.25 0.025 240);
+
+    /* Overlay */
+    --overlay: oklch(0.99 0.001 240);
+    --overlay-foreground: oklch(0.12 0.025 240);
+    --backdrop: oklch(0% 0 0 / 30%);
+
+    --muted: oklch(0.55 0.025 240);
+
+    --default: oklch(0.93 0.015 240);
+    --default-foreground: oklch(0.3 0.04 240);
+
+    /* Accent: Steel Blue — #286EAD logistics blue */
+    --accent: oklch(0.52 0.10 231);
+    --accent-foreground: oklch(0.97 0.005 231);
+
+    /* Form Fields */
+    --field-background: oklch(0.96 0.008 240);
+    --field-foreground: oklch(0.12 0.025 240);
+    --field-placeholder: oklch(0.6 0.02 240);
+    --field-border: oklch(0.85 0.01 240);
+
+    /* Status */
+    --success: oklch(0.65 0.15 155);
+    --success-foreground: oklch(0.12 0.04 155);
+    --warning: oklch(0.75 0.17 75);
+    --warning-foreground: oklch(0.12 0.02 75);
+    --danger: oklch(0.62 0.2 18);
+    --danger-foreground: oklch(0.97 0.005 18);
+
+    /* Misc */
+    --border: oklch(0.88 0.01 240);
+    --separator: oklch(0.9 0.008 240);
+    --focus: var(--accent);
+    --link: oklch(0.55 0.17 240);
+
+    /* Shadows */
+    --surface-shadow: 0 2px 8px 0 rgba(0,0,0,0.06), 0 1px 2px 0 rgba(0,0,0,0.04);
+    --overlay-shadow: 0 8px 32px 0 rgba(0,0,0,0.12), 0 2px 8px 0 rgba(0,0,0,0.06);
+    --field-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
+  }
+
+  @variant dark {
+    /* Backgrounds — deep industrial navy */
+    --background: oklch(0.12 0.025 240);
+    --foreground: oklch(0.93 0.01 240);
+
+    /* Surfaces */
+    --surface: oklch(0.17 0.028 240);
+    --surface-foreground: oklch(0.9 0.012 240);
+    --surface-secondary: oklch(0.21 0.026 240);
+    --surface-secondary-foreground: oklch(0.88 0.012 240);
+    --surface-tertiary: oklch(0.25 0.024 240);
+    --surface-tertiary-foreground: oklch(0.85 0.012 240);
+
+    /* Overlay */
+    --overlay: oklch(0.20 0.03 240);
+    --overlay-foreground: oklch(0.92 0.01 240);
+    --backdrop: oklch(0% 0 0 / 50%);
+
+    --muted: oklch(0.5 0.03 240);
+
+    --default: oklch(0.22 0.03 240);
+    --default-foreground: oklch(0.85 0.015 240);
+
+    /* Accent: Steel Blue — #286EAD */
+    --accent: oklch(0.52 0.10 231);
+    --accent-foreground: oklch(0.97 0.005 231);
+
+    /* Form Fields */
+    --field-background: oklch(0.20 0.028 240);
+    --field-foreground: oklch(0.92 0.01 240);
+    --field-placeholder: oklch(0.48 0.025 240);
+    --field-border: transparent;
+
+    /* Status — #2AB066 green */
+    --success: oklch(0.65 0.15 155);
+    --success-foreground: oklch(0.97 0.008 155);
+    --warning: oklch(0.78 0.18 75);
+    --warning-foreground: oklch(0.1 0.01 75);
+    --danger: oklch(0.65 0.2 20);
+    --danger-foreground: oklch(0.95 0.008 20);
+
+    /* Misc */
+    --border: oklch(0 0 0 / 0%);
+    --separator: oklch(0.26 0.03 240);
+    --focus: var(--accent);
+    --link: oklch(0.75 0.15 240);
+
+    /* Shadows — minimal on dark */
+    --surface-shadow: 0 0 0 1px oklch(0.28 0.03 240);
+    --overlay-shadow: 0 0 0 1px oklch(0.3 0.03 240) inset, 0 24px 48px rgba(0,0,0,0.4);
+    --field-shadow: 0 0 0 0 transparent;
+  }
+}

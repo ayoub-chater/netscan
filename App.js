@@ -3,12 +3,15 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, StyleSheet, Platform, TouchableOpacity } from 'react-native';
+import { View, StyleSheet } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { StatusBar } from 'expo-status-bar';
+import { HeroUINativeProvider } from 'heroui-native';
 import { Ionicons } from '@expo/vector-icons';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
-import { COLORS, SHADOWS, RADIUS } from './src/constants/theme';
+import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -28,45 +31,39 @@ function TabBarIcon({ name, focused, color }) {
   return (
     <View style={[
       styles.iconContainer,
-      focused && styles.iconContainerActive
+      focused && styles.iconContainerActive,
     ]}>
-      <Ionicons 
-        name={name} 
-        size={24} 
-        color={color} 
-        style={{ textAlign: 'center' }}
-      />
+      <Ionicons name={name} size={24} color={color} style={{ textAlign: 'center' }} />
     </View>
   );
 }
 
 function MainTabs() {
-  const insets = useSafeAreaInsets();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
         tabBarSafeAreaInsets: { bottom: 0 },
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
+          backgroundColor: '#286EAD',
           height: 70,
           position: 'absolute',
-          bottom: 4,
-          marginHorizontal: 8,
+          bottom: 8,
+          marginHorizontal: 16,
           borderRadius: 35,
           borderTopWidth: 0,
-          elevation: 10,
+          elevation: 16,
           shadowColor: '#000',
-          shadowOffset: { width: 0, height: 5 },
-          shadowOpacity: 0.1,
-          shadowRadius: 10,
+          shadowOffset: { width: 0, height: 8 },
+          shadowOpacity: 0.35,
+          shadowRadius: 16,
           paddingBottom: 0,
         },
         tabBarItemStyle: {
           height: 70,
           alignItems: 'center',
           justifyContent: 'center',
-          paddingTop: 4, // Lower them slightly
+          paddingTop: 4,
           marginTop: 0,
         },
         tabBarIconStyle: {
@@ -75,14 +72,14 @@ function MainTabs() {
           alignItems: 'center',
           justifyContent: 'center',
         },
-        tabBarActiveTintColor: COLORS.primary,
-        tabBarInactiveTintColor: COLORS.textMuted,
+        tabBarActiveTintColor: '#FFFFFF',
+        tabBarInactiveTintColor: 'rgba(255,255,255,0.55)',
         tabBarShowLabel: false,
         tabBarIcon: ({ focused, color }) => {
           let icon;
           if (route.name === 'Dashboard') icon = focused ? 'home' : 'home-outline';
-          else if (route.name === 'ScannerTab') icon = focused ? 'camera' : 'camera-outline';
-          else if (route.name === 'Journal') icon = focused ? 'heart' : 'heart-outline';
+          else if (route.name === 'ScannerTab') icon = focused ? 'qr-code' : 'qr-code-outline';
+          else if (route.name === 'Journal') icon = focused ? 'time' : 'time-outline';
           else if (route.name === 'Expos') icon = focused ? 'globe' : 'globe-outline';
           else if (route.name === 'Exposants') icon = focused ? 'storefront' : 'storefront-outline';
           else if (route.name === 'Détails') icon = focused ? 'person' : 'person-outline';
@@ -91,7 +88,7 @@ function MainTabs() {
       })}
     >
       <Tab.Screen name="Dashboard" component={HomeScreen} />
-      <Tab.Screen name="ScannerTab" component={ScannerScreen} options={{ tabBarStyle: { display: 'none' } }} />
+      <Tab.Screen name="ScannerTab" component={ScannerScreen} />
       <Tab.Screen name="Journal" component={HistoryScreen} />
       <Tab.Screen name="Expos" component={WebsiteScreen} />
       <Tab.Screen name="Exposants" component={ExposantsScreen} />
@@ -125,13 +122,25 @@ function NavigationRoot() {
   );
 }
 
+function ThemedStatusBar() {
+  const { isDark } = useTheme();
+  return <StatusBar style={isDark ? 'light' : 'dark'} translucent backgroundColor="transparent" />;
+}
+
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <NavigationRoot />
-      </AuthProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <HeroUINativeProvider>
+        <ThemeProvider>
+          <SafeAreaProvider>
+            <AuthProvider>
+              <ThemedStatusBar />
+              <NavigationRoot />
+            </AuthProvider>
+          </SafeAreaProvider>
+        </ThemeProvider>
+      </HeroUINativeProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -144,6 +153,6 @@ const styles = StyleSheet.create({
     borderRadius: 23,
   },
   iconContainerActive: {
-    backgroundColor: '#F0F7FF', 
+    backgroundColor: 'rgba(255,255,255,0.18)',
   },
 });
