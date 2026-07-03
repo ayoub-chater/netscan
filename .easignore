@@ -39,7 +39,4 @@ yarn-error.*
 # generated native folders
 /ios
 /android
-google-services.json
 
-# Firebase credentials
-fireBase_files/

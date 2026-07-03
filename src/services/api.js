@@ -91,6 +91,13 @@ export const deleteNetworkingRecord = (scanId, badgeNumber) =>
 // ─── Exposants ────────────────────────────────────────────────────────────────
 export const getExposants = () => api.get(ENDPOINTS.exposants);
 
+// ─── Push notification devices ────────────────────────────────────────────────
+export const registerDevice = (expoPushToken, platform) =>
+    api.post(ENDPOINTS.devicesRegister, { expo_push_token: expoPushToken, platform });
+
+export const unregisterDevice = (expoPushToken) =>
+    api.post(ENDPOINTS.devicesUnregister, { expo_push_token: expoPushToken }).catch(() => { });
+
 // ─── Register ─────────────────────────────────────────────────────────────────
 export const register = (data) =>
     axios.post(ENDPOINTS.register, { ...data, event_slug: EVENT_SLUG }, {

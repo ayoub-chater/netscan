@@ -5,6 +5,7 @@ import { Alert } from 'react-native';
 import { login as apiLogin, logout as apiLogout, fetchMe, getEventInfo, setApiToken, setOnUnauthorized } from '../services/api';
 import { loadSession, saveSession, clearSession, loadBadgeNumber, saveBadgeNumber } from '../services/auth';
 import { SESSION_MAX_AGE_MS } from '../constants/api';
+import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from '../services/notifications';
 
 const AuthContext = createContext(null);
 
@@ -52,6 +53,7 @@ export function AuthProvider({ children }) {
                         setScanner(session.scanner);
                         setApiToken(session.token);
                         scheduleAutoLogout(session.issuedAt);
+                        registerForPushNotificationsAsync().catch(() => { });
                         setExhibitorId(session.scanner?.exhibitor_id ?? null);
 
                         let storedEventInfo = session.eventInfo;
@@ -101,6 +103,7 @@ export function AuthProvider({ children }) {
         setEventInfo(ev);
         setExhibitorId(sc?.exhibitor_id ?? null);
         setApiToken(t);
+        registerForPushNotificationsAsync().catch(() => { });
         return { token: t, scanner: sc, eventInfo: ev };
     };
 
@@ -113,6 +116,7 @@ export function AuthProvider({ children }) {
 
 
     const signOut = async () => {
+        await unregisterPushNotificationsAsync();
         try { await apiLogout(); } catch { }
         await clearSession();
         if (timerRef.current) clearTimeout(timerRef.current);

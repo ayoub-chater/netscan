@@ -1,6 +1,6 @@
 import 'react-native-gesture-handler';
-import React from 'react';
-import { NavigationContainer } from '@react-navigation/native';
+import React, { useEffect, useRef, useState } from 'react';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, StyleSheet } from 'react-native';
@@ -9,9 +9,13 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { HeroUINativeProvider } from 'heroui-native';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import ConnectionToast from './src/components/ConnectionToast';
+
+const navigationRef = createNavigationContainerRef();
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -98,29 +102,68 @@ function MainTabs() {
   );
 }
 
+function ConnectionNotifications() {
+  const [toast, setToast] = useState(null);
+
+  useEffect(() => {
+    const receivedSub = Notifications.addNotificationReceivedListener((notification) => {
+      const data = notification.request.content.data;
+      if (data?.type !== 'connection') return;
+      const { title, body } = notification.request.content;
+      setToast({ title, body, data });
+    });
+
+    const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data;
+      if (data?.type === 'connection' && navigationRef.isReady()) {
+        navigationRef.navigate('History');
+      }
+    });
+
+    return () => {
+      receivedSub.remove();
+      responseSub.remove();
+    };
+  }, []);
+
+  return (
+    <ConnectionToast
+      toast={toast}
+      onHide={() => setToast(null)}
+      onPress={() => {
+        setToast(null);
+        if (navigationRef.isReady()) navigationRef.navigate('History');
+      }}
+    />
+  );
+}
+
 function NavigationRoot() {
   const { isBootstrapping, isAuthenticated } = useAuth();
 
   if (isBootstrapping) return null;
 
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {!isAuthenticated ? (
-          <>
-            <Stack.Screen name="Login" component={LoginScreen} />
-            <Stack.Screen name="Register" component={RegisterScreen} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="Main" component={MainTabs} />
-            <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'fullScreenModal' }} />
-            <Stack.Screen name="Team" component={TeamScreen} />
-            <Stack.Screen name="History" component={HistoryScreen} />
-          </>
-        )}
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={{ flex: 1 }}>
+      <NavigationContainer ref={navigationRef}>
+        <Stack.Navigator screenOptions={{ headerShown: false }}>
+          {!isAuthenticated ? (
+            <>
+              <Stack.Screen name="Login" component={LoginScreen} />
+              <Stack.Screen name="Register" component={RegisterScreen} />
+            </>
+          ) : (
+            <>
+              <Stack.Screen name="Main" component={MainTabs} />
+              <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'fullScreenModal' }} />
+              <Stack.Screen name="Team" component={TeamScreen} />
+              <Stack.Screen name="History" component={HistoryScreen} />
+            </>
+          )}
+        </Stack.Navigator>
+      </NavigationContainer>
+      {isAuthenticated && <ConnectionNotifications />}
+    </View>
   );
 }
 
