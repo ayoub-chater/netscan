@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
+import { useTranslation } from 'react-i18next';
 import {
   Avatar,
   BottomSheet,
@@ -16,20 +17,21 @@ import {
 const StyledIonicons = withUniwind(Ionicons);
 
 export default function NetworkingModal({ visible, result, onClose, onScanAgain, viewOnly = false }) {
+  const { t } = useTranslation();
   const targetPerson = result?.scanner_view?.person || result?.person;
   const message = result?.scanner_view?.message;
-  const name = targetPerson?.name || 'Inconnu';
-  const role = targetPerson?.role || 'Visiteur';
+  const name = targetPerson?.name || t('common.unknown');
+  const role = targetPerson?.role || t('profile.defaultRole');
   const isExposant = role === 'Exposant';
   const initial = name[0]?.toUpperCase() || '?';
 
   const infoItems = targetPerson
     ? [
-        targetPerson.company && { label: 'Organisation', value: targetPerson.company },
-        targetPerson.secteur && { label: 'Secteur', value: targetPerson.secteur },
-        targetPerson.email && { label: 'Email', value: targetPerson.email },
-        targetPerson.phone && { label: 'Téléphone', value: targetPerson.phone },
-        targetPerson.ville && { label: 'Ville', value: targetPerson.ville },
+        targetPerson.company && { label: t('networking.organization'), value: targetPerson.company },
+        targetPerson.secteur && { label: t('networking.sector'), value: targetPerson.secteur },
+        targetPerson.email && { label: t('networking.email'), value: targetPerson.email },
+        targetPerson.phone && { label: t('networking.phone'), value: targetPerson.phone },
+        targetPerson.ville && { label: t('networking.city'), value: targetPerson.ville },
       ].filter(Boolean)
     : [];
 
@@ -64,12 +66,12 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
                 />
               </View>
               <Text className="text-2xl font-extrabold text-foreground mb-2 text-center">
-                {viewOnly ? name : 'Moment Partagé !'}
+                {viewOnly ? name : t('networking.sharedMoment')}
               </Text>
               <Text className="text-sm text-muted text-center leading-5">
                 {viewOnly
-                  ? `Vous êtes connecté avec ${name} depuis votre journal.`
-                  : `Vous avez échangé vos profils avec ${name}. Retrouvez-le dans votre journal.`}
+                  ? t('networking.viewConnectedBody', { name })
+                  : t('networking.scanSharedBody', { name })}
               </Text>
             </View>
 
@@ -122,7 +124,7 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
               <View className="px-6 mb-6">
                 <Surface className="rounded-xl p-4" variant="secondary">
                   <Text className="text-xs text-muted text-center leading-4">
-                    Vos informations ont également été partagées avec cet interlocuteur.
+                    {t('networking.privacyNote')}
                   </Text>
                 </Surface>
               </View>
@@ -138,7 +140,7 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
                   onPress={onScanAgain}
                 >
                   <Ionicons name="qr-code-outline" size={18} color="#2db067" />
-                  <Button.Label>Scanner un autre</Button.Label>
+                  <Button.Label>{t('networking.scanAnother')}</Button.Label>
                 </Button>
               ) : null}
               <Button
@@ -148,7 +150,7 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
                 onPress={onClose}
               >
                 <Ionicons name={viewOnly ? 'close-outline' : 'checkmark-outline'} size={18} color="#FFFFFF" />
-                <Button.Label>{viewOnly ? 'Fermer' : 'Terminer'}</Button.Label>
+                <Button.Label>{viewOnly ? t('networking.close') : t('networking.finish')}</Button.Label>
               </Button>
             </View>
           </BottomSheetScrollView>

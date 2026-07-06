@@ -20,6 +20,7 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
+import { useTranslation } from 'react-i18next';
 import { Button, Surface } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { networkingScan } from '../services/api';
@@ -32,6 +33,7 @@ const FRAME = 280;
 const BLUE = '#286EAD';
 
 export default function ScannerScreen({ navigation }) {
+  const { t } = useTranslation();
   const { badgeNumber } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
@@ -80,7 +82,7 @@ export default function ScannerScreen({ navigation }) {
     lastScanRef.current = now;
 
     if (!badgeNumber) {
-      Alert.alert('Erreur', 'Impossible de récupérer votre numéro de badge.');
+      Alert.alert(t('common.error'), t('scanner.errorNoBadge'));
       return;
     }
 
@@ -88,11 +90,11 @@ export default function ScannerScreen({ navigation }) {
     if (__DEV__) console.log('📷 [SCAN] raw:', data, '→ target:', targetBadge, '| me:', badgeNumber);
 
     if (!targetBadge) {
-      Alert.alert('Badge inconnu', 'Ce QR Code ne semble pas être un badge valide.');
+      Alert.alert(t('scanner.unknownBadgeTitle'), t('scanner.unknownBadgeBody'));
       return;
     }
     if (targetBadge.toLowerCase() === badgeNumber.toLowerCase()) {
-      Alert.alert('Auto-scan', "C'est votre propre badge.");
+      Alert.alert(t('scanner.selfScanTitle'), t('scanner.selfScanBody'));
       return;
     }
 
@@ -104,13 +106,13 @@ export default function ScannerScreen({ navigation }) {
         setResult(res.data);
         setScanning(false);
       } else {
-        const errMsg = res?.data?.message || 'Une erreur est survenue.';
+        const errMsg = res?.data?.message || t('scanner.genericError');
         const errCode = res?.data?.code;
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         if (errCode === 'ALREADY_CONNECTED') {
-          Alert.alert('Déjà connectés 🌿', errMsg);
+          Alert.alert(t('scanner.alreadyConnectedTitle'), errMsg);
         } else {
-          Alert.alert('Oups', errMsg);
+          Alert.alert(t('scanner.oops'), errMsg);
         }
       }
     } catch (e) {
@@ -118,13 +120,16 @@ export default function ScannerScreen({ navigation }) {
       const status = e.response?.status;
       const msg = e.response?.data?.message;
       if (status === 401) {
-        Alert.alert('Session expirée', 'Veuillez vous reconnecter.');
+        Alert.alert(t('auth.sessionExpiredTitle'), t('scanner.reconnect'));
       } else if (status === 404) {
-        Alert.alert('Badge introuvable', msg || "Ce badge n'est pas reconnu dans le système.");
+        Alert.alert(t('scanner.badgeNotFoundTitle'), msg || t('scanner.badgeNotFoundBody'));
       } else if (msg) {
-        Alert.alert(status === 422 ? 'Info' : 'Oups', msg);
+        Alert.alert(status === 422 ? t('scanner.info') : t('scanner.oops'), msg);
       } else {
-        Alert.alert('Erreur réseau', `Code: ${status ?? 'inconnu'} — Vérifiez votre connexion.`);
+        Alert.alert(
+          t('scanner.networkErrorTitle'),
+          t('scanner.networkErrorBody', { code: status ?? t('scanner.unknownCode') })
+        );
       }
     } finally {
       setLoading(false);
@@ -160,7 +165,7 @@ export default function ScannerScreen({ navigation }) {
               <View style={styles.sideVignette} />
             </View>
             <View style={styles.vignetteBottom}>
-              <Text style={styles.hintText}>Centrez le badge ici</Text>
+              <Text style={styles.hintText}>{t('scanner.centerBadge')}</Text>
               <Pressable onPress={() => setScanning(false)} style={styles.closeCircle}>
                 <Ionicons name="close" size={22} color="#fff" />
               </Pressable>
@@ -176,7 +181,7 @@ export default function ScannerScreen({ navigation }) {
             <>
               <ActivityIndicator color={BLUE} size="large" />
               <Text className="mt-4 text-base text-muted font-semibold">
-                Connexion en cours...
+                {t('scanner.connecting')}
               </Text>
             </>
           ) : (
@@ -186,10 +191,10 @@ export default function ScannerScreen({ navigation }) {
               </View>
 
               <Text className="text-2xl font-extrabold text-foreground text-center mb-3">
-                Prêt pour une rencontre ?
+                {t('scanner.readyTitle')}
               </Text>
               <Text className="text-base text-muted text-center mb-10 leading-6">
-                Ouvrez votre caméra et scannez le badge de votre futur collaborateur.
+                {t('scanner.readyBody')}
               </Text>
 
               <Button
@@ -201,8 +206,8 @@ export default function ScannerScreen({ navigation }) {
                     const res = await requestPermission();
                     if (!res.granted) {
                       Alert.alert(
-                        'Caméra requise',
-                        "Veuillez autoriser l'accès à la caméra dans les réglages de votre téléphone."
+                        t('scanner.cameraRequiredTitle'),
+                        t('scanner.cameraRequiredBody')
                       );
                       return;
                     }
@@ -210,7 +215,7 @@ export default function ScannerScreen({ navigation }) {
                   setScanning(true);
                 }}
               >
-                <Button.Label>Lancer le scanner</Button.Label>
+                <Button.Label>{t('scanner.launch')}</Button.Label>
               </Button>
 
               <Pressable
@@ -220,7 +225,7 @@ export default function ScannerScreen({ navigation }) {
                 className="mt-6 p-2"
                 hitSlop={8}
               >
-                <Text className="text-sm text-muted font-semibold">Plus tard</Text>
+                <Text className="text-sm text-muted font-semibold">{t('scanner.later')}</Text>
               </Pressable>
             </>
           )}

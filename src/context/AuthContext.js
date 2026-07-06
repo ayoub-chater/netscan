@@ -2,6 +2,7 @@ import React, {
     createContext, useContext, useEffect, useRef, useState,
 } from 'react';
 import { Alert } from 'react-native';
+import i18n from '../i18n';
 import { login as apiLogin, logout as apiLogout, fetchMe, getEventInfo, setApiToken, setOnUnauthorized } from '../services/api';
 import { loadSession, saveSession, clearSession, loadBadgeNumber, saveBadgeNumber } from '../services/auth';
 import { SESSION_MAX_AGE_MS } from '../constants/api';
@@ -33,7 +34,7 @@ export function AuthProvider({ children }) {
         if (remaining <= 0) { signOut(); return; }
         timerRef.current = setTimeout(() => {
             signOut();
-            Alert.alert('Session expirée', 'Vous avez été déconnecté automatiquement.');
+            Alert.alert(i18n.t('auth.sessionExpiredTitle'), i18n.t('auth.sessionExpiredBody'));
         }, remaining);
     };
 

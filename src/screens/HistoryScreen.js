@@ -8,10 +8,12 @@ import {
   Pressable,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useFocusEffect } from '@react-navigation/native';
+import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
+import { withTiming } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
 import {
   Avatar,
   Chip,
@@ -21,13 +23,18 @@ import {
   Skeleton,
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
+import { useTabBar, useTabBarScroll } from '../context/TabBarContext';
 import { networkingHistory, deleteNetworkingRecord } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
 
 const StyledIonicons = withUniwind(Ionicons);
 
 export default function HistoryScreen() {
+  const { t } = useTranslation();
   const { badgeNumber } = useAuth();
+  const { translateY } = useTabBar();
+  const tabScroll = useTabBarScroll();
+  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [history, setHistory] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +62,8 @@ export default function HistoryScreen() {
     useCallback(() => {
       setLoading(true);
       fetchHistory();
+      // Ensure the floating navbar is visible on this sub-page.
+      translateY.value = withTiming(0);
     }, [badgeNumber])
   );
 
@@ -65,12 +74,12 @@ export default function HistoryScreen() {
 
   const handleDelete = (item) => {
     Alert.alert(
-      'Supprimer cette rencontre ?',
-      `Retirer ${item?.person?.name || 'ce contact'} de votre journal ?`,
+      t('history.deleteTitle'),
+      t('history.deleteBody', { name: item?.person?.name || t('history.thisContact') }),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             setDeleting(item.id);
@@ -78,7 +87,7 @@ export default function HistoryScreen() {
               await deleteNetworkingRecord(item.id, badgeNumber);
               setHistory(prev => prev.filter(h => h.id !== item.id));
             } catch {
-              Alert.alert('Erreur', 'Impossible de supprimer cette entrée.');
+              Alert.alert(t('common.error'), t('history.deleteError'));
             } finally {
               setDeleting(null);
             }
@@ -104,21 +113,28 @@ export default function HistoryScreen() {
       <StatusBar style="light" />
 
       {/* ── Header ─────────────────────────────────── */}
-      <View className="px-6 pt-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-extrabold text-foreground">Journal</Text>
+      <View className="px-4 pt-5 pb-4 flex-row items-center" style={{ gap: 12 }}>
+        <Pressable
+          onPress={() => (navigation.canGoBack() ? navigation.goBack() : navigation.navigate('Dashboard'))}
+          className="w-10 h-10 rounded-xl bg-surface items-center justify-center active:opacity-70"
+          hitSlop={8}
+        >
+          <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+        </Pressable>
+        <Text className="flex-1 text-2xl font-extrabold text-foreground">{t('history.title')}</Text>
         {history.length > 0 && (
           <Chip size="sm" variant="soft" color="default">
-            <Chip.Label>{history.length} rencontres</Chip.Label>
+            <Chip.Label>{t('history.meetings', { count: history.length })}</Chip.Label>
           </Chip>
         )}
       </View>
 
       {/* ── Search ─────────────────────────────────── */}
-      <View className="px-6 mb-4">
+      <View className="px-4 mb-4">
         <SearchField value={query} onChange={setQuery}>
           <SearchField.Group>
             <SearchField.SearchIcon />
-            <SearchField.Input placeholder="Nom, entreprise, rôle..." />
+            <SearchField.Input placeholder={t('history.searchPlaceholder')} />
             <SearchField.ClearButton />
           </SearchField.Group>
         </SearchField>
@@ -126,11 +142,12 @@ export default function HistoryScreen() {
 
       {/* ── List ───────────────────────────────────── */}
       <ScrollView
+        {...tabScroll}
         showsVerticalScrollIndicator={false}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#286EAD" />
         }
-        contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
       >
         {loading ? (
           [0, 1, 2, 3, 4].map(i => (
@@ -161,20 +178,20 @@ export default function HistoryScreen() {
           <View className="items-center py-16">
             <Ionicons name="people-outline" size={48} color="#2db067" />
             <Text className="text-base font-bold text-foreground mt-4 mb-2">
-              {query ? 'Aucun résultat' : 'Encore aucune rencontre'}
+              {query ? t('history.noResults') : t('history.noMeetingsTitle')}
             </Text>
             <Text className="text-sm text-muted text-center leading-5 px-8">
               {query
-                ? `Aucun contact correspondant à "${query}".`
-                : 'Votre réseau commencera à grandir ici dès votre premier scan.'}
+                ? t('history.noResultsBody', { query })
+                : t('history.noMeetingsBody')}
             </Text>
           </View>
         ) : (
           <ListGroup>
             {filtered.map((item, index) => {
-              const role = item?.person?.role || 'Visiteur';
-              const name = item?.person?.name || 'Inconnu';
-              const company = item?.person?.company || 'Indépendant';
+              const role = item?.person?.role || t('profile.defaultRole');
+              const name = item?.person?.name || t('common.unknown');
+              const company = item?.person?.company || t('common.independent');
               const initial = name[0]?.toUpperCase() || '?';
               const isExposant = role === 'Exposant';
 

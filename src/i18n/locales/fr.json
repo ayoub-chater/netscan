@@ -1,0 +1,283 @@
+{
+  "common": {
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "remove": "Retirer",
+    "close": "Fermer",
+    "retry": "Réessayer",
+    "save": "Enregistrer",
+    "add": "Ajouter",
+    "error": "Erreur",
+    "loading": "Chargement...",
+    "later": "Plus tard",
+    "ok": "D'accord",
+    "unknown": "Inconnu",
+    "independent": "Indépendant",
+    "restartTitle": "Redémarrage requis",
+    "restartBody": "Veuillez fermer puis rouvrir l'application pour appliquer la nouvelle langue."
+  },
+  "auth": {
+    "sessionExpiredTitle": "Session expirée",
+    "sessionExpiredBody": "Vous avez été déconnecté automatiquement."
+  },
+  "login": {
+    "welcome": "Bienvenue de retour",
+    "subtitle": "Saisissez vos identifiants pour continuer",
+    "email": "Email",
+    "emailPlaceholder": "votre@email.fr",
+    "password": "Mot de passe",
+    "rememberMe": "Se souvenir de moi",
+    "signIn": "Se connecter",
+    "signingIn": "Connexion...",
+    "noAccount": "Pas encore de compte ?",
+    "signUp": "S'inscrire",
+    "errorEmptyFields": "Veuillez saisir votre email et mot de passe.",
+    "errorInvalidCredentials": "Identifiants incorrects. Veuillez réessayer."
+  },
+  "register": {
+    "iAm": "Je suis...",
+    "chooseProfile": "Choisissez votre profil pour continuer",
+    "visitorLabel": "Visiteur",
+    "visitorDesc": "Je viens découvrir les exposants",
+    "exhibitorLabel": "Exposant",
+    "exhibitorDesc": "Je représente une entreprise",
+    "continue": "Continuer",
+    "haveAccount": "Déjà un compte ?",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte",
+    "personalInfo": "Informations personnelles",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Votre nom",
+    "passwordPlaceholder": "8 caractères minimum",
+    "phone": "Téléphone",
+    "companyInfo": "Informations entreprise",
+    "company": "Entreprise",
+    "companyPlaceholder": "Nom de votre société",
+    "sector": "Secteur d'activité",
+    "sectorPlaceholder": "Ex: Technologie, Logistique...",
+    "website": "Site web",
+    "websitePlaceholder": "https://votre-site.com",
+    "location": "Localisation",
+    "city": "Ville",
+    "cityPlaceholder": "Votre ville",
+    "country": "Pays",
+    "countryPlaceholder": "Votre pays",
+    "acceptPrefix": "J'accepte les ",
+    "cgu": "Conditions Générales d'Utilisation",
+    "acceptSuffix": " et la politique de confidentialité.",
+    "submit": "S'inscrire",
+    "submitting": "Création...",
+    "errorRequiredFields": "Veuillez remplir les champs obligatoires (nom, email, mot de passe).",
+    "errorAcceptCgu": "Veuillez accepter les Conditions Générales d'Utilisation.",
+    "errorGeneric": "Erreur lors de l'inscription."
+  },
+  "home": {
+    "greeting": "Bonjour,",
+    "friend": "Ami",
+    "eventOpening": "Ouverture du salon",
+    "days": "Jours",
+    "hours": "Heures",
+    "minutes": "Mins",
+    "seconds": "Secs",
+    "scansToday": "Scans\naujourd'hui",
+    "totalNetwork": "Total\nréseau",
+    "scanNow": "Scanner maintenant",
+    "meetingsJournal": "Journal de Rencontres",
+    "seeAll": "Voir tout",
+    "emptyTitle": "Aucune connexion encore",
+    "emptyBody": "Scannez votre premier badge pour démarrer votre réseau logistique.",
+    "badgeModalTitle": "Demande de Badge",
+    "badgeModalBody": "Votre badge sera disponible deux semaines avant le début de l'événement. Veuillez patienter encore un peu !"
+  },
+  "scanner": {
+    "centerBadge": "Centrez le badge ici",
+    "connecting": "Connexion en cours...",
+    "readyTitle": "Prêt pour une rencontre ?",
+    "readyBody": "Ouvrez votre caméra et scannez le badge de votre futur collaborateur.",
+    "launch": "Lancer le scanner",
+    "later": "Plus tard",
+    "errorNoBadge": "Impossible de récupérer votre numéro de badge.",
+    "unknownBadgeTitle": "Badge inconnu",
+    "unknownBadgeBody": "Ce QR Code ne semble pas être un badge valide.",
+    "selfScanTitle": "Auto-scan",
+    "selfScanBody": "C'est votre propre badge.",
+    "genericError": "Une erreur est survenue.",
+    "alreadyConnectedTitle": "Déjà connectés 🌿",
+    "oops": "Oups",
+    "badgeNotFoundTitle": "Badge introuvable",
+    "badgeNotFoundBody": "Ce badge n'est pas reconnu dans le système.",
+    "info": "Info",
+    "networkErrorTitle": "Erreur réseau",
+    "networkErrorBody": "Code: {{code}} — Vérifiez votre connexion.",
+    "unknownCode": "inconnu",
+    "reconnect": "Veuillez vous reconnecter.",
+    "cameraRequiredTitle": "Caméra requise",
+    "cameraRequiredBody": "Veuillez autoriser l'accès à la caméra dans les réglages de votre téléphone."
+  },
+  "history": {
+    "title": "Journal",
+    "meetings": "{{count}} rencontres",
+    "searchPlaceholder": "Nom, entreprise, rôle...",
+    "noResults": "Aucun résultat",
+    "noMeetingsTitle": "Encore aucune rencontre",
+    "noResultsBody": "Aucun contact correspondant à \"{{query}}\".",
+    "noMeetingsBody": "Votre réseau commencera à grandir ici dès votre premier scan.",
+    "deleteTitle": "Supprimer cette rencontre ?",
+    "deleteBody": "Retirer {{name}} de votre journal ?",
+    "thisContact": "ce contact",
+    "deleteError": "Impossible de supprimer cette entrée."
+  },
+  "exposants": {
+    "title": "Exposants",
+    "searchPlaceholder": "Rechercher un exposant...",
+    "me": "Moi",
+    "myProfile": "Mon profil",
+    "viewDetails": "Voir détails",
+    "emptyTitle": "Aucun exposant trouvé",
+    "emptyBody": "Les exposants apparaîtront ici une fois l'événement configuré.",
+    "yourOrganization": "Votre organisation",
+    "contact": "Contact",
+    "email": "Email",
+    "phone": "Téléphone",
+    "address": "Adresse",
+    "website": "Site web",
+    "about": "À propos",
+    "myTeam": "Mon Équipe",
+    "removeConnection": "Retirer du journal",
+    "removingConnection": "Suppression…",
+    "close": "Fermer",
+    "removeConnectionTitle": "Retirer du journal ?",
+    "removeConnectionBody": "Supprimer la connexion avec {{name}} ?",
+    "removeConnectionError": "Impossible de supprimer cette connexion."
+  },
+  "team": {
+    "title": "Mon Équipe",
+    "searchPlaceholder": "Rechercher un membre...",
+    "count_one": "{{count}} membre",
+    "count_other": "{{count}} membres",
+    "emptyTitle": "Aucun membre pour l'instant",
+    "emptyBody": "Ajoutez votre premier membre d'équipe.",
+    "addMember": "Ajouter un membre",
+    "newMember": "Nouveau membre",
+    "editMember": "Modifier le membre",
+    "fullName": "Nom complet",
+    "fullNamePlaceholder": "Prénom Nom",
+    "email": "Email",
+    "emailPlaceholder": "email@exemple.com",
+    "phone": "Téléphone",
+    "add": "Ajouter",
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "loading": "Chargement...",
+    "removeTitle": "Retirer ce membre",
+    "removeBody": "Voulez-vous retirer {{name}} de l'équipe ?",
+    "removeError": "Impossible de supprimer ce membre.",
+    "errorRequired": "Le nom et l'email sont obligatoires.",
+    "errorAdd": "Erreur lors de l'ajout.",
+    "errorEdit": "Erreur lors de la modification."
+  },
+  "plan": {
+    "title": "Plan du salon",
+    "loading": "Chargement du plan…",
+    "errorTitle": "Impossible de charger le plan",
+    "errorBody": "Vérifiez votre connexion puis réessayez.",
+    "retry": "Réessayer"
+  },
+  "website": {
+    "errorTitle": "Problème de connexion",
+    "errorBody": "Assurez-vous que votre téléphone est connecté à Internet (WiFi ou Data) pour accéder au site.",
+    "retry": "Réessayer"
+  },
+  "networking": {
+    "sharedMoment": "Moment Partagé !",
+    "viewConnectedBody": "Vous êtes connecté avec {{name}} depuis votre journal.",
+    "scanSharedBody": "Vous avez échangé vos profils avec {{name}}. Retrouvez-le dans votre journal.",
+    "organization": "Organisation",
+    "sector": "Secteur",
+    "email": "Email",
+    "phone": "Téléphone",
+    "city": "Ville",
+    "privacyNote": "Vos informations ont également été partagées avec cet interlocuteur.",
+    "scanAnother": "Scanner un autre",
+    "finish": "Terminer",
+    "close": "Fermer"
+  },
+  "profile": {
+    "settings": "Paramètres",
+    "identity": "Mon Identité",
+    "role": "Rôle",
+    "badgeLinked": "Badge Relié",
+    "noBadge": "Aucun badge relié",
+    "myBadgeQr": "Mon Badge QR",
+    "myBadgeQrDesc": "Afficher mon code à scanner",
+    "appearance": "Apparence",
+    "system": "Système",
+    "light": "Clair",
+    "dark": "Sombre",
+    "language": "Langue",
+    "about": "À Propos",
+    "helpSupport": "Aide et Support",
+    "legalMentions": "Mentions Légales",
+    "logout": "Se déconnecter de NetScan",
+    "version": "Version {{version}}",
+    "logoutTitle": "Déconnexion",
+    "logoutBody": "Souhaitez-vous fermer votre session NetScan ?",
+    "stay": "Rester",
+    "logoutConfirm": "Déconnexion",
+    "defaultName": "Utilisateur",
+    "defaultRole": "Visiteur"
+  },
+  "myBadge": {
+    "title": "Mon Badge",
+    "subtitle": "Faites scanner ce code pour vous connecter",
+    "noBadgeTitle": "Aucun badge relié",
+    "noBadgeBody": "Votre badge n'est pas encore disponible. Il sera relié à votre compte avant le début de l'événement."
+  },
+  "terms": {
+    "title": "Conditions Générales",
+    "subtitle": "Mentions légales · NetScan",
+    "lastUpdate": "Dernière mise à jour : 6 juillet 2026",
+    "sections": [
+      {
+        "title": "1. Acceptation des conditions",
+        "body": "En créant un compte ou en utilisant l'application NetScan, vous acceptez sans réserve les présentes conditions générales d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser l'application."
+      },
+      {
+        "title": "2. Objet du service",
+        "body": "NetScan est un outil de mise en réseau par badge QR destiné aux exposants et visiteurs de l'événement Logiterre Expo. Il permet de scanner des badges pour établir des connexions professionnelles, de consulter l'annuaire des exposants et de gérer les membres d'une équipe de stand."
+      },
+      {
+        "title": "3. Compte utilisateur",
+        "body": "Vous êtes responsable de la confidentialité de vos identifiants de connexion et de toute activité effectuée depuis votre compte. Vous vous engagez à fournir des informations exactes lors de votre inscription et à les tenir à jour."
+      },
+      {
+        "title": "4. Données personnelles",
+        "body": "Les données collectées (nom, email, société, rôle, historique de scans) sont utilisées uniquement dans le cadre du fonctionnement de l'application et de l'événement Logiterre Expo. Elles ne sont pas revendues à des tiers. Vous pouvez demander l'accès, la rectification ou la suppression de vos données à tout moment auprès de l'organisateur de l'événement, conformément au RGPD."
+      },
+      {
+        "title": "5. Scan de badges et consentement",
+        "body": "En scannant le badge d'un autre participant, vous créez une connexion visible dans votre historique de mise en réseau. Chaque participant est réputé avoir consenti à ce que son badge soit scanné par d'autres participants dans le cadre de l'événement."
+      },
+      {
+        "title": "6. Utilisation acceptable",
+        "body": "Vous vous engagez à utiliser l'application uniquement à des fins professionnelles légitimes liées à l'événement, à ne pas tenter d'accéder à des comptes ou données ne vous appartenant pas, et à ne pas perturber le fonctionnement du service."
+      },
+      {
+        "title": "7. Propriété intellectuelle",
+        "body": "L'ensemble des éléments de l'application (marque NetScan, interface, contenus, logos) est protégé et ne peut être reproduit sans autorisation préalable."
+      },
+      {
+        "title": "8. Limitation de responsabilité",
+        "body": "NetScan est fourni « en l'état ». L'éditeur ne saurait être tenu responsable des interruptions de service, pertes de données ou dommages indirects résultant de l'utilisation de l'application, dans la limite autorisée par la loi."
+      },
+      {
+        "title": "9. Modification des conditions",
+        "body": "Ces conditions peuvent être mises à jour à tout moment. Les utilisateurs seront informés de toute modification substantielle via l'application. La poursuite de l'utilisation du service vaut acceptation des nouvelles conditions."
+      },
+      {
+        "title": "10. Contact",
+        "body": "Pour toute question relative à ces conditions ou à vos données personnelles, contactez l'organisateur de Logiterre Expo via les canaux de support de l'application."
+      }
+    ]
+  }
+}

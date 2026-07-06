@@ -3,9 +3,13 @@ import { View, Text, ActivityIndicator, Pressable, StyleSheet } from 'react-nati
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { WebView } from 'react-native-webview';
 import { Ionicons } from '@expo/vector-icons';
+import { useTranslation } from 'react-i18next';
 import { getEventInfo } from '../services/api';
+import { useTabBarScroll } from '../context/TabBarContext';
 
 export default function PlanScreen() {
+  const { t } = useTranslation();
+  const tabScroll = useTabBarScroll();
   const insets = useSafeAreaInsets();
   const webRef = useRef(null);
   const [planUrl, setPlanUrl] = useState(null);
@@ -49,8 +53,8 @@ export default function PlanScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="px-6 pt-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-extrabold text-foreground">Plan du salon</Text>
+      <View className="px-4 pt-5 pb-4 flex-row items-center justify-between">
+        <Text className="text-2xl font-extrabold text-foreground">{t('plan.title')}</Text>
         <Pressable onPress={reload} hitSlop={8} className="w-9 h-9 rounded-xl bg-surface items-center justify-center">
           <Ionicons name="refresh-outline" size={18} color="#2db067" />
         </Pressable>
@@ -62,20 +66,20 @@ export default function PlanScreen() {
           <View className="flex-1 items-center justify-center">
             <ActivityIndicator color="#286EAD" size="large" />
             <Text className="mt-3 text-sm text-muted font-semibold">
-              Chargement du plan…
+              {t('plan.loading')}
             </Text>
           </View>
         ) : error || !planUrl ? (
           <View className="flex-1 items-center justify-center px-8">
             <Ionicons name="wifi-outline" size={48} color="#2db067" />
             <Text className="text-base font-bold text-foreground mt-4 mb-2 text-center">
-              Impossible de charger le plan
+              {t('plan.errorTitle')}
             </Text>
             <Text className="text-sm text-muted text-center leading-5 mb-6">
-              Vérifiez votre connexion puis réessayez.
+              {t('plan.errorBody')}
             </Text>
             <Pressable onPress={reload} className="px-6 py-3 bg-accent rounded-2xl">
-              <Text className="text-white font-bold text-sm">Réessayer</Text>
+              <Text className="text-white font-bold text-sm">{t('plan.retry')}</Text>
             </Pressable>
           </View>
         ) : (
@@ -96,6 +100,7 @@ export default function PlanScreen() {
               thirdPartyCookiesEnabled
               originWhitelist={['*']}
               scrollEnabled
+              onScroll={tabScroll.onScroll}
               showsVerticalScrollIndicator={false}
               showsHorizontalScrollIndicator={false}
             />

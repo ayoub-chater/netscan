@@ -1,0 +1,283 @@
+{
+  "common": {
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "remove": "Remove",
+    "close": "Close",
+    "retry": "Retry",
+    "save": "Save",
+    "add": "Add",
+    "error": "Error",
+    "loading": "Loading...",
+    "later": "Later",
+    "ok": "OK",
+    "unknown": "Unknown",
+    "independent": "Independent",
+    "restartTitle": "Restart required",
+    "restartBody": "Please close and reopen the app to apply the new language."
+  },
+  "auth": {
+    "sessionExpiredTitle": "Session expired",
+    "sessionExpiredBody": "You have been logged out automatically."
+  },
+  "login": {
+    "welcome": "Welcome back",
+    "subtitle": "Enter your credentials to continue",
+    "email": "Email",
+    "emailPlaceholder": "your@email.com",
+    "password": "Password",
+    "rememberMe": "Remember me",
+    "signIn": "Sign in",
+    "signingIn": "Signing in...",
+    "noAccount": "Don't have an account yet?",
+    "signUp": "Sign up",
+    "errorEmptyFields": "Please enter your email and password.",
+    "errorInvalidCredentials": "Incorrect credentials. Please try again."
+  },
+  "register": {
+    "iAm": "I am...",
+    "chooseProfile": "Choose your profile to continue",
+    "visitorLabel": "Visitor",
+    "visitorDesc": "I'm here to discover exhibitors",
+    "exhibitorLabel": "Exhibitor",
+    "exhibitorDesc": "I represent a company",
+    "continue": "Continue",
+    "haveAccount": "Already have an account?",
+    "signIn": "Sign in",
+    "createAccount": "Create an account",
+    "personalInfo": "Personal information",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "Your name",
+    "passwordPlaceholder": "8 characters minimum",
+    "phone": "Phone",
+    "companyInfo": "Company information",
+    "company": "Company",
+    "companyPlaceholder": "Your company name",
+    "sector": "Business sector",
+    "sectorPlaceholder": "e.g. Technology, Logistics...",
+    "website": "Website",
+    "websitePlaceholder": "https://your-site.com",
+    "location": "Location",
+    "city": "City",
+    "cityPlaceholder": "Your city",
+    "country": "Country",
+    "countryPlaceholder": "Your country",
+    "acceptPrefix": "I accept the ",
+    "cgu": "Terms and Conditions",
+    "acceptSuffix": " and the privacy policy.",
+    "submit": "Sign up",
+    "submitting": "Creating...",
+    "errorRequiredFields": "Please fill in the required fields (name, email, password).",
+    "errorAcceptCgu": "Please accept the Terms and Conditions.",
+    "errorGeneric": "An error occurred during sign up."
+  },
+  "home": {
+    "greeting": "Hello,",
+    "friend": "Friend",
+    "eventOpening": "Show opening",
+    "days": "Days",
+    "hours": "Hours",
+    "minutes": "Mins",
+    "seconds": "Secs",
+    "scansToday": "Scans\ntoday",
+    "totalNetwork": "Total\nnetwork",
+    "scanNow": "Scan now",
+    "meetingsJournal": "Meetings Log",
+    "seeAll": "See all",
+    "emptyTitle": "No connections yet",
+    "emptyBody": "Scan your first badge to start building your logistics network.",
+    "badgeModalTitle": "Badge Request",
+    "badgeModalBody": "Your badge will be available two weeks before the event starts. Please hold on a little longer!"
+  },
+  "scanner": {
+    "centerBadge": "Center the badge here",
+    "connecting": "Connecting...",
+    "readyTitle": "Ready to meet someone?",
+    "readyBody": "Open your camera and scan the badge of your future collaborator.",
+    "launch": "Launch scanner",
+    "later": "Later",
+    "errorNoBadge": "Unable to retrieve your badge number.",
+    "unknownBadgeTitle": "Unknown badge",
+    "unknownBadgeBody": "This QR Code does not appear to be a valid badge.",
+    "selfScanTitle": "Self-scan",
+    "selfScanBody": "This is your own badge.",
+    "genericError": "An error occurred.",
+    "alreadyConnectedTitle": "Already connected 🌿",
+    "oops": "Oops",
+    "badgeNotFoundTitle": "Badge not found",
+    "badgeNotFoundBody": "This badge is not recognized in the system.",
+    "info": "Info",
+    "networkErrorTitle": "Network error",
+    "networkErrorBody": "Code: {{code}} — Check your connection.",
+    "unknownCode": "unknown",
+    "reconnect": "Please log in again.",
+    "cameraRequiredTitle": "Camera required",
+    "cameraRequiredBody": "Please allow camera access in your phone settings."
+  },
+  "history": {
+    "title": "Log",
+    "meetings": "{{count}} meetings",
+    "searchPlaceholder": "Name, company, role...",
+    "noResults": "No results",
+    "noMeetingsTitle": "No meetings yet",
+    "noResultsBody": "No contact matching \"{{query}}\".",
+    "noMeetingsBody": "Your network will start growing here from your first scan.",
+    "deleteTitle": "Delete this meeting?",
+    "deleteBody": "Remove {{name}} from your log?",
+    "thisContact": "this contact",
+    "deleteError": "Unable to delete this entry."
+  },
+  "exposants": {
+    "title": "Exhibitors",
+    "searchPlaceholder": "Search for an exhibitor...",
+    "me": "Me",
+    "myProfile": "My profile",
+    "viewDetails": "View details",
+    "emptyTitle": "No exhibitor found",
+    "emptyBody": "Exhibitors will appear here once the event is configured.",
+    "yourOrganization": "Your organization",
+    "contact": "Contact",
+    "email": "Email",
+    "phone": "Phone",
+    "address": "Address",
+    "website": "Website",
+    "about": "About",
+    "myTeam": "My Team",
+    "removeConnection": "Remove from log",
+    "removingConnection": "Removing…",
+    "close": "Close",
+    "removeConnectionTitle": "Remove from log?",
+    "removeConnectionBody": "Delete the connection with {{name}}?",
+    "removeConnectionError": "Unable to delete this connection."
+  },
+  "team": {
+    "title": "My Team",
+    "searchPlaceholder": "Search for a member...",
+    "count_one": "{{count}} member",
+    "count_other": "{{count}} members",
+    "emptyTitle": "No members yet",
+    "emptyBody": "Add your first team member.",
+    "addMember": "Add a member",
+    "newMember": "New member",
+    "editMember": "Edit member",
+    "fullName": "Full name",
+    "fullNamePlaceholder": "First Last",
+    "email": "Email",
+    "emailPlaceholder": "email@example.com",
+    "phone": "Phone",
+    "add": "Add",
+    "save": "Save",
+    "cancel": "Cancel",
+    "loading": "Loading...",
+    "removeTitle": "Remove this member",
+    "removeBody": "Do you want to remove {{name}} from the team?",
+    "removeError": "Unable to delete this member.",
+    "errorRequired": "Name and email are required.",
+    "errorAdd": "An error occurred while adding.",
+    "errorEdit": "An error occurred while editing."
+  },
+  "plan": {
+    "title": "Floor plan",
+    "loading": "Loading plan…",
+    "errorTitle": "Unable to load the plan",
+    "errorBody": "Check your connection and try again.",
+    "retry": "Retry"
+  },
+  "website": {
+    "errorTitle": "Connection problem",
+    "errorBody": "Make sure your phone is connected to the Internet (WiFi or Data) to access the site.",
+    "retry": "Retry"
+  },
+  "networking": {
+    "sharedMoment": "Shared Moment!",
+    "viewConnectedBody": "You are connected with {{name}} from your log.",
+    "scanSharedBody": "You have exchanged profiles with {{name}}. Find them in your log.",
+    "organization": "Organization",
+    "sector": "Sector",
+    "email": "Email",
+    "phone": "Phone",
+    "city": "City",
+    "privacyNote": "Your information was also shared with this contact.",
+    "scanAnother": "Scan another",
+    "finish": "Done",
+    "close": "Close"
+  },
+  "profile": {
+    "settings": "Settings",
+    "identity": "My Identity",
+    "role": "Role",
+    "badgeLinked": "Linked Badge",
+    "noBadge": "No badge linked",
+    "myBadgeQr": "My QR Badge",
+    "myBadgeQrDesc": "Show my code to be scanned",
+    "appearance": "Appearance",
+    "system": "System",
+    "light": "Light",
+    "dark": "Dark",
+    "language": "Language",
+    "about": "About",
+    "helpSupport": "Help and Support",
+    "legalMentions": "Legal Notice",
+    "logout": "Log out of NetScan",
+    "version": "Version {{version}}",
+    "logoutTitle": "Log out",
+    "logoutBody": "Do you want to close your NetScan session?",
+    "stay": "Stay",
+    "logoutConfirm": "Log out",
+    "defaultName": "User",
+    "defaultRole": "Visitor"
+  },
+  "myBadge": {
+    "title": "My Badge",
+    "subtitle": "Have this code scanned to connect",
+    "noBadgeTitle": "No badge linked",
+    "noBadgeBody": "Your badge is not available yet. It will be linked to your account before the event starts."
+  },
+  "terms": {
+    "title": "Terms and Conditions",
+    "subtitle": "Legal Notice · NetScan",
+    "lastUpdate": "Last updated: July 6, 2026",
+    "sections": [
+      {
+        "title": "1. Acceptance of terms",
+        "body": "By creating an account or using the NetScan application, you fully accept these terms and conditions of use. If you do not accept these terms, please do not use the application."
+      },
+      {
+        "title": "2. Purpose of the service",
+        "body": "NetScan is a QR badge networking tool intended for exhibitors and visitors of the Logiterre Expo event. It allows you to scan badges to establish professional connections, browse the exhibitor directory, and manage the members of a booth team."
+      },
+      {
+        "title": "3. User account",
+        "body": "You are responsible for the confidentiality of your login credentials and for any activity carried out from your account. You agree to provide accurate information when registering and to keep it up to date."
+      },
+      {
+        "title": "4. Personal data",
+        "body": "The data collected (name, email, company, role, scan history) is used only within the scope of the application and the Logiterre Expo event. It is not resold to third parties. You may request access to, correction of, or deletion of your data at any time from the event organizer, in accordance with the GDPR."
+      },
+      {
+        "title": "5. Badge scanning and consent",
+        "body": "By scanning another participant's badge, you create a connection visible in your networking history. Each participant is deemed to have consented to their badge being scanned by other participants as part of the event."
+      },
+      {
+        "title": "6. Acceptable use",
+        "body": "You agree to use the application only for legitimate professional purposes related to the event, not to attempt to access accounts or data that do not belong to you, and not to disrupt the operation of the service."
+      },
+      {
+        "title": "7. Intellectual property",
+        "body": "All elements of the application (the NetScan brand, interface, content, logos) are protected and may not be reproduced without prior authorization."
+      },
+      {
+        "title": "8. Limitation of liability",
+        "body": "NetScan is provided \"as is\". The publisher cannot be held responsible for service interruptions, data loss, or indirect damages resulting from the use of the application, to the extent permitted by law."
+      },
+      {
+        "title": "9. Changes to the terms",
+        "body": "These terms may be updated at any time. Users will be informed of any substantial change through the application. Continued use of the service constitutes acceptance of the new terms."
+      },
+      {
+        "title": "10. Contact",
+        "body": "For any question regarding these terms or your personal data, contact the Logiterre Expo organizer through the application's support channels."
+      }
+    ]
+  }
+}

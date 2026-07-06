@@ -11,6 +11,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
+import { useTranslation } from 'react-i18next';
 import {
   Alert as HeroAlert,
   Avatar,
@@ -33,6 +34,7 @@ const StyledIonicons = withUniwind(Ionicons);
 // ── Form inside BottomSheet (must be inside BottomSheet context) ───────────────
 
 function MemberForm({ defaultValues, onSubmit, loading, errorMsg, submitLabel }) {
+  const { t } = useTranslation();
   const { onFocus, onBlur } = useBottomSheetAwareHandlers();
   const [name, setName] = useState(defaultValues?.name || '');
   const [email, setEmail] = useState(defaultValues?.email || '');
@@ -52,9 +54,9 @@ function MemberForm({ defaultValues, onSubmit, loading, errorMsg, submitLabel })
       ) : null}
 
       <TextField isRequired>
-        <Label>Nom complet</Label>
+        <Label>{t('team.fullName')}</Label>
         <Input
-          placeholder="Prénom Nom"
+          placeholder={t('team.fullNamePlaceholder')}
           autoCapitalize="words"
           value={name}
           onChangeText={setName}
@@ -65,9 +67,9 @@ function MemberForm({ defaultValues, onSubmit, loading, errorMsg, submitLabel })
       </TextField>
 
       <TextField isRequired>
-        <Label>Email</Label>
+        <Label>{t('team.email')}</Label>
         <Input
-          placeholder="email@exemple.com"
+          placeholder={t('team.emailPlaceholder')}
           keyboardType="email-address"
           autoCapitalize="none"
           value={email}
@@ -79,7 +81,7 @@ function MemberForm({ defaultValues, onSubmit, loading, errorMsg, submitLabel })
       </TextField>
 
       <TextField>
-        <Label>Téléphone</Label>
+        <Label>{t('team.phone')}</Label>
         <Input
           placeholder="+212 6 00 00 00 00"
           keyboardType="phone-pad"
@@ -98,7 +100,7 @@ function MemberForm({ defaultValues, onSubmit, loading, errorMsg, submitLabel })
         onPress={handleSubmit}
         isDisabled={loading}
       >
-        <Button.Label>{loading ? 'Chargement...' : submitLabel}</Button.Label>
+        <Button.Label>{loading ? t('team.loading') : submitLabel}</Button.Label>
       </Button>
     </View>
   );
@@ -155,6 +157,7 @@ function MemberCard({ item, onEdit, onDelete }) {
 // ── Main screen ───────────────────────────────────────────────────────────────
 
 export default function TeamScreen({ navigation }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [members, setMembers] = useState([]);
   const [companyName, setCompanyName] = useState('');
@@ -202,19 +205,19 @@ export default function TeamScreen({ navigation }) {
 
   const handleDelete = (item) => {
     Alert.alert(
-      'Retirer ce membre',
-      `Voulez-vous retirer ${item.name} de l'équipe ?`,
+      t('team.removeTitle'),
+      t('team.removeBody', { name: item.name }),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Retirer',
+          text: t('common.remove'),
           style: 'destructive',
           onPress: async () => {
             try {
               await deleteTeamMember(item.id);
               setMembers(prev => prev.filter(m => m.id !== item.id));
             } catch {
-              Alert.alert('Erreur', 'Impossible de supprimer ce membre.');
+              Alert.alert(t('common.error'), t('team.removeError'));
             }
           },
         },
@@ -224,7 +227,7 @@ export default function TeamScreen({ navigation }) {
 
   const handleAddSubmit = async ({ name, email, phone }) => {
     if (!name.trim() || !email.trim()) {
-      setAddError("Le nom et l'email sont obligatoires.");
+      setAddError(t('team.errorRequired'));
       return;
     }
     setAddLoading(true);
@@ -243,7 +246,7 @@ export default function TeamScreen({ navigation }) {
         (e?.response?.data?.errors
           ? Object.values(e.response.data.errors)[0][0]
           : null) ||
-        "Erreur lors de l'ajout.";
+        t('team.errorAdd');
       setAddError(msg);
     } finally {
       setAddLoading(false);
@@ -253,7 +256,7 @@ export default function TeamScreen({ navigation }) {
   const handleEditSubmit = async ({ name, email, phone }) => {
     if (!editMember) return;
     if (!name.trim() || !email.trim()) {
-      setEditError("Le nom et l'email sont obligatoires.");
+      setEditError(t('team.errorRequired'));
       return;
     }
     setEditLoading(true);
@@ -272,7 +275,7 @@ export default function TeamScreen({ navigation }) {
         (e?.response?.data?.errors
           ? Object.values(e.response.data.errors)[0][0]
           : null) ||
-        'Erreur lors de la modification.';
+        t('team.errorEdit');
       setEditError(msg);
     } finally {
       setEditLoading(false);
@@ -284,7 +287,7 @@ export default function TeamScreen({ navigation }) {
       <StatusBar style="light" />
 
       {/* ── Header ─────────────────────────────────── */}
-      <View className="px-6 pt-5 pb-4">
+      <View className="px-4 pt-5 pb-4">
         <View className="flex-row items-center mb-4" style={{ gap: 12 }}>
           <Pressable
             onPress={() => navigation.goBack()}
@@ -294,7 +297,7 @@ export default function TeamScreen({ navigation }) {
             <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
           </Pressable>
           <View className="flex-1">
-            <Text className="text-xl font-extrabold text-foreground">Mon Équipe</Text>
+            <Text className="text-xl font-extrabold text-foreground">{t('team.title')}</Text>
             {companyName ? (
               <Text className="text-xs text-muted mt-0.5">{companyName}</Text>
             ) : null}
@@ -314,7 +317,7 @@ export default function TeamScreen({ navigation }) {
         <SearchField value={search} onChange={onSearchChange}>
           <SearchField.Group>
             <SearchField.SearchIcon />
-            <SearchField.Input placeholder="Rechercher un membre..." />
+            <SearchField.Input placeholder={t('team.searchPlaceholder')} />
             <SearchField.ClearButton />
           </SearchField.Group>
         </SearchField>
@@ -323,13 +326,13 @@ export default function TeamScreen({ navigation }) {
       {/* Count */}
       <View className="px-8 pb-2">
         <Text className="text-[10px] font-bold text-muted uppercase tracking-widest">
-          {members.length} membre{members.length !== 1 ? 's' : ''}
+          {t('team.count', { count: members.length })}
         </Text>
       </View>
 
       {/* ── List ───────────────────────────────────── */}
       {loading ? (
-        <View className="px-6" style={{ gap: 12 }}>
+        <View className="px-4" style={{ gap: 12 }}>
           {[0, 1, 2].map(i => (
             <Card key={i}>
               <Card.Body>
@@ -354,10 +357,10 @@ export default function TeamScreen({ navigation }) {
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="people-outline" size={48} color="#2db067" />
           <Text className="text-base font-bold text-foreground mt-4 mb-2">
-            Aucun membre pour l'instant
+            {t('team.emptyTitle')}
           </Text>
           <Text className="text-sm text-muted text-center leading-5 mb-6">
-            Ajoutez votre premier membre d'équipe.
+            {t('team.emptyBody')}
           </Text>
           <Button
             variant="primary"
@@ -368,14 +371,14 @@ export default function TeamScreen({ navigation }) {
               setShowAdd(true);
             }}
           >
-            <Button.Label>Ajouter un membre</Button.Label>
+            <Button.Label>{t('team.addMember')}</Button.Label>
           </Button>
         </View>
       ) : (
         <FlatList
           data={members}
           keyExtractor={item => String(item.id)}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           renderItem={({ item }) => (
             <MemberCard item={item} onEdit={m => { setEditError(null); setEditMember(m); }} onDelete={handleDelete} />
@@ -396,19 +399,19 @@ export default function TeamScreen({ navigation }) {
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content keyboardBehavior="extend" keyboardShouldPersistTaps="handled">
-            <View className="px-6 pt-2 pb-8">
+            <View className="px-4 pt-2 pb-8">
               <View className="flex-row items-center mb-6" style={{ gap: 12 }}>
                 <View className="w-10 h-10 rounded-xl bg-accent-soft items-center justify-center">
                   <Ionicons name="person-add-outline" size={18} color="#2db067" />
                 </View>
-                <BottomSheet.Title>Nouveau membre</BottomSheet.Title>
+                <BottomSheet.Title>{t('team.newMember')}</BottomSheet.Title>
               </View>
               <MemberForm
                 defaultValues={null}
                 onSubmit={handleAddSubmit}
                 loading={addLoading}
                 errorMsg={addError}
-                submitLabel="Ajouter"
+                submitLabel={t('team.add')}
               />
               <Button
                 variant="tertiary"
@@ -419,7 +422,7 @@ export default function TeamScreen({ navigation }) {
                   setAddError(null);
                 }}
               >
-                <Button.Label>Annuler</Button.Label>
+                <Button.Label>{t('team.cancel')}</Button.Label>
               </Button>
             </View>
           </BottomSheet.Content>
@@ -439,13 +442,13 @@ export default function TeamScreen({ navigation }) {
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content keyboardBehavior="extend" keyboardShouldPersistTaps="handled">
-            <View className="px-6 pt-2 pb-8">
+            <View className="px-4 pt-2 pb-8">
               <View className="flex-row items-center mb-6" style={{ gap: 12 }}>
                 <View className="w-10 h-10 rounded-xl bg-surface items-center justify-center border border-separator">
                   <Ionicons name="pencil-outline" size={18} color="#2db067" />
                 </View>
                 <View>
-                  <BottomSheet.Title>Modifier le membre</BottomSheet.Title>
+                  <BottomSheet.Title>{t('team.editMember')}</BottomSheet.Title>
                   {editMember?.name ? (
                     <BottomSheet.Description>{editMember.name}</BottomSheet.Description>
                   ) : null}
@@ -458,7 +461,7 @@ export default function TeamScreen({ navigation }) {
                   onSubmit={handleEditSubmit}
                   loading={editLoading}
                   errorMsg={editError}
-                  submitLabel="Enregistrer"
+                  submitLabel={t('team.save')}
                 />
               ) : null}
               <Button
@@ -470,7 +473,7 @@ export default function TeamScreen({ navigation }) {
                   setEditError(null);
                 }}
               >
-                <Button.Label>Annuler</Button.Label>
+                <Button.Label>{t('team.cancel')}</Button.Label>
               </Button>
             </View>
           </BottomSheet.Content>

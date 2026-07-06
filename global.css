@@ -34,8 +34,8 @@
     --default-foreground: oklch(0.3 0.04 240);
 
     /* Accent: Steel Blue — #286EAD logistics blue */
-    --accent: oklch(0.52 0.10 231);
-    --accent-foreground: oklch(0.97 0.005 231);
+    --accent: oklch(0.525 0.121 249);
+    --accent-foreground: oklch(0.97 0.005 249);
 
     /* Form Fields */
     --field-background: oklch(0.96 0.008 240);
@@ -87,8 +87,8 @@
     --default-foreground: oklch(0.85 0.015 240);
 
     /* Accent: Steel Blue — #286EAD */
-    --accent: oklch(0.52 0.10 231);
-    --accent-foreground: oklch(0.97 0.005 231);
+    --accent: oklch(0.525 0.121 249);
+    --accent-foreground: oklch(0.97 0.005 249);
 
     /* Form Fields */
     --field-background: oklch(0.20 0.028 240);

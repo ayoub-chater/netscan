@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Button,
@@ -29,6 +30,7 @@ import { useAuth } from '../context/AuthContext';
 const StyledIonicons = withUniwind(Ionicons);
 
 export default function LoginScreen({ navigation }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
@@ -42,7 +44,7 @@ export default function LoginScreen({ navigation }) {
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
-      setErrorMsg('Veuillez saisir votre email et mot de passe.');
+      setErrorMsg(t('login.errorEmptyFields'));
       return;
     }
     setLoading(true);
@@ -52,7 +54,7 @@ export default function LoginScreen({ navigation }) {
     } catch (e) {
       const msg =
         e?.response?.data?.message ||
-        'Identifiants incorrects. Veuillez réessayer.';
+        t('login.errorInvalidCredentials');
       setErrorMsg(msg);
     } finally {
       setLoading(false);
@@ -94,10 +96,10 @@ export default function LoginScreen({ navigation }) {
             {/* Heading */}
             <View className="gap-1">
               <Text className="text-lg font-bold text-foreground">
-                Bienvenue de retour
+                {t('login.welcome')}
               </Text>
               <Text className="text-sm text-muted">
-                Saisissez vos identifiants pour continuer
+                {t('login.subtitle')}
               </Text>
             </View>
 
@@ -113,9 +115,9 @@ export default function LoginScreen({ navigation }) {
 
             {/* Email field */}
             <TextField isRequired isInvalid={!!errorMsg}>
-              <Label>Email</Label>
+              <Label>{t('login.email')}</Label>
               <Input
-                placeholder="votre@email.fr"
+                placeholder={t('login.emailPlaceholder')}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -130,7 +132,7 @@ export default function LoginScreen({ navigation }) {
 
             {/* Password field */}
             <TextField isRequired isInvalid={!!errorMsg}>
-              <Label>Mot de passe</Label>
+              <Label>{t('login.password')}</Label>
               <View className="w-full flex-row items-center">
                 <Input
                   value={password}
@@ -167,7 +169,7 @@ export default function LoginScreen({ navigation }) {
                 <Checkbox className="mt-0.5" />
               </ControlField.Indicator>
               <Label className="text-sm font-medium text-muted">
-                Se souvenir de moi
+                {t('login.rememberMe')}
               </Label>
             </ControlField>
 
@@ -180,20 +182,20 @@ export default function LoginScreen({ navigation }) {
               isDisabled={loading}
             >
               <Button.Label>
-                {loading ? 'Connexion...' : 'Se connecter'}
+                {loading ? t('login.signingIn') : t('login.signIn')}
               </Button.Label>
             </Button>
           </Surface>
 
           {/* Register link */}
           <View className="flex-row justify-center items-center mt-8 gap-1 flex-wrap">
-            <Text className="text-sm text-muted">Pas encore de compte ?</Text>
+            <Text className="text-sm text-muted">{t('login.noAccount')}</Text>
             <LinkButton
               size="sm"
               onPress={() => navigation.navigate('Register')}
             >
               <LinkButton.Label className="text-accent font-semibold">
-                S'inscrire
+                {t('login.signUp')}
               </LinkButton.Label>
             </LinkButton>
           </View>

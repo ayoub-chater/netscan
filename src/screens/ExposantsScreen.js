@@ -13,6 +13,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
+import { useTranslation } from 'react-i18next';
 import {
   Avatar,
   BottomSheet,
@@ -28,12 +29,14 @@ import {
 } from 'heroui-native';
 import { getExposants, networkingHistory, deleteNetworkingRecord } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useTabBarScroll } from '../context/TabBarContext';
 
 const StyledIonicons = withUniwind(Ionicons);
 
 const CATEGORIES = ['Tous', 'Tech', 'Startups', 'AI', 'Finance', 'Santé', 'Logistique'];
 
 function ExposantCard({ item, isMine, onPress }) {
+  const { t } = useTranslation();
   const displayName = item.company || item.name;
   const initials = displayName ? displayName.slice(0, 2).toUpperCase() : '??';
 
@@ -56,7 +59,7 @@ function ExposantCard({ item, isMine, onPress }) {
           </View>
           {isMine ? (
             <Chip size="sm" variant="soft" color="success">
-              <Chip.Label>Moi</Chip.Label>
+              <Chip.Label>{t('exposants.me')}</Chip.Label>
             </Chip>
           ) : null}
         </View>
@@ -75,7 +78,7 @@ function ExposantCard({ item, isMine, onPress }) {
           className="rounded-xl flex-1"
           onPress={() => onPress(item)}
         >
-          <Button.Label>{isMine ? 'Mon profil' : 'Voir détails'}</Button.Label>
+          <Button.Label>{isMine ? t('exposants.myProfile') : t('exposants.viewDetails')}</Button.Label>
         </Button>
       </Card.Footer>
     </Card>
@@ -83,6 +86,8 @@ function ExposantCard({ item, isMine, onPress }) {
 }
 
 export default function ExposantsScreen({ navigation }) {
+  const { t } = useTranslation();
+  const tabScroll = useTabBarScroll();
   const insets = useSafeAreaInsets();
   const { exhibitorId, badgeNumber } = useAuth();
   const [connectedMap, setConnectedMap] = useState(new Map()); // email → scan_id
@@ -155,12 +160,12 @@ export default function ExposantsScreen({ navigation }) {
     if (!scanId) return;
 
     Alert.alert(
-      'Retirer du journal ?',
-      `Supprimer la connexion avec ${sheetExposant.company || sheetExposant.name} ?`,
+      t('exposants.removeConnectionTitle'),
+      t('exposants.removeConnectionBody', { name: sheetExposant.company || sheetExposant.name }),
       [
-        { text: 'Annuler', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Supprimer',
+          text: t('common.delete'),
           style: 'destructive',
           onPress: async () => {
             setDeletingConnection(true);
@@ -173,7 +178,7 @@ export default function ExposantsScreen({ navigation }) {
               });
               setSheetOpen(false);
             } catch {
-              Alert.alert('Erreur', 'Impossible de supprimer cette connexion.');
+              Alert.alert(t('common.error'), t('exposants.removeConnectionError'));
             } finally {
               setDeletingConnection(false);
             }
@@ -217,25 +222,25 @@ export default function ExposantsScreen({ navigation }) {
     ? [
         sheetExposant.email && {
           icon: 'mail-outline',
-          label: 'Email',
+          label: t('exposants.email'),
           value: sheetExposant.email,
           onPress: () => Linking.openURL(`mailto:${sheetExposant.email}`),
         },
         sheetExposant.phone && {
           icon: 'call-outline',
-          label: 'Téléphone',
+          label: t('exposants.phone'),
           value: sheetExposant.phone,
           onPress: () => Linking.openURL(`tel:${sheetExposant.phone}`),
         },
         sheetExposant.address && {
           icon: 'location-outline',
-          label: 'Adresse',
+          label: t('exposants.address'),
           value: sheetExposant.address,
           onPress: null,
         },
         sheetExposant.website && {
           icon: 'globe-outline',
-          label: 'Site web',
+          label: t('exposants.website'),
           value: sheetExposant.website,
           onPress: () => openLink(sheetExposant.website),
         },
@@ -247,8 +252,8 @@ export default function ExposantsScreen({ navigation }) {
       <StatusBar style="light" />
 
       {/* ── Header ─────────────────────────────────── */}
-      <View className="px-6 pt-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-extrabold text-foreground">Exposants</Text>
+      <View className="px-4 pt-5 pb-4 flex-row items-center justify-between">
+        <Text className="text-2xl font-extrabold text-foreground">{t('exposants.title')}</Text>
         {exposants.length > 0 && (
           <Chip size="sm" variant="soft" color="default">
             <Chip.Label>{exposants.length}</Chip.Label>
@@ -257,18 +262,18 @@ export default function ExposantsScreen({ navigation }) {
       </View>
 
       {/* ── Search ─────────────────────────────────── */}
-      <View className="px-6 mb-4">
+      <View className="px-4 mb-4">
         <SearchField value={search} onChange={setSearch}>
           <SearchField.Group>
             <SearchField.SearchIcon />
-            <SearchField.Input placeholder="Rechercher un exposant..." />
+            <SearchField.Input placeholder={t('exposants.searchPlaceholder')} />
             <SearchField.ClearButton />
           </SearchField.Group>
         </SearchField>
       </View>
 
       {/* ── Category Filter ────────────────────────── */}
-      <View className="px-6 mb-4">
+      <View className="px-4 mb-4">
         <TagGroup
           selectionMode="single"
           selectedKeys={new Set([activeCategory])}
@@ -288,7 +293,7 @@ export default function ExposantsScreen({ navigation }) {
 
       {/* ── Exposant List ──────────────────────────── */}
       {loading ? (
-        <View className="px-6" style={{ gap: 12 }}>
+        <View className="px-4" style={{ gap: 12 }}>
           {[0, 1, 2].map(i => (
             <Card key={i}>
               <Card.Body>
@@ -317,9 +322,10 @@ export default function ExposantsScreen({ navigation }) {
         </View>
       ) : (
         <FlatList
+          {...tabScroll}
           data={filtered}
           keyExtractor={item => String(item.id)}
-          contentContainerStyle={{ paddingHorizontal: 24, paddingBottom: 120 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#286EAD" />
@@ -331,10 +337,10 @@ export default function ExposantsScreen({ navigation }) {
             <View className="items-center py-16">
               <Ionicons name="business-outline" size={48} color="#2db067" />
               <Text className="text-base font-bold text-foreground mt-4 mb-2">
-                Aucun exposant trouvé
+                {t('exposants.emptyTitle')}
               </Text>
               <Text className="text-sm text-muted text-center leading-5 px-8">
-                Les exposants apparaîtront ici une fois l'événement configuré.
+                {t('exposants.emptyBody')}
               </Text>
             </View>
           }
@@ -358,7 +364,7 @@ export default function ExposantsScreen({ navigation }) {
           >
             <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
               {/* Hero */}
-              <View className="items-center pt-3 pb-6 px-6 border-b border-separator">
+              <View className="items-center pt-3 pb-6 px-4 border-b border-separator">
                 <Avatar size="lg" color={isMine ? 'success' : 'default'} variant="soft">
                   <Avatar.Fallback>{sheetInitials}</Avatar.Fallback>
                 </Avatar>
@@ -373,7 +379,7 @@ export default function ExposantsScreen({ navigation }) {
                   ) : null}
                   {isMine ? (
                     <Chip size="sm" variant="soft" color="success">
-                      <Chip.Label>Votre organisation</Chip.Label>
+                      <Chip.Label>{t('exposants.yourOrganization')}</Chip.Label>
                     </Chip>
                   ) : null}
                 </View>
@@ -381,9 +387,9 @@ export default function ExposantsScreen({ navigation }) {
 
               {/* Contact info */}
               {contactItems.length > 0 ? (
-                <View className="px-6 pt-5">
+                <View className="px-4 pt-5">
                   <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
-                    Contact
+                    {t('exposants.contact')}
                   </Text>
                   <ListGroup>
                     {contactItems.map((ci, index) => (
@@ -411,9 +417,9 @@ export default function ExposantsScreen({ navigation }) {
 
               {/* Description */}
               {sheetExposant?.description ? (
-                <View className="px-6 pt-5">
+                <View className="px-4 pt-5">
                   <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
-                    À propos
+                    {t('exposants.about')}
                   </Text>
                   <Surface className="rounded-xl p-4">
                     <Text className="text-sm text-muted leading-5">
@@ -424,7 +430,7 @@ export default function ExposantsScreen({ navigation }) {
               ) : null}
 
               {/* Action buttons */}
-              <View className="px-6 pt-6" style={{ gap: 12 }}>
+              <View className="px-4 pt-6" style={{ gap: 12 }}>
                 {isMine ? (
                   <Button
                     variant="primary"
@@ -435,7 +441,7 @@ export default function ExposantsScreen({ navigation }) {
                       navigation.navigate('Team');
                     }}
                   >
-                    <Button.Label>Mon Équipe</Button.Label>
+                    <Button.Label>{t('exposants.myTeam')}</Button.Label>
                   </Button>
                 ) : null}
                 {isConnected && !isMine ? (
@@ -452,7 +458,7 @@ export default function ExposantsScreen({ navigation }) {
                       color="#EF4444"
                     />
                     <Button.Label style={{ color: '#EF4444' }}>
-                      {deletingConnection ? 'Suppression…' : 'Retirer du journal'}
+                      {deletingConnection ? t('exposants.removingConnection') : t('exposants.removeConnection')}
                     </Button.Label>
                   </Button>
                 ) : null}
@@ -462,7 +468,7 @@ export default function ExposantsScreen({ navigation }) {
                   className="rounded-2xl"
                   onPress={() => setSheetOpen(false)}
                 >
-                  <Button.Label>Fermer</Button.Label>
+                  <Button.Label>{t('exposants.close')}</Button.Label>
                 </Button>
               </View>
             </BottomSheetScrollView>

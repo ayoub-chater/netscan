@@ -3,16 +3,19 @@ import React, { useEffect, useRef, useState } from 'react';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, StyleSheet } from 'react-native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StatusBar } from 'expo-status-bar';
 import { HeroUINativeProvider } from 'heroui-native';
-import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
 
+import './src/i18n';
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
+import { LanguageProvider } from './src/context/LanguageContext';
+import { TabBarProvider } from './src/context/TabBarContext';
+import FloatingTabBar from './src/components/FloatingTabBar';
 import ConnectionToast from './src/components/ConnectionToast';
 
 const navigationRef = createNavigationContainerRef();
@@ -28,69 +31,17 @@ import ProfileScreen from './src/screens/ProfileScreen';
 import WebsiteScreen from './src/screens/WebsiteScreen';
 import ExposantsScreen from './src/screens/ExposantsScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
+import TermsScreen from './src/screens/TermsScreen';
+import MyBadgeScreen from './src/screens/MyBadgeScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
-function TabBarIcon({ name, focused, color }) {
-  return (
-    <View style={[
-      styles.iconContainer,
-      focused && styles.iconContainerActive,
-    ]}>
-      <Ionicons name={name} size={24} color={color} style={{ textAlign: 'center' }} />
-    </View>
-  );
-}
-
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        headerShown: false,
-        tabBarSafeAreaInsets: { bottom: 0 },
-        tabBarStyle: {
-          backgroundColor: '#286EAD',
-          height: 70,
-          position: 'absolute',
-          bottom: 8,
-          marginHorizontal: 16,
-          borderRadius: 35,
-          borderTopWidth: 0,
-          elevation: 16,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: 8 },
-          shadowOpacity: 0.35,
-          shadowRadius: 16,
-          paddingBottom: 0,
-        },
-        tabBarItemStyle: {
-          height: 70,
-          alignItems: 'center',
-          justifyContent: 'center',
-          paddingTop: 4,
-          marginTop: 0,
-        },
-        tabBarIconStyle: {
-          width: 50,
-          height: 50,
-          alignItems: 'center',
-          justifyContent: 'center',
-        },
-        tabBarActiveTintColor: '#FFFFFF',
-        tabBarInactiveTintColor: 'rgba(255,255,255,0.55)',
-        tabBarShowLabel: false,
-        tabBarIcon: ({ focused, color }) => {
-          let icon;
-          if (route.name === 'Dashboard') icon = focused ? 'home' : 'home-outline';
-          else if (route.name === 'ScannerTab') icon = focused ? 'qr-code' : 'qr-code-outline';
-          else if (route.name === 'Plan') icon = focused ? 'map' : 'map-outline';
-          else if (route.name === 'Expos') icon = focused ? 'globe' : 'globe-outline';
-          else if (route.name === 'Exposants') icon = focused ? 'storefront' : 'storefront-outline';
-          else if (route.name === 'Détails') icon = focused ? 'person' : 'person-outline';
-          return <TabBarIcon name={icon} focused={focused} color={color} />;
-        },
-      })}
+      screenOptions={{ headerShown: false }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
     >
       <Tab.Screen name="Dashboard" component={HomeScreen} />
       <Tab.Screen name="ScannerTab" component={ScannerScreen} />
@@ -98,6 +49,9 @@ function MainTabs() {
       <Tab.Screen name="Expos" component={WebsiteScreen} />
       <Tab.Screen name="Exposants" component={ExposantsScreen} />
       <Tab.Screen name="Détails" component={ProfileScreen} />
+      {/* Sub-page kept inside the tabs so the floating navbar stays visible.
+          Hidden from the bar itself via the ICONS filter in FloatingTabBar. */}
+      <Tab.Screen name="History" component={HistoryScreen} />
     </Tab.Navigator>
   );
 }
@@ -116,7 +70,7 @@ function ConnectionNotifications() {
     const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data;
       if (data?.type === 'connection' && navigationRef.isReady()) {
-        navigationRef.navigate('History');
+        navigationRef.navigate('Main', { screen: 'History' });
       }
     });
 
@@ -132,7 +86,7 @@ function ConnectionNotifications() {
       onHide={() => setToast(null)}
       onPress={() => {
         setToast(null);
-        if (navigationRef.isReady()) navigationRef.navigate('History');
+        if (navigationRef.isReady()) navigationRef.navigate('Main', { screen: 'History' });
       }}
     />
   );
@@ -157,7 +111,8 @@ function NavigationRoot() {
               <Stack.Screen name="Main" component={MainTabs} />
               <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'fullScreenModal' }} />
               <Stack.Screen name="Team" component={TeamScreen} />
-              <Stack.Screen name="History" component={HistoryScreen} />
+              <Stack.Screen name="Terms" component={TermsScreen} />
+              <Stack.Screen name="MyBadge" component={MyBadgeScreen} />
             </>
           )}
         </Stack.Navigator>
@@ -175,29 +130,20 @@ function ThemedStatusBar() {
 export default function App() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <HeroUINativeProvider>
-        <ThemeProvider>
-          <SafeAreaProvider>
-            <AuthProvider>
-              <ThemedStatusBar />
-              <NavigationRoot />
-            </AuthProvider>
-          </SafeAreaProvider>
-        </ThemeProvider>
-      </HeroUINativeProvider>
+      <LanguageProvider>
+        <HeroUINativeProvider>
+          <ThemeProvider>
+            <SafeAreaProvider>
+              <AuthProvider>
+                <TabBarProvider>
+                  <ThemedStatusBar />
+                  <NavigationRoot />
+                </TabBarProvider>
+              </AuthProvider>
+            </SafeAreaProvider>
+          </ThemeProvider>
+        </HeroUINativeProvider>
+      </LanguageProvider>
     </GestureHandlerRootView>
   );
 }
-
-const styles = StyleSheet.create({
-  iconContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    width: 46,
-    height: 46,
-    borderRadius: 23,
-  },
-  iconContainerActive: {
-    backgroundColor: 'rgba(255,255,255,0.18)',
-  },
-});

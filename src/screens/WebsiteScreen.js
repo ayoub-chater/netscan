@@ -2,25 +2,29 @@ import React, { useState } from 'react';
 import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
 import { WebView } from 'react-native-webview';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
 import { StatusBar } from 'expo-status-bar';
+import { useTabBarScroll } from '../context/TabBarContext';
 
 export default function WebsiteScreen() {
+    const { t } = useTranslation();
+    const tabScroll = useTabBarScroll();
     const insets = useSafeAreaInsets();
     const [key, setKey] = useState(0);
 
     const renderError = () => (
         <View style={styles.errorContainer}>
             <Text style={styles.errorEmoji}>🌐</Text>
-            <Text style={styles.errorTitle}>Problème de connexion</Text>
+            <Text style={styles.errorTitle}>{t('website.errorTitle')}</Text>
             <Text style={styles.errorSub}>
-                Assurez-vous que votre téléphone est connecté à Internet (WiFi ou Data) pour accéder au site.
+                {t('website.errorBody')}
             </Text>
             <TouchableOpacity
                 style={styles.retryBtn}
                 onPress={() => setKey(k => k + 1)}
             >
-                <Text style={styles.retryText}>Réessayer</Text>
+                <Text style={styles.retryText}>{t('website.retry')}</Text>
             </TouchableOpacity>
         </View>
     );
@@ -32,6 +36,7 @@ export default function WebsiteScreen() {
                 key={key}
                 source={{ uri: 'https://logiterre-expo.com/' }}
                 style={styles.webview}
+                onScroll={tabScroll.onScroll}
                 startInLoadingState={true}
                 renderLoading={() => (
                     <View style={styles.loading}>

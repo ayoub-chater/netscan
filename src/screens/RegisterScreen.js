@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
+import { useTranslation } from 'react-i18next';
 import {
   Alert,
   Button,
@@ -34,20 +35,21 @@ const ROLES = [
   {
     key: 'Visiteur',
     icon: 'person-outline',
-    label: 'Visiteur',
-    desc: 'Je viens découvrir les exposants',
+    labelKey: 'register.visitorLabel',
+    descKey: 'register.visitorDesc',
     chipColor: 'default',
   },
   {
     key: 'Exposant',
     icon: 'storefront-outline',
-    label: 'Exposant',
-    desc: 'Je représente une entreprise',
+    labelKey: 'register.exhibitorLabel',
+    descKey: 'register.exhibitorDesc',
     chipColor: 'accent',
   },
 ];
 
 export default function RegisterScreen({ navigation }) {
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { applySession } = useAuth();
   const [step, setStep] = useState('role');
@@ -68,11 +70,11 @@ export default function RegisterScreen({ navigation }) {
 
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password) {
-      setErrorMsg('Veuillez remplir les champs obligatoires (nom, email, mot de passe).');
+      setErrorMsg(t('register.errorRequiredFields'));
       return;
     }
     if (!acceptCgu) {
-      setErrorMsg("Veuillez accepter les Conditions Générales d'Utilisation.");
+      setErrorMsg(t('register.errorAcceptCgu'));
       return;
     }
     setLoading(true);
@@ -97,7 +99,7 @@ export default function RegisterScreen({ navigation }) {
         (e?.response?.data?.errors
           ? Object.values(e.response.data.errors)[0][0]
           : null) ||
-        "Erreur lors de l'inscription.";
+        t('register.errorGeneric');
       setErrorMsg(msg);
     } finally {
       setLoading(false);
@@ -144,10 +146,10 @@ export default function RegisterScreen({ navigation }) {
 
           {/* Title */}
           <Text className="text-2xl font-extrabold text-foreground text-center mb-1">
-            Je suis...
+            {t('register.iAm')}
           </Text>
           <Text className="text-sm text-muted text-center mb-8">
-            Choisissez votre profil pour continuer
+            {t('register.chooseProfile')}
           </Text>
 
           {/* Step dots */}
@@ -194,9 +196,9 @@ export default function RegisterScreen({ navigation }) {
                         isSelected ? 'text-accent' : 'text-foreground',
                       ].join(' ')}
                     >
-                      {r.label}
+                      {t(r.labelKey)}
                     </Text>
-                    <Text className="text-xs text-muted">{r.desc}</Text>
+                    <Text className="text-xs text-muted">{t(r.descKey)}</Text>
                   </View>
 
                   {/* Selected checkmark */}
@@ -224,15 +226,15 @@ export default function RegisterScreen({ navigation }) {
             onPress={() => role && setStep('form')}
             isDisabled={!role}
           >
-            <Button.Label>Continuer</Button.Label>
+            <Button.Label>{t('register.continue')}</Button.Label>
           </Button>
 
           {/* Login link */}
           <View className="flex-row justify-center items-center mt-6 gap-1">
-            <Text className="text-sm text-muted">Déjà un compte ?</Text>
+            <Text className="text-sm text-muted">{t('register.haveAccount')}</Text>
             <LinkButton size="sm" onPress={() => navigation.goBack()}>
               <LinkButton.Label className="text-accent font-semibold">
-                Se connecter
+                {t('register.signIn')}
               </LinkButton.Label>
             </LinkButton>
           </View>
@@ -297,7 +299,7 @@ export default function RegisterScreen({ navigation }) {
 
           {/* Title */}
           <Text className="text-2xl font-extrabold text-foreground mb-6">
-            Créer un compte
+            {t('register.createAccount')}
           </Text>
 
           {/* Error */}
@@ -313,12 +315,12 @@ export default function RegisterScreen({ navigation }) {
           {/* Personal Info */}
           <Surface className="rounded-2xl px-5 py-5 gap-4 mb-4">
             <Text className="text-sm font-semibold text-muted mb-1">
-              Informations personnelles
+              {t('register.personalInfo')}
             </Text>
             <TextField isRequired>
-              <Label>Nom complet</Label>
+              <Label>{t('register.fullName')}</Label>
               <Input
-                placeholder="Votre nom"
+                placeholder={t('register.fullNamePlaceholder')}
                 autoCapitalize="words"
                 value={name}
                 onChangeText={setName}
@@ -326,9 +328,9 @@ export default function RegisterScreen({ navigation }) {
               />
             </TextField>
             <TextField isRequired>
-              <Label>Email</Label>
+              <Label>{t('login.email')}</Label>
               <Input
-                placeholder="votre@email.fr"
+                placeholder={t('login.emailPlaceholder')}
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoComplete="email"
@@ -338,9 +340,9 @@ export default function RegisterScreen({ navigation }) {
               />
             </TextField>
             <TextField isRequired>
-              <Label>Mot de passe</Label>
+              <Label>{t('login.password')}</Label>
               <Input
-                placeholder="8 caractères minimum"
+                placeholder={t('register.passwordPlaceholder')}
                 secureTextEntry
                 autoCapitalize="none"
                 value={password}
@@ -349,7 +351,7 @@ export default function RegisterScreen({ navigation }) {
               />
             </TextField>
             <TextField>
-              <Label>Téléphone</Label>
+              <Label>{t('register.phone')}</Label>
               <Input
                 placeholder="+212 6 00 00 00 00"
                 keyboardType="phone-pad"
@@ -364,30 +366,30 @@ export default function RegisterScreen({ navigation }) {
           {role === 'Exposant' && (
             <Surface className="rounded-2xl px-5 py-5 gap-4 mb-4">
               <Text className="text-sm font-semibold text-muted mb-1">
-                Informations entreprise
+                {t('register.companyInfo')}
               </Text>
               <TextField>
-                <Label>Entreprise</Label>
+                <Label>{t('register.company')}</Label>
                 <Input
-                  placeholder="Nom de votre société"
+                  placeholder={t('register.companyPlaceholder')}
                   value={company}
                   onChangeText={setCompany}
                   editable={!loading}
                 />
               </TextField>
               <TextField>
-                <Label>Secteur d'activité</Label>
+                <Label>{t('register.sector')}</Label>
                 <Input
-                  placeholder="Ex: Technologie, Logistique..."
+                  placeholder={t('register.sectorPlaceholder')}
                   value={secteur}
                   onChangeText={setSecteur}
                   editable={!loading}
                 />
               </TextField>
               <TextField>
-                <Label>Site web</Label>
+                <Label>{t('register.website')}</Label>
                 <Input
-                  placeholder="https://votre-site.com"
+                  placeholder={t('register.websitePlaceholder')}
                   autoCapitalize="none"
                   keyboardType="url"
                   value={website}
@@ -401,14 +403,14 @@ export default function RegisterScreen({ navigation }) {
           {/* Location */}
           <Surface className="rounded-2xl px-5 py-5 gap-4 mb-4">
             <Text className="text-sm font-semibold text-muted mb-1">
-              Localisation
+              {t('register.location')}
             </Text>
             <View className="flex-row gap-3">
               <View className="flex-1">
                 <TextField>
-                  <Label>Ville</Label>
+                  <Label>{t('register.city')}</Label>
                   <Input
-                    placeholder="Votre ville"
+                    placeholder={t('register.cityPlaceholder')}
                     value={ville}
                     onChangeText={setVille}
                     editable={!loading}
@@ -417,9 +419,9 @@ export default function RegisterScreen({ navigation }) {
               </View>
               <View className="flex-1">
                 <TextField>
-                  <Label>Pays</Label>
+                  <Label>{t('register.country')}</Label>
                   <Input
-                    placeholder="Votre pays"
+                    placeholder={t('register.countryPlaceholder')}
                     value={pays}
                     onChangeText={setPays}
                     editable={!loading}
@@ -439,15 +441,14 @@ export default function RegisterScreen({ navigation }) {
               <Checkbox className="mt-0.5" />
             </ControlField.Indicator>
             <View className="flex-row flex-wrap flex-1">
-              <Text className="text-sm text-muted">J'accepte les </Text>
+              <Text className="text-sm text-muted">{t('register.acceptPrefix')}</Text>
               <LinkButton size="sm">
                 <LinkButton.Label className="text-accent">
-                  Conditions Générales d'Utilisation
+                  {t('register.cgu')}
                 </LinkButton.Label>
               </LinkButton>
               <Text className="text-sm text-muted">
-                {' '}
-                et la politique de confidentialité.
+                {t('register.acceptSuffix')}
               </Text>
             </View>
           </ControlField>
@@ -461,7 +462,7 @@ export default function RegisterScreen({ navigation }) {
             isDisabled={loading}
           >
             <Button.Label>
-              {loading ? 'Création...' : "S'inscrire"}
+              {loading ? t('register.submitting') : t('register.submit')}
             </Button.Label>
           </Button>
         </ScrollView>

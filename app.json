@@ -5,7 +5,7 @@
     "version": "1.5.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "dark",
+    "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "splash": {
       "image": "./assets/splash-icon.png",
@@ -54,7 +54,8 @@
           "icon": "./assets/icon.png",
           "color": "#2e368e"
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "web": {
       "favicon": "./assets/favicon.png"
