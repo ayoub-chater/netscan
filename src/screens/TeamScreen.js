@@ -6,7 +6,6 @@ import {
   Alert,
   Pressable,
 } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -284,7 +283,6 @@ export default function TeamScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <StatusBar style="light" />
 
       {/* ── Header ─────────────────────────────────── */}
       <View className="px-4 pt-5 pb-4">

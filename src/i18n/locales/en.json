@@ -218,10 +218,10 @@
     "about": "About",
     "helpSupport": "Help and Support",
     "legalMentions": "Legal Notice",
-    "logout": "Log out of NetScan",
+    "logout": "Log out of LOGITTERRE",
     "version": "Version {{version}}",
     "logoutTitle": "Log out",
-    "logoutBody": "Do you want to close your NetScan session?",
+    "logoutBody": "Do you want to close your LOGITTERRE session?",
     "stay": "Stay",
     "logoutConfirm": "Log out",
     "defaultName": "User",
@@ -235,16 +235,16 @@
   },
   "terms": {
     "title": "Terms and Conditions",
-    "subtitle": "Legal Notice · NetScan",
+    "subtitle": "Legal Notice · LOGITTERRE",
     "lastUpdate": "Last updated: July 6, 2026",
     "sections": [
       {
         "title": "1. Acceptance of terms",
-        "body": "By creating an account or using the NetScan application, you fully accept these terms and conditions of use. If you do not accept these terms, please do not use the application."
+        "body": "By creating an account or using the LOGITTERRE application, you fully accept these terms and conditions of use. If you do not accept these terms, please do not use the application."
       },
       {
         "title": "2. Purpose of the service",
-        "body": "NetScan is a QR badge networking tool intended for exhibitors and visitors of the Logiterre Expo event. It allows you to scan badges to establish professional connections, browse the exhibitor directory, and manage the members of a booth team."
+        "body": "LOGITTERRE is a QR badge networking tool intended for exhibitors and visitors of the Logiterre Expo event. It allows you to scan badges to establish professional connections, browse the exhibitor directory, and manage the members of a booth team."
       },
       {
         "title": "3. User account",
@@ -264,11 +264,11 @@
       },
       {
         "title": "7. Intellectual property",
-        "body": "All elements of the application (the NetScan brand, interface, content, logos) are protected and may not be reproduced without prior authorization."
+        "body": "All elements of the application (the LOGITTERRE brand, interface, content, logos) are protected and may not be reproduced without prior authorization."
       },
       {
         "title": "8. Limitation of liability",
-        "body": "NetScan is provided \"as is\". The publisher cannot be held responsible for service interruptions, data loss, or indirect damages resulting from the use of the application, to the extent permitted by law."
+        "body": "LOGITTERRE is provided \"as is\". The publisher cannot be held responsible for service interruptions, data loss, or indirect damages resulting from the use of the application, to the extent permitted by law."
       },
       {
         "title": "9. Changes to the terms",

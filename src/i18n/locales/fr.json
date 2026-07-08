@@ -218,10 +218,10 @@
     "about": "À Propos",
     "helpSupport": "Aide et Support",
     "legalMentions": "Mentions Légales",
-    "logout": "Se déconnecter de NetScan",
+    "logout": "Se déconnecter de LOGITTERRE",
     "version": "Version {{version}}",
     "logoutTitle": "Déconnexion",
-    "logoutBody": "Souhaitez-vous fermer votre session NetScan ?",
+    "logoutBody": "Souhaitez-vous fermer votre session LOGITTERRE ?",
     "stay": "Rester",
     "logoutConfirm": "Déconnexion",
     "defaultName": "Utilisateur",
@@ -235,16 +235,16 @@
   },
   "terms": {
     "title": "Conditions Générales",
-    "subtitle": "Mentions légales · NetScan",
+    "subtitle": "Mentions légales · LOGITTERRE",
     "lastUpdate": "Dernière mise à jour : 6 juillet 2026",
     "sections": [
       {
         "title": "1. Acceptation des conditions",
-        "body": "En créant un compte ou en utilisant l'application NetScan, vous acceptez sans réserve les présentes conditions générales d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser l'application."
+        "body": "En créant un compte ou en utilisant l'application LOGITTERRE, vous acceptez sans réserve les présentes conditions générales d'utilisation. Si vous n'acceptez pas ces conditions, veuillez ne pas utiliser l'application."
       },
       {
         "title": "2. Objet du service",
-        "body": "NetScan est un outil de mise en réseau par badge QR destiné aux exposants et visiteurs de l'événement Logiterre Expo. Il permet de scanner des badges pour établir des connexions professionnelles, de consulter l'annuaire des exposants et de gérer les membres d'une équipe de stand."
+        "body": "LOGITTERRE est un outil de mise en réseau par badge QR destiné aux exposants et visiteurs de l'événement Logiterre Expo. Il permet de scanner des badges pour établir des connexions professionnelles, de consulter l'annuaire des exposants et de gérer les membres d'une équipe de stand."
       },
       {
         "title": "3. Compte utilisateur",
@@ -264,11 +264,11 @@
       },
       {
         "title": "7. Propriété intellectuelle",
-        "body": "L'ensemble des éléments de l'application (marque NetScan, interface, contenus, logos) est protégé et ne peut être reproduit sans autorisation préalable."
+        "body": "L'ensemble des éléments de l'application (marque LOGITTERRE, interface, contenus, logos) est protégé et ne peut être reproduit sans autorisation préalable."
       },
       {
         "title": "8. Limitation de responsabilité",
-        "body": "NetScan est fourni « en l'état ». L'éditeur ne saurait être tenu responsable des interruptions de service, pertes de données ou dommages indirects résultant de l'utilisation de l'application, dans la limite autorisée par la loi."
+        "body": "LOGITTERRE est fourni « en l'état ». L'éditeur ne saurait être tenu responsable des interruptions de service, pertes de données ou dommages indirects résultant de l'utilisation de l'application, dans la limite autorisée par la loi."
       },
       {
         "title": "9. Modification des conditions",

@@ -175,8 +175,6 @@ export default function ScannerScreen({ navigation }) {
       ) : (
         // ── Welcome / loading state ─────────────────────────────────────────
         <View className="flex-1 bg-background items-center justify-center px-8">
-          <StatusBar style="light" />
-
           {loading ? (
             <>
               <ActivityIndicator color={BLUE} size="large" />

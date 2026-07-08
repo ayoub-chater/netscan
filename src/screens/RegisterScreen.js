@@ -9,7 +9,6 @@ import {
   Pressable,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
 import { useTranslation } from 'react-i18next';
@@ -110,7 +109,6 @@ export default function RegisterScreen({ navigation }) {
   if (step === 'role') {
     return (
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-        <StatusBar style="light" />
         <ScrollView
           contentContainerStyle={{
             flexGrow: 1,
@@ -248,7 +246,6 @@ export default function RegisterScreen({ navigation }) {
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <StatusBar style="light" />
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         className="flex-1"
