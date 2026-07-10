@@ -40,11 +40,19 @@ export async function registerForPushNotificationsAsync() {
     if (finalStatus !== 'granted') return null;
 
     const projectId = Constants.expoConfig?.extra?.eas?.projectId;
-    const { data: token } = await Notifications.getExpoPushTokenAsync({ projectId });
+    let token;
+    try {
+        ({ data: token } = await Notifications.getExpoPushTokenAsync({ projectId }));
+    } catch (err) {
+        console.warn('[push] getExpoPushTokenAsync failed', Platform.OS, err);
+        return null;
+    }
 
     try {
         await registerDevice(token, Platform.OS);
-    } catch { }
+    } catch (err) {
+        console.warn('[push] registerDevice failed', Platform.OS, err);
+    }
 
     return token;
 }
