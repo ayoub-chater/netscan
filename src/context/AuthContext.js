@@ -70,13 +70,14 @@ export function AuthProvider({ children }) {
                         setEventInfo(storedEventInfo);
 
                         let badge = session.badgeNumber;
-                        if (!badge) {
-                            try {
-                                const meRes = await fetchMe();
-                                badge = meRes?.data?.badge_number || null;
-                                if (badge) await saveBadgeNumber(badge);
-                            } catch { }
-                        }
+                        try {
+                            const meRes = await fetchMe();
+                            const fresh = meRes?.data?.badge_number || null;
+                            if (fresh) {
+                                badge = fresh;
+                                await saveBadgeNumber(fresh);
+                            }
+                        } catch { }
                         setBadgeNumber(badge);
                     } else {
                         await clearSession();

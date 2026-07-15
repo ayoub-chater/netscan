@@ -65,7 +65,7 @@ export const getEventInfo = () =>
 export const logout = () =>
     api.post(ENDPOINTS.logout, {}).catch(() => { });
 
-export const fetchMe = () => api.get(ENDPOINTS.me);
+export const fetchMe = () => api.get(ENDPOINTS.me, { params: { event_slug: EVENT_SLUG } });
 
 // ─── Badge lookup ─────────────────────────────────────────────────────────────
 export const lookupBadge = (badgeNumber) => api.get(ENDPOINTS.badgeLookup(badgeNumber));
