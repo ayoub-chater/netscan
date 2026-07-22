@@ -8,6 +8,7 @@ import { withUniwind } from 'uniwind';
 import QRCode from 'react-native-qrcode-svg';
 import { Chip } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
+import PendingApproval from '../components/PendingApproval';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -19,12 +20,12 @@ export default function MyBadgeScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { scanner, badgeNumber } = useAuth();
+  const { scanner, badgeNumber, isApproved } = useAuth();
 
   const scannerName = scanner?.name || t('profile.defaultName');
   const scannerRole = scanner?.role || t('profile.defaultRole');
   const isExposant = scannerRole.toLowerCase() === 'exposant';
-  const hasBadge = !!badgeNumber;
+  const hasBadge = !!badgeNumber && isApproved;
   const qrValue = hasBadge
     ? `${BADGE_BASE_URL}/${encodeURIComponent(badgeNumber)}`
     : null;
@@ -56,7 +57,9 @@ export default function MyBadgeScreen() {
 
       {/* ── Content ────────────────────────────────── */}
       <View className="flex-1 items-center justify-center px-4" style={{ gap: 24 }}>
-        {hasBadge ? (
+        {!isApproved ? (
+          <PendingApproval />
+        ) : hasBadge ? (
           <>
             {/* QR card — always light for reliable scanning in any theme */}
             <View

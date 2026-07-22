@@ -49,6 +49,8 @@
     "fullName": "Full name",
     "fullNamePlaceholder": "Your name",
     "passwordPlaceholder": "8 characters minimum",
+    "confirmPassword": "Confirm password",
+    "confirmPasswordPlaceholder": "Re-enter your password",
     "phone": "Phone",
     "companyInfo": "Company information",
     "company": "Company",
@@ -69,7 +71,30 @@
     "submitting": "Creating...",
     "errorRequiredFields": "Please fill in the required fields (name, email, password).",
     "errorAcceptCgu": "Please accept the Terms and Conditions.",
+    "errorPasswordMismatch": "The passwords do not match.",
+    "errorPasswordTooShort": "The password must be at least 8 characters.",
+    "close": "Close",
     "errorGeneric": "An error occurred during sign up."
+  },
+  "pending": {
+    "title": "Account awaiting approval",
+    "body": "Your exhibitor account is being reviewed by the organizer. Once approved, you'll get your badge QR and can scan other participants and browse exhibitors.",
+    "refresh": "Check status",
+    "checking": "Checking...",
+    "badge": "Pending"
+  },
+  "editProfile": {
+    "title": "Edit profile",
+    "subtitle": "Name, phone, website and photo",
+    "changePhoto": "Tap to change your photo",
+    "changeLogo": "Tap to change your logo",
+    "emailLocked": "Email cannot be changed here.",
+    "save": "Save changes",
+    "saving": "Saving...",
+    "errorName": "Please enter your name.",
+    "errorGeneric": "Could not save your profile. Please try again.",
+    "permissionTitle": "Permission required",
+    "permissionBody": "Allow access to your photos to change your image."
   },
   "home": {
     "greeting": "Hello,",

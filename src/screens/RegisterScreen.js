@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   Platform,
   Image,
   Pressable,
+  Modal,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -50,16 +52,23 @@ const ROLES = [
 export default function RegisterScreen({ navigation }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const scrollRef = useRef(null);
   const { applySession } = useAuth();
   const [step, setStep] = useState('role');
   const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [acceptCgu, setAcceptCgu] = useState(false);
+  const [termsOpen, setTermsOpen] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+  const [confirmVisible, setConfirmVisible] = useState(false);
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [company, setCompany] = useState('');
   const [ville, setVille] = useState('');
@@ -67,9 +76,24 @@ export default function RegisterScreen({ navigation }) {
   const [secteur, setSecteur] = useState('');
   const [website, setWebsite] = useState('');
 
+  // Scroll the error into view when it appears (error alert sits at the top of the form)
+  useEffect(() => {
+    if (errorMsg) {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }
+  }, [errorMsg]);
+
   const handleRegister = async () => {
     if (!name.trim() || !email.trim() || !password) {
       setErrorMsg(t('register.errorRequiredFields'));
+      return;
+    }
+    if (password.length < 8) {
+      setErrorMsg(t('register.errorPasswordTooShort'));
+      return;
+    }
+    if (password !== confirmPassword) {
+      setErrorMsg(t('register.errorPasswordMismatch'));
       return;
     }
     if (!acceptCgu) {
@@ -136,8 +160,8 @@ export default function RegisterScreen({ navigation }) {
           {/* Logo */}
           <View className="items-center mb-10">
             <Image
-              source={require('../../assets/logiterre-logo.png')}
-              style={{ width: 160, height: 55 }}
+              source={require('../../assets/Logo_Logiterre-colored.webp')}
+              style={{ width: 180, height: 73 }}
               resizeMode="contain"
             />
           </View>
@@ -251,8 +275,11 @@ export default function RegisterScreen({ navigation }) {
         className="flex-1"
       >
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={{
-            paddingHorizontal: 24,
+            flexGrow: 1,
+            justifyContent: isTablet ? 'center' : 'flex-start',
+            paddingHorizontal: isTablet ? '15%' : 24,
             paddingTop: 24,
             paddingBottom: 48,
           }}
@@ -338,14 +365,53 @@ export default function RegisterScreen({ navigation }) {
             </TextField>
             <TextField isRequired>
               <Label>{t('login.password')}</Label>
-              <Input
-                placeholder={t('register.passwordPlaceholder')}
-                secureTextEntry
-                autoCapitalize="none"
-                value={password}
-                onChangeText={setPassword}
-                editable={!loading}
-              />
+              <View className="w-full flex-row items-center">
+                <Input
+                  placeholder={t('register.passwordPlaceholder')}
+                  className="flex-1 pr-11"
+                  secureTextEntry={!passwordVisible}
+                  autoCapitalize="none"
+                  value={password}
+                  onChangeText={setPassword}
+                  editable={!loading}
+                />
+                <Pressable
+                  className="absolute right-3.5 p-1"
+                  onPress={() => setPasswordVisible(v => !v)}
+                  hitSlop={8}
+                >
+                  <StyledIonicons
+                    name={passwordVisible ? 'eye-outline' : 'eye-off-outline'}
+                    size={18}
+                    className="text-muted"
+                  />
+                </Pressable>
+              </View>
+            </TextField>
+            <TextField isRequired>
+              <Label>{t('register.confirmPassword')}</Label>
+              <View className="w-full flex-row items-center">
+                <Input
+                  placeholder={t('register.confirmPasswordPlaceholder')}
+                  className="flex-1 pr-11"
+                  secureTextEntry={!confirmVisible}
+                  autoCapitalize="none"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                  editable={!loading}
+                />
+                <Pressable
+                  className="absolute right-3.5 p-1"
+                  onPress={() => setConfirmVisible(v => !v)}
+                  hitSlop={8}
+                >
+                  <StyledIonicons
+                    name={confirmVisible ? 'eye-outline' : 'eye-off-outline'}
+                    size={18}
+                    className="text-muted"
+                  />
+                </Pressable>
+              </View>
             </TextField>
             <TextField>
               <Label>{t('register.phone')}</Label>
@@ -432,18 +498,18 @@ export default function RegisterScreen({ navigation }) {
           <ControlField
             isSelected={acceptCgu}
             onSelectedChange={setAcceptCgu}
-            className="items-start mt-2 mb-6"
+            className="flex-row items-start mt-2 mb-6"
           >
             <ControlField.Indicator>
-              <Checkbox className="mt-0.5" />
+              <Checkbox className="border-2 border-muted" />
             </ControlField.Indicator>
-            <View className="flex-row flex-wrap flex-1">
+            <View className="flex-1 flex-row flex-wrap items-center">
               <Text className="text-sm text-muted">{t('register.acceptPrefix')}</Text>
-              <LinkButton size="sm">
-                <LinkButton.Label className="text-accent">
+              <Pressable onPress={() => setTermsOpen(true)} hitSlop={4}>
+                <Text className="text-sm font-semibold text-accent underline">
                   {t('register.cgu')}
-                </LinkButton.Label>
-              </LinkButton>
+                </Text>
+              </Pressable>
               <Text className="text-sm text-muted">
                 {t('register.acceptSuffix')}
               </Text>
@@ -464,6 +530,76 @@ export default function RegisterScreen({ navigation }) {
           </Button>
         </ScrollView>
       </KeyboardAvoidingView>
+
+      {/* Terms & Conditions modal */}
+      <Modal
+        visible={termsOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTermsOpen(false)}
+        statusBarTranslucent
+      >
+        <View
+          className="flex-1 justify-center px-5"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+        >
+          <View
+            className="bg-background rounded-3xl overflow-hidden"
+            style={{ maxHeight: '80%' }}
+          >
+            {/* Modal header */}
+            <View className="flex-row items-center justify-between px-5 pt-5 pb-3 border-b border-separator">
+              <View className="flex-1 pr-3">
+                <Text className="text-lg font-extrabold text-foreground">
+                  {t('terms.title')}
+                </Text>
+                <Text className="text-xs text-muted mt-0.5">
+                  {t('terms.subtitle')}
+                </Text>
+              </View>
+              <Pressable
+                onPress={() => setTermsOpen(false)}
+                className="w-9 h-9 rounded-full bg-surface items-center justify-center"
+                hitSlop={8}
+              >
+                <StyledIonicons name="close" size={20} className="text-foreground" />
+              </Pressable>
+            </View>
+
+            <ScrollView
+              contentContainerStyle={{ padding: 20, gap: 18 }}
+              showsVerticalScrollIndicator={false}
+            >
+              <Text className="text-xs text-muted">{t('terms.lastUpdate')}</Text>
+              {(() => {
+                const sections = t('terms.sections', { returnObjects: true });
+                return (Array.isArray(sections) ? sections : []).map(section => (
+                  <View key={section.title} style={{ gap: 6 }}>
+                    <Text className="text-base font-bold text-foreground">
+                      {section.title}
+                    </Text>
+                    <Text className="text-sm text-muted leading-5">
+                      {section.body}
+                    </Text>
+                  </View>
+                ));
+              })()}
+            </ScrollView>
+
+            {/* Modal footer */}
+            <View className="px-5 py-4 border-t border-separator">
+              <Button
+                variant="primary"
+                size="md"
+                className="rounded-2xl"
+                onPress={() => setTermsOpen(false)}
+              >
+                <Button.Label>{t('register.close')}</Button.Label>
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }

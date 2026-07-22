@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,7 @@ import {
   Platform,
   Image,
   Pressable,
+  useWindowDimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
@@ -31,6 +32,9 @@ const StyledIonicons = withUniwind(Ionicons);
 export default function LoginScreen({ navigation }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
+  const isTablet = width >= 768;
+  const scrollRef = useRef(null);
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -40,6 +44,13 @@ export default function LoginScreen({ navigation }) {
   const [errorMsg, setErrorMsg] = useState(null);
 
   const accentFgColor = useThemeColor('accent-foreground');
+
+  // Scroll the error into view when it appears (error alert sits at the top of the form)
+  useEffect(() => {
+    if (errorMsg) {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }
+  }, [errorMsg]);
 
   const handleLogin = async () => {
     if (!email.trim() || !password) {
@@ -68,9 +79,11 @@ export default function LoginScreen({ navigation }) {
         keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 50}
       >
         <ScrollView
+          ref={scrollRef}
           contentContainerStyle={{
             flexGrow: 1,
-            paddingHorizontal: 24,
+            justifyContent: isTablet ? 'center' : 'flex-start',
+            paddingHorizontal: isTablet ? '15%' : 24,
             paddingTop: 40,
             paddingBottom: 40,
           }}
@@ -80,8 +93,8 @@ export default function LoginScreen({ navigation }) {
           {/* Wordmark */}
           <View className="items-center mb-12">
             <Image
-              source={require('../../assets/logiterre-logo.png')}
-              style={{ width: 180, height: 60 }}
+              source={require('../../assets/Logo_Logiterre-colored.webp')}
+              style={{ width: 200, height: 82 }}
               resizeMode="contain"
             />
             {/* Amber divider */}
@@ -164,7 +177,7 @@ export default function LoginScreen({ navigation }) {
               className="items-center"
             >
               <ControlField.Indicator>
-                <Checkbox className="mt-0.5" />
+                <Checkbox className="mt-0.5 border-2 border-muted" />
               </ControlField.Indicator>
               <Label className="text-sm font-medium text-muted">
                 {t('login.rememberMe')}

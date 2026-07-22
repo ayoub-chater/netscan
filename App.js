@@ -33,6 +33,7 @@ import ExposantsScreen from './src/screens/ExposantsScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import TermsScreen from './src/screens/TermsScreen';
 import MyBadgeScreen from './src/screens/MyBadgeScreen';
+import EditProfileScreen from './src/screens/EditProfileScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -113,6 +114,7 @@ function NavigationRoot() {
               <Stack.Screen name="Team" component={TeamScreen} />
               <Stack.Screen name="Terms" component={TermsScreen} />
               <Stack.Screen name="MyBadge" component={MyBadgeScreen} />
+              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
             </>
           )}
         </Stack.Navigator>

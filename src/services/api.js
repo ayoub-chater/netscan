@@ -91,6 +91,24 @@ export const deleteNetworkingRecord = (scanId, badgeNumber) =>
 // ─── Exposants ────────────────────────────────────────────────────────────────
 export const getExposants = () => api.get(ENDPOINTS.exposants);
 
+// ─── Profile ──────────────────────────────────────────────────────────────────
+export const getProfile = () => api.get(ENDPOINTS.profile);
+
+// data: { name, phone, website, company, image?, logo? }
+// image/logo are { uri, name, type } objects from expo-image-picker.
+export const updateProfile = (data) => {
+    const form = new FormData();
+    ['name', 'phone', 'website', 'company', 'ville', 'pays', 'secteur'].forEach((key) => {
+        if (data[key] !== undefined && data[key] !== null) form.append(key, data[key]);
+    });
+    if (data.image) form.append('image', data.image);
+    if (data.logo) form.append('logo', data.logo);
+    return api.post(ENDPOINTS.profile, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
+    });
+};
+
 // ─── Push notification devices ────────────────────────────────────────────────
 export const registerDevice = (expoPushToken, platform) =>
     api.post(ENDPOINTS.devicesRegister, { expo_push_token: expoPushToken, platform });

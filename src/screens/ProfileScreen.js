@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
+  Image,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import {
@@ -37,7 +38,14 @@ const APP_VERSION = '1.2.0';
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { scanner, badgeNumber, signOut } = useAuth();
+  const { scanner, badgeNumber, signOut, isApproved, refreshProfile } = useAuth();
+
+  // Refresh profile whenever the screen regains focus (approval status, edits).
+  useFocusEffect(
+    useCallback(() => {
+      refreshProfile();
+    }, [])
+  );
   const { themeMode, setThemeMode } = useTheme();
   const { language, setLanguage } = useLanguage();
   const tabScroll = useTabBarScroll();
@@ -50,6 +58,10 @@ export default function ProfileScreen() {
   const scannerRole = scanner?.role || t('profile.defaultRole');
   const isExposant = scannerRole.toLowerCase() === 'exposant';
   const initial = scannerName[0]?.toUpperCase() || '?';
+  const profileImage = isExposant
+    ? scanner?.exhibitor_logo || scanner?.image
+    : scanner?.image;
+  const isPending = isExposant && !isApproved;
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -67,19 +79,52 @@ export default function ProfileScreen() {
 
         {/* ── Profile Card ─────────────────────────── */}
         <View className="mx-4 mb-8 bg-surface rounded-2xl px-5 py-5 flex-row items-center" style={{ gap: 16 }}>
-          <Avatar size="lg" color={isExposant ? 'success' : 'default'} variant="soft">
-            <Avatar.Fallback>{initial}</Avatar.Fallback>
-          </Avatar>
+          {profileImage ? (
+            <Image
+              source={{ uri: profileImage }}
+              style={{ width: 56, height: 56, borderRadius: 28 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <Avatar size="lg" color={isExposant ? 'success' : 'default'} variant="soft">
+              <Avatar.Fallback>{initial}</Avatar.Fallback>
+            </Avatar>
+          )}
           <View className="flex-1" style={{ gap: 4 }}>
             <Text className="text-lg font-extrabold text-foreground">{scannerName}</Text>
             {scannerEmail ? (
               <Text className="text-sm text-muted">{scannerEmail}</Text>
             ) : null}
-            <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-              <Chip.Label>{scannerRole}</Chip.Label>
-            </Chip>
+            <View className="flex-row items-center" style={{ gap: 6 }}>
+              <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
+                <Chip.Label>{scannerRole}</Chip.Label>
+              </Chip>
+              {isPending ? (
+                <Chip size="sm" variant="soft" color="warning">
+                  <Chip.Label>{t('pending.badge')}</Chip.Label>
+                </Chip>
+              ) : null}
+            </View>
           </View>
         </View>
+
+        {/* ── Edit Profile ─────────────────────────── */}
+        <ListGroup className="mx-4 mb-6">
+          <ListGroup.Item onPress={() => navigation.navigate('EditProfile')}>
+            <ListGroup.ItemPrefix>
+              <Ionicons name="create-outline" size={18} color="#286EAD" />
+            </ListGroup.ItemPrefix>
+            <ListGroup.ItemContent>
+              <ListGroup.ItemTitle>{t('editProfile.title')}</ListGroup.ItemTitle>
+              <ListGroup.ItemDescription>
+                {t('editProfile.subtitle')}
+              </ListGroup.ItemDescription>
+            </ListGroup.ItemContent>
+            <ListGroup.ItemSuffix>
+              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+            </ListGroup.ItemSuffix>
+          </ListGroup.Item>
+        </ListGroup>
 
         {/* ── Identity Section ─────────────────────── */}
         <Text className="text-[10px] font-bold text-muted uppercase tracking-widest px-6 mb-2">

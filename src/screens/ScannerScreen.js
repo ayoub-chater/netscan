@@ -25,6 +25,7 @@ import { Button, Surface } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { networkingScan } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
+import PendingApproval from '../components/PendingApproval';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -34,7 +35,7 @@ const BLUE = '#286EAD';
 
 export default function ScannerScreen({ navigation }) {
   const { t } = useTranslation();
-  const { badgeNumber } = useAuth();
+  const { badgeNumber, isApproved } = useAuth();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -80,6 +81,12 @@ export default function ScannerScreen({ navigation }) {
     const now = Date.now();
     if (now - lastScanRef.current < 3000) return;
     lastScanRef.current = now;
+
+    if (!isApproved) {
+      Alert.alert(t('pending.title'), t('pending.body'));
+      setScanning(false);
+      return;
+    }
 
     if (!badgeNumber) {
       Alert.alert(t('common.error'), t('scanner.errorNoBadge'));
@@ -175,7 +182,9 @@ export default function ScannerScreen({ navigation }) {
       ) : (
         // ── Welcome / loading state ─────────────────────────────────────────
         <View className="flex-1 bg-background items-center justify-center px-8">
-          {loading ? (
+          {!isApproved ? (
+            <PendingApproval />
+          ) : loading ? (
             <>
               <ActivityIndicator color={BLUE} size="large" />
               <Text className="mt-4 text-base text-muted font-semibold">

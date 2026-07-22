@@ -19,6 +19,7 @@ export const ENDPOINTS = {
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,
     networkingDelete: (id, badge) => `${BASE_URL}/networking/history/${id}?badge_number=${encodeURIComponent(badge)}`,
     exposants: `${BASE_URL}/exposants`,
+    profile: `${BASE_URL}/profile`,
     devicesRegister: `${BASE_URL}/devices/register`,
     devicesUnregister: `${BASE_URL}/devices/unregister`,
     register: `${BASE_URL}/register`,

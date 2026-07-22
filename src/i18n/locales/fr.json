@@ -49,6 +49,8 @@
     "fullName": "Nom complet",
     "fullNamePlaceholder": "Votre nom",
     "passwordPlaceholder": "8 caractères minimum",
+    "confirmPassword": "Confirmer le mot de passe",
+    "confirmPasswordPlaceholder": "Ressaisissez votre mot de passe",
     "phone": "Téléphone",
     "companyInfo": "Informations entreprise",
     "company": "Entreprise",
@@ -69,7 +71,30 @@
     "submitting": "Création...",
     "errorRequiredFields": "Veuillez remplir les champs obligatoires (nom, email, mot de passe).",
     "errorAcceptCgu": "Veuillez accepter les Conditions Générales d'Utilisation.",
+    "errorPasswordMismatch": "Les mots de passe ne correspondent pas.",
+    "errorPasswordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
+    "close": "Fermer",
     "errorGeneric": "Erreur lors de l'inscription."
+  },
+  "pending": {
+    "title": "Compte en attente de validation",
+    "body": "Votre compte exposant est en cours de vérification par l'organisateur. Une fois validé, vous obtiendrez votre QR de badge et pourrez scanner les participants et consulter les exposants.",
+    "refresh": "Vérifier le statut",
+    "checking": "Vérification...",
+    "badge": "En attente"
+  },
+  "editProfile": {
+    "title": "Modifier le profil",
+    "subtitle": "Nom, téléphone, site web et photo",
+    "changePhoto": "Touchez pour changer votre photo",
+    "changeLogo": "Touchez pour changer votre logo",
+    "emailLocked": "L'email ne peut pas être modifié ici.",
+    "save": "Enregistrer",
+    "saving": "Enregistrement...",
+    "errorName": "Veuillez saisir votre nom.",
+    "errorGeneric": "Impossible d'enregistrer votre profil. Réessayez.",
+    "permissionTitle": "Autorisation requise",
+    "permissionBody": "Autorisez l'accès à vos photos pour changer votre image."
   },
   "home": {
     "greeting": "Bonjour,",

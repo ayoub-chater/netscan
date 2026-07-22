@@ -18,6 +18,7 @@
       "buildNumber": "4",
       "infoPlist": {
         "NSCameraUsageDescription": "L'application a besoin d'accéder à la caméra pour scanner les QR codes des badges.",
+        "NSPhotoLibraryUsageDescription": "L'application a besoin d'accéder à vos photos pour définir votre photo de profil ou le logo de votre entreprise.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -54,6 +55,12 @@
         {
           "icon": "./assets/icon.png",
           "color": "#2e368e"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "L'application a besoin d'accéder à vos photos pour définir votre photo de profil ou le logo de votre entreprise."
         }
       ],
       "expo-localization"

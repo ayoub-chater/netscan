@@ -3,7 +3,7 @@ import React, {
 } from 'react';
 import { Alert } from 'react-native';
 import i18n from '../i18n';
-import { login as apiLogin, logout as apiLogout, fetchMe, getEventInfo, setApiToken, setOnUnauthorized } from '../services/api';
+import { login as apiLogin, logout as apiLogout, fetchMe, getProfile, getEventInfo, setApiToken, setOnUnauthorized } from '../services/api';
 import { loadSession, saveSession, clearSession, loadBadgeNumber, saveBadgeNumber } from '../services/auth';
 import { SESSION_MAX_AGE_MS } from '../constants/api';
 import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from '../services/notifications';
@@ -77,6 +77,15 @@ export function AuthProvider({ children }) {
                                 badge = fresh;
                                 await saveBadgeNumber(fresh);
                             }
+                            // Merge fresh profile (approval status, image, etc.) so a
+                            // just-approved exhibitor unlocks without re-logging in.
+                            const freshUser = meRes?.data?.user;
+                            if (freshUser) {
+                                const merged = { ...session.scanner, ...freshUser };
+                                setScanner(merged);
+                                setExhibitorId(merged.exhibitor_id ?? null);
+                                await saveSession(session.token, merged, storedEventInfo);
+                            }
                         } catch { }
                         setBadgeNumber(badge);
                     } else {
@@ -130,6 +139,31 @@ export function AuthProvider({ children }) {
         setBadgeNumber(badge);
     };
 
+    // Merge partial fields into the stored user (after a profile edit).
+    const updateScanner = async (partial) => {
+        setScanner((prev) => {
+            const merged = { ...prev, ...partial };
+            saveSession(token, merged, eventInfo).catch(() => { });
+            if (merged.exhibitor_id !== undefined) setExhibitorId(merged.exhibitor_id ?? null);
+            return merged;
+        });
+    };
+
+    // Re-fetch the profile from the server (approval status, image, …).
+    const refreshProfile = async () => {
+        try {
+            const res = await getProfile();
+            const user = res?.data?.user;
+            if (user) {
+                await updateScanner(user);
+                if (user.badge_number) await updateBadgeNumber(user.badge_number);
+            }
+            return user;
+        } catch {
+            return null;
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             isBootstrapping,
@@ -139,9 +173,15 @@ export function AuthProvider({ children }) {
             badgeNumber,
             eventInfo,
             exhibitorId,
+            // Exhibitors are gated until an admin approves them; everyone else
+            // is approved. Default to true when the flag is absent (old sessions).
+            isApproved: scanner?.is_approved !== false,
+            isExposant: (scanner?.role || '').toLowerCase() === 'exposant',
             signIn,
             signOut,
             updateBadgeNumber,
+            updateScanner,
+            refreshProfile,
             applySession: applyAuthResponse,
         }}>
             {children}
