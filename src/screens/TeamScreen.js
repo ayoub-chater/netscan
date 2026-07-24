@@ -23,6 +23,7 @@ import {
   SearchField,
   Separator,
   Skeleton,
+  Surface,
   TextField,
   useBottomSheetAwareHandlers,
 } from 'heroui-native';
@@ -52,45 +53,47 @@ function MemberForm({ defaultValues, onSubmit, loading, errorMsg, submitLabel })
         </HeroAlert>
       ) : null}
 
-      <TextField isRequired>
-        <Label>{t('team.fullName')}</Label>
-        <Input
-          placeholder={t('team.fullNamePlaceholder')}
-          autoCapitalize="words"
-          value={name}
-          onChangeText={setName}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          editable={!loading}
-        />
-      </TextField>
+      <Surface className="rounded-2xl px-5 py-5" style={{ gap: 16 }}>
+        <TextField isRequired>
+          <Label>{t('team.fullName')}</Label>
+          <Input
+            placeholder={t('team.fullNamePlaceholder')}
+            autoCapitalize="words"
+            value={name}
+            onChangeText={setName}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            editable={!loading}
+          />
+        </TextField>
 
-      <TextField isRequired>
-        <Label>{t('team.email')}</Label>
-        <Input
-          placeholder={t('team.emailPlaceholder')}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          value={email}
-          onChangeText={setEmail}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          editable={!loading}
-        />
-      </TextField>
+        <TextField isRequired>
+          <Label>{t('team.email')}</Label>
+          <Input
+            placeholder={t('team.emailPlaceholder')}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            editable={!loading}
+          />
+        </TextField>
 
-      <TextField>
-        <Label>{t('team.phone')}</Label>
-        <Input
-          placeholder="+212 6 00 00 00 00"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={setPhone}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          editable={!loading}
-        />
-      </TextField>
+        <TextField>
+          <Label>{t('team.phone')}</Label>
+          <Input
+            placeholder="+212 6 00 00 00 00"
+            keyboardType="phone-pad"
+            value={phone}
+            onChangeText={setPhone}
+            onFocus={onFocus}
+            onBlur={onBlur}
+            editable={!loading}
+          />
+        </TextField>
+      </Surface>
 
       <Button
         variant="primary"
@@ -396,7 +399,12 @@ export default function TeamScreen({ navigation }) {
       >
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
-          <BottomSheet.Content keyboardBehavior="extend" keyboardShouldPersistTaps="handled">
+          <BottomSheet.Content
+            keyboardBehavior="interactive"
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
+            keyboardShouldPersistTaps="handled"
+          >
             <View className="px-4 pt-2 pb-8">
               <View className="flex-row items-center mb-6" style={{ gap: 12 }}>
                 <View className="w-10 h-10 rounded-xl bg-accent-soft items-center justify-center">
@@ -439,7 +447,12 @@ export default function TeamScreen({ navigation }) {
       >
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
-          <BottomSheet.Content keyboardBehavior="extend" keyboardShouldPersistTaps="handled">
+          <BottomSheet.Content
+            keyboardBehavior="interactive"
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
+            keyboardShouldPersistTaps="handled"
+          >
             <View className="px-4 pt-2 pb-8">
               <View className="flex-row items-center mb-6" style={{ gap: 12 }}>
                 <View className="w-10 h-10 rounded-xl bg-surface items-center justify-center border border-separator">

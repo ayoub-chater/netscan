@@ -4,7 +4,6 @@ import {
   Text,
   Image,
   FlatList,
-  ScrollView,
   Pressable,
   RefreshControl,
   Linking,
@@ -88,57 +87,85 @@ function NoteField({ value, onChangeText }) {
   );
 }
 
+// Status dot color for a persona.
+function statusDot(status) {
+  return status === 'active' ? '#22C55E' : status === 'on_break' ? '#F59E0B' : '#EF4444';
+}
+
 // ── Persona card (bookable contact) ─────────────────────────────────────────
-function PersonaCard({ item, onBook }) {
+function PersonaCard({ item, onBook, onView }) {
   const { t } = useTranslation();
   const initials = (item.name || '?').slice(0, 2).toUpperCase();
-  const hasDates = (item.available_dates?.length || 0) > 0;
+  // Backend flags: `bookable` = active + has availability. Fall back to
+  // available_dates for older payloads.
+  const bookable = item.bookable ?? ((item.available_dates?.length || 0) > 0);
+  const status = item.status || 'active';
+  const off = status !== 'active';
 
   return (
     <Card className="mb-3">
-      <Card.Header>
-        <View className="flex-row items-center" style={{ gap: 12 }}>
-          {item.photo ? (
-            <Image
-              source={{ uri: item.photo }}
-              style={{ width: 48, height: 48, borderRadius: 24 }}
-              resizeMode="cover"
-            />
-          ) : (
-            <Avatar size="md" color="default" variant="soft">
-              <Avatar.Fallback>{initials}</Avatar.Fallback>
-            </Avatar>
-          )}
-          <View className="flex-1 items-start" style={{ gap: 4 }}>
-            <Text className="text-base font-bold text-foreground" numberOfLines={1}>
-              {item.name}
-            </Text>
-            {item.title || item.company ? (
-              <Text className="text-xs text-muted" numberOfLines={1}>
-                {[item.title, item.company].filter(Boolean).join(' · ')}
-              </Text>
-            ) : null}
+      <Pressable onPress={() => onView(item)}>
+        <Card.Header>
+          <View className="flex-row items-center" style={{ gap: 12 }}>
+            {item.photo ? (
+              <Image
+                source={{ uri: item.photo }}
+                style={{ width: 48, height: 48, borderRadius: 24 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Avatar size="md" color="default" variant="soft">
+                <Avatar.Fallback>{initials}</Avatar.Fallback>
+              </Avatar>
+            )}
+            <View className="flex-1 items-start" style={{ gap: 4 }}>
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Text className="text-base font-bold text-foreground" numberOfLines={1}>
+                  {item.name}
+                </Text>
+                {off ? (
+                  <View className="flex-row items-center" style={{ gap: 4 }}>
+                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: statusDot(status) }} />
+                    <Text className="text-[10px] font-bold text-muted uppercase">
+                      {t(`speaker.statusValue.${status}`)}
+                    </Text>
+                  </View>
+                ) : null}
+              </View>
+              {item.title || item.company ? (
+                <Text className="text-xs text-muted" numberOfLines={1}>
+                  {[item.title, item.company].filter(Boolean).join(' · ')}
+                </Text>
+              ) : null}
+            </View>
+            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
           </View>
-        </View>
-      </Card.Header>
-      {item.bio ? (
-        <Card.Body className="pt-2 pb-1">
-          <Text className="text-sm text-muted leading-5" numberOfLines={2}>
-            {item.bio}
-          </Text>
-        </Card.Body>
-      ) : null}
+        </Card.Header>
+        {item.bio ? (
+          <Card.Body className="pt-2 pb-1">
+            <Text className="text-sm text-muted leading-5" numberOfLines={2}>
+              {item.bio}
+            </Text>
+          </Card.Body>
+        ) : null}
+      </Pressable>
       <Card.Footer className="pt-3">
         <Button
-          variant={hasDates ? 'primary' : 'secondary'}
+          variant={bookable ? 'primary' : 'secondary'}
           size="sm"
           className="rounded-xl flex-1"
           onPress={() => onBook(item)}
-          disabled={!hasDates}
+          disabled={!bookable}
         >
-          <Ionicons name="calendar-outline" size={16} color={hasDates ? '#FFFFFF' : ACCENT} />
+          <Ionicons name="calendar-outline" size={16} color={bookable ? '#FFFFFF' : ACCENT} />
           <Button.Label>
-            {hasDates ? t('appointments.book') : t('appointments.noSlots')}
+            {bookable
+              ? t('appointments.book')
+              : item.already_booked
+              ? t('appointments.alreadyBookedShort')
+              : off
+              ? t('appointments.speakerUnavailable')
+              : t('appointments.noSlots')}
           </Button.Label>
         </Button>
       </Card.Footer>
@@ -246,6 +273,10 @@ export default function AppointmentsScreen({ navigation }) {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
+  // Profile view sheet
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [profilePersona, setProfilePersona] = useState(null);
+
   // Booking sheet state
   const [sheetOpen, setSheetOpen] = useState(false);
   const [activePersona, setActivePersona] = useState(null);
@@ -282,8 +313,14 @@ export default function AppointmentsScreen({ navigation }) {
     load();
   };
 
+  const openProfile = (persona) => {
+    setProfilePersona(persona);
+    setProfileOpen(true);
+  };
+
   // ── Booking flow ──────────────────────────────────────────────────────────
   const openBooking = (persona) => {
+    setProfileOpen(false);
     setActivePersona(persona);
     setSelectedSlot(null);
     setSlots([]);
@@ -316,14 +353,22 @@ export default function AppointmentsScreen({ navigation }) {
     if (!activePersona || !selectedDate || !selectedSlot) return;
     setBooking(true);
     try {
-      await bookAppointment({
+      const res = await bookAppointment({
         persona_slug: activePersona.slug,
         date: selectedDate,
         start_time: selectedSlot.start,
         note: note.trim() || undefined,
       });
       setSheetOpen(false);
-      Alert.alert(t('appointments.bookedTitle'), t('appointments.bookedBody', { name: activePersona.name }));
+      // Speaker-managed personas start pending (they confirm); admin personas
+      // are auto-confirmed. Message follows the real returned status.
+      const pending = res?.data?.appointment?.status === 'pending';
+      Alert.alert(
+        pending ? t('appointments.requestSentTitle') : t('appointments.bookedTitle'),
+        pending
+          ? t('appointments.requestSentBody', { name: activePersona.name })
+          : t('appointments.bookedBody', { name: activePersona.name })
+      );
       setTab('mine');
       load();
     } catch (e) {
@@ -333,6 +378,8 @@ export default function AppointmentsScreen({ navigation }) {
           ? t('appointments.slotTaken')
           : code === 'ALREADY_BOOKED'
           ? t('appointments.alreadyBooked')
+          : code === 'SPEAKER_UNAVAILABLE'
+          ? t('appointments.speakerUnavailableMsg')
           : e?.response?.data?.message || t('appointments.bookError');
       Alert.alert(t('common.error'), msg);
       // Refresh slots if the chosen one was taken.
@@ -364,8 +411,19 @@ export default function AppointmentsScreen({ navigation }) {
     );
   };
 
-  // Speakers get their own management dashboard instead of the booking view.
+  // Speakers get their own management dashboard — but only once an admin has
+  // approved them (same gating as exhibitors).
   if (isSpeaker) {
+    if (!isApproved) {
+      return (
+        <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+          <View className="px-4 pt-5 pb-4">
+            <Text className="text-2xl font-extrabold text-foreground">{t('speaker.title')}</Text>
+          </View>
+          <PendingApproval />
+        </View>
+      );
+    }
     return <SpeakerAppointmentsScreen />;
   }
 
@@ -443,7 +501,7 @@ export default function AppointmentsScreen({ navigation }) {
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />}
-          renderItem={({ item }) => <PersonaCard item={item} onBook={openBooking} />}
+          renderItem={({ item }) => <PersonaCard item={item} onBook={openBooking} onView={openProfile} />}
           ListEmptyComponent={
             <View className="items-center py-16">
               <Ionicons name="people-outline" size={48} color={ACCENT} />
@@ -481,6 +539,132 @@ export default function AppointmentsScreen({ navigation }) {
         />
       )}
 
+      {/* ── Profile view BottomSheet ───────────────── */}
+      <BottomSheet isOpen={profileOpen} onOpenChange={(o) => !o && setProfileOpen(false)}>
+        <BottomSheet.Portal>
+          <BottomSheet.Overlay />
+          <BottomSheet.Content snapPoints={['70%']} enableOverDrag={false} enableDynamicSizing={false} contentContainerClassName="h-full">
+            <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
+              <View className="items-center pt-3 pb-5 px-4 border-b border-separator">
+                {profilePersona?.photo ? (
+                  <Image source={{ uri: profilePersona.photo }} style={{ width: 84, height: 84, borderRadius: 42 }} resizeMode="cover" />
+                ) : (
+                  <Avatar size="lg" color="default" variant="soft">
+                    <Avatar.Fallback>{(profilePersona?.name || '?').slice(0, 2).toUpperCase()}</Avatar.Fallback>
+                  </Avatar>
+                )}
+                <Text className="text-xl font-extrabold text-foreground mt-3 text-center">{profilePersona?.name}</Text>
+                {profilePersona?.title || profilePersona?.company ? (
+                  <Text className="text-sm text-muted mt-1 text-center">
+                    {[profilePersona?.title, profilePersona?.company].filter(Boolean).join(' · ')}
+                  </Text>
+                ) : null}
+                <View className="flex-row items-center mt-2" style={{ gap: 6 }}>
+                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: statusDot(profilePersona?.status || 'active') }} />
+                  <Text className="text-xs font-bold text-muted uppercase">
+                    {t(`speaker.statusValue.${profilePersona?.status || 'active'}`)}
+                  </Text>
+                </View>
+              </View>
+
+              <View className="px-4 pt-4" style={{ gap: 14 }}>
+                {profilePersona?.bio ? (
+                  <View>
+                    <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">{t('appointments.aboutLabel')}</Text>
+                    <Text className="text-sm text-foreground leading-6">{profilePersona.bio}</Text>
+                  </View>
+                ) : null}
+                <View style={{ gap: 10 }}>
+                  {profilePersona?.company ? (
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Ionicons name="business-outline" size={15} color={ACCENT} />
+                      <Text className="text-sm text-foreground">{profilePersona.company}</Text>
+                    </View>
+                  ) : null}
+                  {profilePersona?.title ? (
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Ionicons name="briefcase-outline" size={15} color={ACCENT} />
+                      <Text className="text-sm text-foreground">{profilePersona.title}</Text>
+                    </View>
+                  ) : null}
+                  {profilePersona?.location ? (
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Ionicons name="location-outline" size={15} color={ACCENT} />
+                      <Text className="text-sm text-foreground">{profilePersona.location}</Text>
+                    </View>
+                  ) : null}
+                  {profilePersona?.appointment_duration ? (
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Ionicons name="hourglass-outline" size={15} color={ACCENT} />
+                      <Text className="text-sm text-foreground">
+                        {t('appointments.duration', { min: profilePersona.appointment_duration })}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {(profilePersona?.meeting_types?.length || 0) > 0 ? (
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Ionicons name={meetingTypeIcon(profilePersona.meeting_types[0])} size={15} color={ACCENT} />
+                      <Text className="text-sm text-foreground">
+                        {profilePersona.meeting_types
+                          .map((m) => t(`appointments.type.${m}`, m))
+                          .join(' · ')}
+                      </Text>
+                    </View>
+                  ) : null}
+                  {(profilePersona?.languages?.length || 0) > 0 ? (
+                    <View className="flex-row items-center" style={{ gap: 8 }}>
+                      <Ionicons name="language-outline" size={15} color={ACCENT} />
+                      <Text className="text-sm text-foreground">{profilePersona.languages.join(' · ')}</Text>
+                    </View>
+                  ) : null}
+                  {(profilePersona?.available_dates?.length || 0) > 0 ? (
+                    <View className="flex-row items-start" style={{ gap: 8 }}>
+                      <Ionicons name="calendar-outline" size={15} color={ACCENT} style={{ marginTop: 2 }} />
+                      <Text className="text-sm text-foreground flex-1">
+                        {profilePersona.available_dates
+                          .map((d) => formatDateLabel(d, locale))
+                          .join(' · ')}
+                      </Text>
+                    </View>
+                  ) : null}
+                </View>
+                {(profilePersona?.tags?.length || 0) > 0 ? (
+                  <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                    {profilePersona.tags.map((tag) => (
+                      <Chip key={tag} size="sm" variant="soft" color="default">
+                        <Chip.Label>{tag}</Chip.Label>
+                      </Chip>
+                    ))}
+                  </View>
+                ) : null}
+              </View>
+
+              <View className="px-4 pt-6" style={{ gap: 12 }}>
+                {(profilePersona?.bookable ?? ((profilePersona?.available_dates?.length || 0) > 0)) ? (
+                  <Button variant="primary" size="lg" className="rounded-2xl" onPress={() => openBooking(profilePersona)}>
+                    <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+                    <Button.Label>{t('appointments.book')}</Button.Label>
+                  </Button>
+                ) : (
+                  <Surface className="rounded-xl p-4">
+                    <Text className="text-sm text-muted text-center">
+                      {profilePersona?.already_booked
+                        ? t('appointments.alreadyBookedMsg')
+                        : (profilePersona?.status && profilePersona.status !== 'active')
+                        ? t('appointments.speakerUnavailableMsg')
+                        : t('appointments.noSlots')}
+                    </Text>
+                  </Surface>
+                )}
+                <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={() => setProfileOpen(false)}>
+                  <Button.Label>{t('common.close')}</Button.Label>
+                </Button>
+              </View>
+            </BottomSheetScrollView>
+          </BottomSheet.Content>
+        </BottomSheet.Portal>
+      </BottomSheet>
+
       {/* ── Booking BottomSheet ────────────────────── */}
       <BottomSheet
         isOpen={sheetOpen}
@@ -494,6 +678,9 @@ export default function AppointmentsScreen({ navigation }) {
             snapPoints={['85%']}
             enableOverDrag={false}
             enableDynamicSizing={false}
+            keyboardBehavior="interactive"
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
             contentContainerClassName="h-full"
           >
             <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
@@ -534,7 +721,7 @@ export default function AppointmentsScreen({ navigation }) {
                 <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
                   {t('appointments.chooseDate')}
                 </Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                   {(activePersona?.available_dates || []).map((d) => {
                     const active = d === selectedDate;
                     return (
@@ -549,7 +736,7 @@ export default function AppointmentsScreen({ navigation }) {
                       </Pressable>
                     );
                   })}
-                </ScrollView>
+                </View>
               </View>
 
               {/* Slots */}
@@ -611,7 +798,9 @@ export default function AppointmentsScreen({ navigation }) {
                 <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
                   {t('appointments.noteLabel')}
                 </Text>
-                <NoteField value={note} onChangeText={setNote} />
+                <Surface className="rounded-2xl px-5 py-5">
+                  <NoteField value={note} onChangeText={setNote} />
+                </Surface>
               </View>
 
               {/* Confirm */}

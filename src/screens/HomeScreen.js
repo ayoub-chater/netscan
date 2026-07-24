@@ -263,7 +263,11 @@ export default function HomeScreen({ navigation }) {
               <Text className="text-base font-medium text-muted">
                 {displayedHi || '​'}
               </Text>
-              <Text className="text-2xl font-extrabold text-foreground leading-tight">
+              <Text
+                className="text-2xl font-extrabold text-foreground leading-tight"
+                numberOfLines={1}
+                ellipsizeMode="tail"
+              >
                 {displayedName || '​'}
               </Text>
             </View>
@@ -272,7 +276,7 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate('MyBadge')}
             className="flex-row items-center bg-surface rounded-xl py-1.5 pl-3 pr-1.5 active:opacity-70"
             hitSlop={8}
-            style={{ gap: 8 }}
+            style={{ gap: 8, flexShrink: 0, marginLeft: 8 }}
           >
             <Text className="text-xs font-bold text-foreground">{role}</Text>
             <View className="w-7 h-7 rounded-lg bg-accent items-center justify-center">

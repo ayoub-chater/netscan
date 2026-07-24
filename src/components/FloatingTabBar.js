@@ -25,7 +25,9 @@ export default function FloatingTabBar({ state, navigation }) {
   const { translateY } = useTabBar();
   const { isDark } = useTheme();
 
-  const barBottom = Math.max(insets.bottom, 10);
+  // Sit above the phone's system nav strip with a bit of breathing room, so
+  // the floating bar doesn't look stuck to the OS navigation bar.
+  const barBottom = Math.max(insets.bottom, 10) + 14;
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: translateY.value }],

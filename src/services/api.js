@@ -113,8 +113,9 @@ export const getSpeakerPersona = () => api.get(ENDPOINTS.speakerPersona);
 export const updateSpeakerPersona = (data) => {
     const form = new FormData();
     form.append('_method', 'PUT'); // method spoofing so multipart files parse
+    // `company` is read-only (set at registration) — never sent.
     [
-        'name', 'title', 'company', 'bio', 'location', 'video_link',
+        'name', 'title', 'bio', 'location',
         'appointment_duration', 'buffer_time', 'max_per_day', 'status',
     ].forEach((key) => {
         if (data[key] !== undefined && data[key] !== null) form.append(key, String(data[key]));

@@ -280,7 +280,14 @@
       "video": "Video",
       "phone": "Phone"
     },
-    "booked": "Booked"
+    "booked": "Booked",
+    "speakerUnavailable": "Unavailable",
+    "speakerUnavailableMsg": "This speaker isn't accepting meetings right now.",
+    "aboutLabel": "About",
+    "alreadyBookedShort": "Already met",
+    "alreadyBookedMsg": "You already have a meeting with this contact for this event.",
+    "requestSentTitle": "Request sent",
+    "requestSentBody": "Your meeting request with {{name}} was sent. You'll be notified once they confirm."
   },
   "profile": {
     "settings": "Settings",
@@ -401,6 +408,14 @@
     "endTime": "End time",
     "timeOrderError": "End time must be after start time.",
     "removeSlotTitle": "Remove this slot?",
-    "removeSlotMsg": "Attendees will no longer be able to book this window."
+    "removeSlotMsg": "Attendees will no longer be able to book this window.",
+    "quickStatus": "Quick status",
+    "customDuration": "Custom duration (min)",
+    "buffer": "Buffer between meetings",
+    "bufferHint": "A pause added after each meeting.",
+    "noBuffer": "None",
+    "customBuffer": "Custom buffer (min)",
+    "statusChangeTitle": "Change status",
+    "statusChangeMsg": "Set your availability to \"{{status}}\"? Attendees will see this immediately."
   }
 }

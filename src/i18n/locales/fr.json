@@ -280,7 +280,14 @@
       "video": "Vidéo",
       "phone": "Téléphone"
     },
-    "booked": "Réservé"
+    "booked": "Réservé",
+    "speakerUnavailable": "Indisponible",
+    "speakerUnavailableMsg": "Cet intervenant n'accepte pas de rendez-vous pour le moment.",
+    "aboutLabel": "À propos",
+    "alreadyBookedShort": "Déjà réservé",
+    "alreadyBookedMsg": "Vous avez déjà un rendez-vous avec ce contact pour cet événement.",
+    "requestSentTitle": "Demande envoyée",
+    "requestSentBody": "Votre demande de rendez-vous avec {{name}} a été envoyée. Vous serez notifié dès sa confirmation."
   },
   "profile": {
     "settings": "Paramètres",
@@ -401,6 +408,14 @@
     "endTime": "Heure de fin",
     "timeOrderError": "L'heure de fin doit être après l'heure de début.",
     "removeSlotTitle": "Supprimer ce créneau ?",
-    "removeSlotMsg": "Les participants ne pourront plus réserver ce créneau."
+    "removeSlotMsg": "Les participants ne pourront plus réserver ce créneau.",
+    "quickStatus": "Statut rapide",
+    "customDuration": "Durée personnalisée (min)",
+    "buffer": "Pause entre les rendez-vous",
+    "bufferHint": "Une pause ajoutée après chaque rendez-vous.",
+    "noBuffer": "Aucune",
+    "customBuffer": "Pause personnalisée (min)",
+    "statusChangeTitle": "Changer le statut",
+    "statusChangeMsg": "Passer votre disponibilité à « {{status}} » ? Les participants le verront immédiatement."
   }
 }

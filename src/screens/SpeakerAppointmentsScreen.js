@@ -60,14 +60,32 @@ function formatDateLabel(iso, locale) {
   }
 }
 
-// Next `count` calendar days as YYYY-MM-DD.
-function nextDays(count) {
+// Local YYYY-MM-DD. Never use toISOString() here — it converts to UTC and
+// shifts the day backwards for positive-offset timezones (UTC+1 → yesterday).
+const iso = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+// Bookable dates for the event: from max(today, start) to end (inclusive).
+// Falls back to the next 14 days if the event has no dates yet.
+function eventDays(bounds) {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  let start = bounds?.start_date ? new Date(bounds.start_date + 'T00:00:00') : today;
+  const end = bounds?.end_date ? new Date(bounds.end_date + 'T00:00:00') : null;
+  if (start < today) start = today;
+
   const out = [];
-  const base = new Date();
-  for (let i = 0; i < count; i++) {
-    const d = new Date(base);
-    d.setDate(base.getDate() + i);
-    out.push(d.toISOString().slice(0, 10));
+  if (end) {
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      out.push(iso(new Date(d)));
+    }
+  } else {
+    for (let i = 0; i < 14; i++) {
+      const d = new Date(start);
+      d.setDate(start.getDate() + i);
+      out.push(iso(d));
+    }
   }
   return out;
 }
@@ -99,9 +117,17 @@ function MeetingCard({ item, onAct, locale, busyId }) {
     <Card className="mb-3">
       <Card.Body>
         <View className="flex-row items-center" style={{ gap: 12 }}>
-          <Avatar size="md" color="default" variant="soft">
-            <Avatar.Fallback>{initials}</Avatar.Fallback>
-          </Avatar>
+          {guest.photo ? (
+            <Image
+              source={{ uri: guest.photo }}
+              style={{ width: 44, height: 44, borderRadius: 22 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <Avatar size="md" color="default" variant="soft">
+              <Avatar.Fallback>{initials}</Avatar.Fallback>
+            </Avatar>
+          )}
           <View className="flex-1" style={{ gap: 3 }}>
             <Text className="text-base font-bold text-foreground" numberOfLines={1}>
               {guest.name || '—'}
@@ -241,6 +267,8 @@ export default function SpeakerAppointmentsScreen() {
 
   const [tab, setTab] = useState('meetings'); // 'meetings' | 'profile'
   const [persona, setPersona] = useState(null);
+  const [eventBounds, setEventBounds] = useState(null);
+  const [statusSaving, setStatusSaving] = useState(false);
   const [upcoming, setUpcoming] = useState([]);
   const [past, setPast] = useState([]);
   const [pendingCount, setPendingCount] = useState(0);
@@ -266,7 +294,10 @@ export default function SpeakerAppointmentsScreen() {
         getSpeakerPersona(),
         getSpeakerAppointments(),
       ]);
-      if (pRes.status === 'fulfilled') setPersona(pRes.value?.data?.persona || null);
+      if (pRes.status === 'fulfilled') {
+        setPersona(pRes.value?.data?.persona || null);
+        setEventBounds(pRes.value?.data?.event || null);
+      }
       if (aRes.status === 'fulfilled') {
         setUpcoming(aRes.value?.data?.upcoming || []);
         setPast(aRes.value?.data?.past || []);
@@ -329,13 +360,41 @@ export default function SpeakerAppointmentsScreen() {
       company: persona.company || '',
       bio: persona.bio || '',
       location: persona.location || '',
-      video_link: persona.video_link || '',
       appointment_duration: String(persona.appointment_duration || 30),
+      buffer_time: String(persona.buffer_time ?? 0),
       status: persona.status || 'active',
       photo: null,
       photoPreview: persona.photo || null,
     });
     setEditOpen(true);
+  };
+
+  // Quick status change from the profile header (no full edit needed).
+  const applyStatus = async (status) => {
+    const prev = persona;
+    setPersona({ ...persona, status }); // optimistic
+    setStatusSaving(true);
+    try {
+      const res = await updateSpeakerPersona({ status });
+      if (res?.data?.persona) setPersona(res.data.persona);
+    } catch {
+      setPersona(prev); // rollback
+      Alert.alert(t('common.error'), t('speaker.saveError'));
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  const quickStatus = (status) => {
+    if (!persona || persona.status === status || statusSaving) return;
+    Alert.alert(
+      t('speaker.statusChangeTitle'),
+      t('speaker.statusChangeMsg', { status: t(`speaker.statusValue.${status}`) }),
+      [
+        { text: t('common.cancel'), style: 'cancel' },
+        { text: t('common.confirm'), onPress: () => applyStatus(status) },
+      ]
+    );
   };
 
   const pickPhoto = async () => {
@@ -361,11 +420,10 @@ export default function SpeakerAppointmentsScreen() {
       const res = await updateSpeakerPersona({
         name: form.name.trim(),
         title: form.title.trim(),
-        company: form.company.trim(),
         bio: form.bio.trim(),
         location: form.location.trim(),
-        video_link: form.video_link.trim(),
         appointment_duration: parseInt(form.appointment_duration, 10) || 30,
+        buffer_time: parseInt(form.buffer_time, 10) || 0,
         status: form.status,
         photo: form.photo || undefined,
       });
@@ -497,6 +555,35 @@ export default function SpeakerAppointmentsScreen() {
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />}
         >
+          {/* Quick status toggle */}
+          <Surface className="rounded-2xl px-4 py-3 mb-4">
+            <View className="flex-row items-center justify-between mb-2">
+              <Text className="text-xs font-bold text-muted uppercase tracking-wide">
+                {t('speaker.quickStatus')}
+              </Text>
+              {statusSaving ? <ActivityIndicator size="small" color={ACCENT} /> : null}
+            </View>
+            <View className="flex-row" style={{ gap: 8 }}>
+              {['active', 'on_break', 'inactive'].map((s) => {
+                const active = persona?.status === s;
+                const dot = s === 'active' ? '#22C55E' : s === 'on_break' ? '#F59E0B' : '#EF4444';
+                return (
+                  <Pressable
+                    key={s}
+                    onPress={() => quickStatus(s)}
+                    className={`flex-1 flex-row items-center justify-center py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface-secondary border-separator'}`}
+                    style={{ gap: 6 }}
+                  >
+                    <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: active ? '#FFFFFF' : dot }} />
+                    <Text className={`text-xs font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>
+                      {t(`speaker.statusValue.${s}`)}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+          </Surface>
+
           {/* Persona summary */}
           <Card className="mb-4">
             <Card.Body>
@@ -586,7 +673,15 @@ export default function SpeakerAppointmentsScreen() {
       <BottomSheet isOpen={editOpen} onOpenChange={(o) => !o && setEditOpen(false)}>
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
-          <BottomSheet.Content snapPoints={['90%']} enableOverDrag={false} enableDynamicSizing={false} contentContainerClassName="h-full">
+          <BottomSheet.Content
+            snapPoints={['90%']}
+            enableOverDrag={false}
+            enableDynamicSizing={false}
+            keyboardBehavior="interactive"
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
+            contentContainerClassName="h-full"
+          >
             <BottomSheetScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 14 }}>
               <Text className="text-lg font-extrabold text-foreground">{t('speaker.editProfile')}</Text>
 
@@ -601,50 +696,94 @@ export default function SpeakerAppointmentsScreen() {
                 <Text className="text-xs text-accent font-semibold mt-2">{t('speaker.changePhoto')}</Text>
               </Pressable>
 
-              <SheetField label={t('register.fullName')} value={form?.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
-              <SheetField label={t('register.jobTitle')} value={form?.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
-              <SheetField label={t('register.company')} value={form?.company} onChangeText={(v) => setForm((f) => ({ ...f, company: v }))} />
-              <SheetField
-                label={t('register.bio')}
-                value={form?.bio}
-                onChangeText={(v) => setForm((f) => ({ ...f, bio: v }))}
-                multiline
-                numberOfLines={3}
-                style={{ minHeight: 72, textAlignVertical: 'top' }}
-              />
-              <SheetField label={t('speaker.location')} value={form?.location} onChangeText={(v) => setForm((f) => ({ ...f, location: v }))} />
-              <SheetField label={t('speaker.videoLink')} value={form?.video_link} autoCapitalize="none" keyboardType="url" onChangeText={(v) => setForm((f) => ({ ...f, video_link: v }))} />
+              <Surface className="rounded-2xl px-5 py-5 gap-4">
+                <SheetField label={t('register.fullName')} value={form?.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
+                <SheetField label={t('register.jobTitle')} value={form?.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
+                {/* Company is set at registration — read-only here. */}
+                <View>
+                  <Label>{t('register.company')}</Label>
+                  <View className="bg-surface-secondary rounded-xl px-4 py-3 mt-1.5 flex-row items-center justify-between">
+                    <Text className="text-sm text-muted flex-1" numberOfLines={1}>
+                      {form?.company || '—'}
+                    </Text>
+                    <Ionicons name="lock-closed-outline" size={15} color="#9CA3AF" />
+                  </View>
+                </View>
+                <SheetField
+                  label={t('register.bio')}
+                  value={form?.bio}
+                  onChangeText={(v) => setForm((f) => ({ ...f, bio: v }))}
+                  multiline
+                  numberOfLines={3}
+                  style={{ minHeight: 72, textAlignVertical: 'top' }}
+                />
+                <SheetField label={t('speaker.location')} value={form?.location} onChangeText={(v) => setForm((f) => ({ ...f, location: v }))} />
+              </Surface>
 
-              {/* Duration */}
-              <View>
+              {/* Duration (presets + custom) */}
+              <Surface className="rounded-2xl px-5 py-5 gap-3">
                 <Label>{t('speaker.duration')}</Label>
-                <View className="flex-row flex-wrap mt-2" style={{ gap: 8 }}>
+                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                   {[15, 20, 30, 45, 60].map((d) => {
                     const active = String(d) === String(form?.appointment_duration);
                     return (
                       <Pressable
                         key={d}
                         onPress={() => setForm((f) => ({ ...f, appointment_duration: String(d) }))}
-                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface border-separator'}`}
+                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface-secondary border-separator'}`}
                       >
                         <Text className={`text-sm font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>{d}m</Text>
                       </Pressable>
                     );
                   })}
                 </View>
-              </View>
+                <SheetField
+                  label={t('speaker.customDuration')}
+                  value={form?.appointment_duration}
+                  keyboardType="number-pad"
+                  onChangeText={(v) => setForm((f) => ({ ...f, appointment_duration: v.replace(/[^0-9]/g, '') }))}
+                />
+              </Surface>
+
+              {/* Buffer between meetings (presets + custom) */}
+              <Surface className="rounded-2xl px-5 py-5 gap-3">
+                <Label>{t('speaker.buffer')}</Label>
+                <Text className="text-xs text-muted -mt-1">{t('speaker.bufferHint')}</Text>
+                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                  {[0, 5, 10, 15, 30].map((b) => {
+                    const active = String(b) === String(form?.buffer_time);
+                    return (
+                      <Pressable
+                        key={b}
+                        onPress={() => setForm((f) => ({ ...f, buffer_time: String(b) }))}
+                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface-secondary border-separator'}`}
+                      >
+                        <Text className={`text-sm font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>
+                          {b === 0 ? t('speaker.noBuffer') : `${b}m`}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+                <SheetField
+                  label={t('speaker.customBuffer')}
+                  value={form?.buffer_time}
+                  keyboardType="number-pad"
+                  onChangeText={(v) => setForm((f) => ({ ...f, buffer_time: v.replace(/[^0-9]/g, '') }))}
+                />
+              </Surface>
 
               {/* Status */}
-              <View>
+              <Surface className="rounded-2xl px-5 py-5 gap-2">
                 <Label>{t('speaker.statusLabel')}</Label>
-                <View className="flex-row flex-wrap mt-2" style={{ gap: 8 }}>
+                <View className="flex-row flex-wrap mt-1" style={{ gap: 8 }}>
                   {['active', 'on_break', 'inactive'].map((s) => {
                     const active = s === form?.status;
                     return (
                       <Pressable
                         key={s}
                         onPress={() => setForm((f) => ({ ...f, status: s }))}
-                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface border-separator'}`}
+                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface-secondary border-separator'}`}
                       >
                         <Text className={`text-sm font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>
                           {t(`speaker.statusValue.${s}`)}
@@ -653,7 +792,7 @@ export default function SpeakerAppointmentsScreen() {
                     );
                   })}
                 </View>
-              </View>
+              </Surface>
 
               <Button variant="primary" size="lg" className="rounded-2xl mt-2" onPress={saveProfile} disabled={savingProfile}>
                 <Button.Label>{savingProfile ? t('speaker.saving') : t('speaker.save')}</Button.Label>
@@ -670,14 +809,22 @@ export default function SpeakerAppointmentsScreen() {
       <BottomSheet isOpen={availOpen} onOpenChange={(o) => !o && setAvailOpen(false)}>
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
-          <BottomSheet.Content snapPoints={['80%']} enableOverDrag={false} enableDynamicSizing={false} contentContainerClassName="h-full">
+          <BottomSheet.Content
+            snapPoints={['80%']}
+            enableOverDrag={false}
+            enableDynamicSizing={false}
+            keyboardBehavior="interactive"
+            keyboardBlurBehavior="restore"
+            android_keyboardInputMode="adjustResize"
+            contentContainerClassName="h-full"
+          >
             <BottomSheetScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}>
               <Text className="text-lg font-extrabold text-foreground">{t('speaker.addSlot')}</Text>
 
               <View>
                 <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t('appointments.chooseDate')}</Text>
-                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-                  {nextDays(21).map((d) => {
+                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
+                  {eventDays(eventBounds).map((d) => {
                     const active = d === avDate;
                     return (
                       <Pressable
@@ -691,7 +838,7 @@ export default function SpeakerAppointmentsScreen() {
                       </Pressable>
                     );
                   })}
-                </ScrollView>
+                </View>
               </View>
 
               <View>

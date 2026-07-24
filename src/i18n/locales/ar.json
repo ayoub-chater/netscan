@@ -280,7 +280,14 @@
       "video": "فيديو",
       "phone": "هاتف"
     },
-    "booked": "محجوز"
+    "booked": "محجوز",
+    "speakerUnavailable": "غير متاح",
+    "speakerUnavailableMsg": "هذا المتحدث لا يقبل مواعيد حاليًا.",
+    "aboutLabel": "نبذة",
+    "alreadyBookedShort": "محجوز مسبقًا",
+    "alreadyBookedMsg": "لديك بالفعل موعد مع هذا الشخص في هذا الحدث.",
+    "requestSentTitle": "تم إرسال الطلب",
+    "requestSentBody": "تم إرسال طلب موعدك مع {{name}}. سيتم إشعارك عند التأكيد."
   },
   "profile": {
     "settings": "الإعدادات",
@@ -401,6 +408,14 @@
     "endTime": "وقت الانتهاء",
     "timeOrderError": "يجب أن يكون وقت الانتهاء بعد وقت البدء.",
     "removeSlotTitle": "حذف هذه الفترة؟",
-    "removeSlotMsg": "لن يتمكن المشاركون من حجز هذه الفترة بعد الآن."
+    "removeSlotMsg": "لن يتمكن المشاركون من حجز هذه الفترة بعد الآن.",
+    "quickStatus": "حالة سريعة",
+    "customDuration": "مدة مخصصة (دقيقة)",
+    "buffer": "فاصل بين المواعيد",
+    "bufferHint": "استراحة تُضاف بعد كل موعد.",
+    "noBuffer": "بدون",
+    "customBuffer": "فاصل مخصص (دقيقة)",
+    "statusChangeTitle": "تغيير الحالة",
+    "statusChangeMsg": "تعيين حالتك إلى «{{status}}»؟ سيراها المشاركون فورًا."
   }
 }
