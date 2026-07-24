@@ -225,6 +225,16 @@ export default function ScannerScreen({ navigation }) {
                 <Button.Label>{t('scanner.launch')}</Button.Label>
               </Button>
 
+              <Button
+                variant="secondary"
+                size="lg"
+                className="rounded-2xl w-full mt-3"
+                onPress={() => navigation.navigate('MyBadge')}
+              >
+                <Ionicons name="qr-code-outline" size={20} color={BLUE} />
+                <Button.Label>{t('scanner.showMyQr')}</Button.Label>
+              </Button>
+
               <Pressable
                 onPress={() => {
                   if (navigation.canGoBack()) navigation.goBack();

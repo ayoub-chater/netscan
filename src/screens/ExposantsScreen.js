@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   FlatList,
   RefreshControl,
   Linking,
@@ -44,10 +45,18 @@ function ExposantCard({ item, isMine, onPress }) {
     <Card className="mb-3">
       <Card.Header>
         <View className="flex-row items-center" style={{ gap: 12 }}>
-          <Avatar size="md" color={isMine ? 'success' : 'default'} variant="soft">
-            <Avatar.Fallback>{initials}</Avatar.Fallback>
-          </Avatar>
-          <View className="flex-1" style={{ gap: 4 }}>
+          {item.logo ? (
+            <Image
+              source={{ uri: item.logo }}
+              style={{ width: 40, height: 40, borderRadius: 20 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <Avatar size="md" color={isMine ? 'success' : 'default'} variant="soft">
+              <Avatar.Fallback>{initials}</Avatar.Fallback>
+            </Avatar>
+          )}
+          <View className="flex-1 items-start" style={{ gap: 6 }}>
             <Text className="text-base font-bold text-foreground" numberOfLines={1}>
               {displayName}
             </Text>
@@ -65,13 +74,13 @@ function ExposantCard({ item, isMine, onPress }) {
         </View>
       </Card.Header>
       {item.description || item.email ? (
-        <Card.Body>
+        <Card.Body className="pt-2 pb-1">
           <Text className="text-sm text-muted leading-5" numberOfLines={2}>
             {item.description || item.email}
           </Text>
         </Card.Body>
       ) : null}
-      <Card.Footer>
+      <Card.Footer className="pt-3">
         <Button
           variant={isMine ? 'primary' : 'secondary'}
           size="sm"
@@ -335,7 +344,7 @@ export default function ExposantsScreen({ navigation }) {
           {...tabScroll}
           data={filtered}
           keyExtractor={item => String(item.id)}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 6, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#286EAD" />
@@ -375,9 +384,17 @@ export default function ExposantsScreen({ navigation }) {
             <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
               {/* Hero */}
               <View className="items-center pt-3 pb-6 px-4 border-b border-separator">
-                <Avatar size="lg" color={isMine ? 'success' : 'default'} variant="soft">
-                  <Avatar.Fallback>{sheetInitials}</Avatar.Fallback>
-                </Avatar>
+                {sheetExposant?.logo ? (
+                  <Image
+                    source={{ uri: sheetExposant.logo }}
+                    style={{ width: 64, height: 64, borderRadius: 32 }}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Avatar size="lg" color={isMine ? 'success' : 'default'} variant="soft">
+                    <Avatar.Fallback>{sheetInitials}</Avatar.Fallback>
+                  </Avatar>
+                )}
                 <Text className="text-xl font-extrabold text-foreground mt-4 mb-2 text-center">
                   {displayName}
                 </Text>

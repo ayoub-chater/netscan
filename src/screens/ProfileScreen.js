@@ -4,6 +4,7 @@ import {
   Text,
   ScrollView,
   Image,
+  Linking,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -36,6 +37,10 @@ const LANGUAGE_OPTIONS = [
 
 const APP_VERSION = '1.2.0';
 
+const SUPPORT_EMAIL = 'contact@logiterre-expo.com';
+const SUPPORT_PHONE = '+212 5 22 00 00 00';
+const SUPPORT_WEBSITE = 'https://logiterre-expo.com';
+
 export default function ProfileScreen() {
   const { t } = useTranslation();
   const { scanner, badgeNumber, signOut, isApproved, refreshProfile } = useAuth();
@@ -52,6 +57,7 @@ export default function ProfileScreen() {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [logoutOpen, setLogoutOpen] = useState(false);
+  const [supportOpen, setSupportOpen] = useState(false);
 
   const scannerName = scanner?.name || t('profile.defaultName');
   const scannerEmail = scanner?.email || '';
@@ -234,14 +240,16 @@ export default function ProfileScreen() {
           {t('profile.about')}
         </Text>
         <ListGroup className="mx-4 mb-8">
-          <ListGroup.Item onPress={() => {}}>
+          <ListGroup.Item onPress={() => setSupportOpen(true)}>
             <ListGroup.ItemPrefix>
               <Ionicons name="help-circle-outline" size={18} color="#286EAD" />
             </ListGroup.ItemPrefix>
             <ListGroup.ItemContent>
               <ListGroup.ItemTitle>{t('profile.helpSupport')}</ListGroup.ItemTitle>
             </ListGroup.ItemContent>
-            <ListGroup.ItemSuffix />
+            <ListGroup.ItemSuffix>
+              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+            </ListGroup.ItemSuffix>
           </ListGroup.Item>
           <Separator className="mx-4" />
           <ListGroup.Item onPress={() => navigation.navigate('Terms')}>
@@ -297,6 +305,68 @@ export default function ProfileScreen() {
               </Button>
               <Button variant="primary" size="sm" onPress={signOut}>
                 <Button.Label>{t('profile.logoutConfirm')}</Button.Label>
+              </Button>
+            </View>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog>
+
+      {/* ── Support Dialog ───────────────────────── */}
+      <Dialog isOpen={supportOpen} onOpenChange={setSupportOpen}>
+        <Dialog.Portal>
+          <Dialog.Overlay />
+          <Dialog.Content>
+            <View className="mb-5" style={{ gap: 6 }}>
+              <Dialog.Title>{t('profile.supportTitle')}</Dialog.Title>
+              <Dialog.Description>
+                {t('profile.supportBody')}
+              </Dialog.Description>
+            </View>
+
+            <ListGroup className="mb-5">
+              <ListGroup.Item onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
+                <ListGroup.ItemPrefix>
+                  <Ionicons name="mail-outline" size={18} color="#286EAD" />
+                </ListGroup.ItemPrefix>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>{t('profile.supportEmail')}</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>{SUPPORT_EMAIL}</ListGroup.ItemDescription>
+                </ListGroup.ItemContent>
+                <ListGroup.ItemSuffix>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </ListGroup.ItemSuffix>
+              </ListGroup.Item>
+              <Separator className="mx-4" />
+              <ListGroup.Item onPress={() => Linking.openURL(`tel:${SUPPORT_PHONE.replace(/\s/g, '')}`)}>
+                <ListGroup.ItemPrefix>
+                  <Ionicons name="call-outline" size={18} color="#286EAD" />
+                </ListGroup.ItemPrefix>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>{t('profile.supportPhone')}</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>{SUPPORT_PHONE}</ListGroup.ItemDescription>
+                </ListGroup.ItemContent>
+                <ListGroup.ItemSuffix>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </ListGroup.ItemSuffix>
+              </ListGroup.Item>
+              <Separator className="mx-4" />
+              <ListGroup.Item onPress={() => Linking.openURL(SUPPORT_WEBSITE)}>
+                <ListGroup.ItemPrefix>
+                  <Ionicons name="globe-outline" size={18} color="#286EAD" />
+                </ListGroup.ItemPrefix>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>{t('profile.supportWebsite')}</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>{SUPPORT_WEBSITE.replace('https://', '')}</ListGroup.ItemDescription>
+                </ListGroup.ItemContent>
+                <ListGroup.ItemSuffix>
+                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+                </ListGroup.ItemSuffix>
+              </ListGroup.Item>
+            </ListGroup>
+
+            <View className="flex-row justify-end">
+              <Button variant="tertiary" size="sm" onPress={() => setSupportOpen(false)}>
+                <Button.Label>{t('common.close')}</Button.Label>
               </Button>
             </View>
           </Dialog.Content>

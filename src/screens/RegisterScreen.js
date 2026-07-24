@@ -47,6 +47,13 @@ const ROLES = [
     descKey: 'register.exhibitorDesc',
     chipColor: 'accent',
   },
+  {
+    key: 'Intervenant',
+    icon: 'mic-outline',
+    labelKey: 'register.speakerLabel',
+    descKey: 'register.speakerDesc',
+    chipColor: 'accent',
+  },
 ];
 
 export default function RegisterScreen({ navigation }) {
@@ -75,6 +82,9 @@ export default function RegisterScreen({ navigation }) {
   const [pays, setPays] = useState('');
   const [secteur, setSecteur] = useState('');
   const [website, setWebsite] = useState('');
+  const [jobTitle, setJobTitle] = useState('');
+  const [topic, setTopic] = useState('');
+  const [bio, setBio] = useState('');
 
   // Scroll the error into view when it appears (error alert sits at the top of the form)
   useEffect(() => {
@@ -114,6 +124,9 @@ export default function RegisterScreen({ navigation }) {
         ville: ville.trim() || undefined,
         pays: pays.trim() || undefined,
         secteur_activite: secteur.trim() || undefined,
+        job_title: role === 'Intervenant' ? jobTitle.trim() || undefined : undefined,
+        topic: role === 'Intervenant' ? topic.trim() || undefined : undefined,
+        bio: role === 'Intervenant' ? bio.trim() || undefined : undefined,
       });
       await applySession(res.data);
     } catch (e) {
@@ -458,6 +471,54 @@ export default function RegisterScreen({ navigation }) {
                   value={website}
                   onChangeText={setWebsite}
                   editable={!loading}
+                />
+              </TextField>
+            </Surface>
+          )}
+
+          {/* Speaker-only fields */}
+          {role === 'Intervenant' && (
+            <Surface className="rounded-2xl px-5 py-5 gap-4 mb-4">
+              <Text className="text-sm font-semibold text-muted mb-1">
+                {t('register.speakerInfo')}
+              </Text>
+              <TextField>
+                <Label>{t('register.company')}</Label>
+                <Input
+                  placeholder={t('register.companyPlaceholder')}
+                  value={company}
+                  onChangeText={setCompany}
+                  editable={!loading}
+                />
+              </TextField>
+              <TextField>
+                <Label>{t('register.jobTitle')}</Label>
+                <Input
+                  placeholder={t('register.jobTitlePlaceholder')}
+                  value={jobTitle}
+                  onChangeText={setJobTitle}
+                  editable={!loading}
+                />
+              </TextField>
+              <TextField>
+                <Label>{t('register.topic')}</Label>
+                <Input
+                  placeholder={t('register.topicPlaceholder')}
+                  value={topic}
+                  onChangeText={setTopic}
+                  editable={!loading}
+                />
+              </TextField>
+              <TextField>
+                <Label>{t('register.bio')}</Label>
+                <Input
+                  placeholder={t('register.bioPlaceholder')}
+                  value={bio}
+                  onChangeText={setBio}
+                  editable={!loading}
+                  multiline
+                  numberOfLines={3}
+                  style={{ minHeight: 72, textAlignVertical: 'top' }}
                 />
               </TextField>
             </Surface>

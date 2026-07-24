@@ -53,6 +53,9 @@ function ContactRow({ item, onPress }) {
   const company = item?.person?.company || t('common.independent');
   const initial = name[0]?.toUpperCase() || '?';
   const isExposant = role === 'Exposant';
+  const photo = isExposant
+    ? item?.person?.exhibitor_logo || item?.person?.image
+    : item?.person?.image;
   const timeStr = item.scanned_at
     ? new Date(item.scanned_at).toLocaleTimeString('fr-FR', {
         hour: '2-digit',
@@ -65,9 +68,17 @@ function ContactRow({ item, onPress }) {
       onPress={() => onPress(item)}
       className="flex-row items-center bg-surface rounded-xl px-4 py-3.5 mb-2.5 active:opacity-70"
     >
-      <Avatar size="md" color={isExposant ? 'success' : 'default'} variant="soft">
-        <Avatar.Fallback>{initial}</Avatar.Fallback>
-      </Avatar>
+      {photo ? (
+        <Image
+          source={{ uri: photo }}
+          style={{ width: 40, height: 40, borderRadius: 20 }}
+          resizeMode="cover"
+        />
+      ) : (
+        <Avatar size="md" color={isExposant ? 'success' : 'default'} variant="soft">
+          <Avatar.Fallback>{initial}</Avatar.Fallback>
+        </Avatar>
+      )}
       <View className="flex-1 ml-3">
         <Text className="text-sm font-bold text-foreground">{name}</Text>
         <Text className="text-xs text-muted mt-0.5">{company}</Text>
@@ -212,6 +223,10 @@ export default function HomeScreen({ navigation }) {
 
   const role = scanner?.role || t('profile.defaultRole');
   const isExposant = role === 'Exposant';
+  const scannerInitial = (scanner?.name || t('home.friend'))[0]?.toUpperCase() || '?';
+  const profileImage = isExposant
+    ? scanner?.exhibitor_logo || scanner?.image
+    : scanner?.image;
   const currentDayIndex = (new Date().getDay() + 6) % 7;
 
   const todayCount = history.filter(h => {
@@ -232,13 +247,26 @@ export default function HomeScreen({ navigation }) {
       >
         {/* ── Header ─────────────────────────────────── */}
         <View className="px-3 pt-5 pb-4 flex-row items-end justify-between">
-          <View style={{ minHeight: 64, justifyContent: 'flex-end' }}>
-            <Text className="text-base font-medium text-muted">
-              {displayedHi || '​'}
-            </Text>
-            <Text className="text-2xl font-extrabold text-foreground leading-tight">
-              {displayedName || '​'}
-            </Text>
+          <View className="flex-row items-center" style={{ gap: 12, flex: 1 }}>
+            {profileImage ? (
+              <Image
+                source={{ uri: profileImage }}
+                style={{ width: 48, height: 48, borderRadius: 24 }}
+                resizeMode="cover"
+              />
+            ) : (
+              <Avatar size="lg" color={isExposant ? 'success' : 'default'} variant="soft">
+                <Avatar.Fallback>{scannerInitial}</Avatar.Fallback>
+              </Avatar>
+            )}
+            <View style={{ minHeight: 64, justifyContent: 'flex-end', flex: 1 }}>
+              <Text className="text-base font-medium text-muted">
+                {displayedHi || '​'}
+              </Text>
+              <Text className="text-2xl font-extrabold text-foreground leading-tight">
+                {displayedName || '​'}
+              </Text>
+            </View>
           </View>
           <Pressable
             onPress={() => navigation.navigate('MyBadge')}

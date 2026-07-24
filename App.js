@@ -30,6 +30,7 @@ import PlanScreen from './src/screens/PlanScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import WebsiteScreen from './src/screens/WebsiteScreen';
 import ExposantsScreen from './src/screens/ExposantsScreen';
+import AppointmentsScreen from './src/screens/AppointmentsScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import TermsScreen from './src/screens/TermsScreen';
 import MyBadgeScreen from './src/screens/MyBadgeScreen';
@@ -49,6 +50,7 @@ function MainTabs() {
       <Tab.Screen name="Plan" component={PlanScreen} />
       <Tab.Screen name="Expos" component={WebsiteScreen} />
       <Tab.Screen name="Exposants" component={ExposantsScreen} />
+      <Tab.Screen name="RDV" component={AppointmentsScreen} />
       <Tab.Screen name="Détails" component={ProfileScreen} />
       {/* Sub-page kept inside the tabs so the floating navbar stays visible.
           Hidden from the bar itself via the ICONS filter in FloatingTabBar. */}
@@ -70,8 +72,11 @@ function ConnectionNotifications() {
 
     const responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
       const data = response.notification.request.content.data;
-      if (data?.type === 'connection' && navigationRef.isReady()) {
+      if (!navigationRef.isReady()) return;
+      if (data?.type === 'connection') {
         navigationRef.navigate('Main', { screen: 'History' });
+      } else if (data?.type === 'appointment') {
+        navigationRef.navigate('Main', { screen: 'RDV' });
       }
     });
 

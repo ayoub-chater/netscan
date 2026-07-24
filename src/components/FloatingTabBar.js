@@ -14,6 +14,7 @@ const ICONS = {
   Plan: ['map', 'map-outline'],
   Expos: ['globe', 'globe-outline'],
   Exposants: ['storefront', 'storefront-outline'],
+  RDV: ['calendar', 'calendar-outline'],
   Détails: ['person', 'person-outline'],
 };
 

@@ -91,6 +91,59 @@ export const deleteNetworkingRecord = (scanId, badgeNumber) =>
 // ─── Exposants ────────────────────────────────────────────────────────────────
 export const getExposants = () => api.get(ENDPOINTS.exposants);
 
+// ─── Appointments (bookable contacts / networking sessions) ────────────────────
+export const getPersonas = () => api.get(ENDPOINTS.personas);
+
+export const getPersonaSlots = (slug, date) => api.get(ENDPOINTS.personaSlots(slug, date));
+
+// data: { persona_slug, date, start_time, meeting_type?, note? }
+export const bookAppointment = (data) =>
+    api.post(ENDPOINTS.appointmentBook, { ...data, event_slug: EVENT_SLUG });
+
+export const getMyAppointments = () => api.get(ENDPOINTS.appointments);
+
+export const cancelAppointment = (id) => api.delete(ENDPOINTS.appointmentCancel(id));
+
+// ─── Speaker (Intervenant) self-service ────────────────────────────────────────
+export const getSpeakerPersona = () => api.get(ENDPOINTS.speakerPersona);
+
+// data: { name?, title, company, bio, location, video_link, appointment_duration,
+//         buffer_time, max_per_day, meeting_types?, languages?, status?, photo? }
+// photo is a { uri, name, type } object from expo-image-picker.
+export const updateSpeakerPersona = (data) => {
+    const form = new FormData();
+    form.append('_method', 'PUT'); // method spoofing so multipart files parse
+    [
+        'name', 'title', 'company', 'bio', 'location', 'video_link',
+        'appointment_duration', 'buffer_time', 'max_per_day', 'status',
+    ].forEach((key) => {
+        if (data[key] !== undefined && data[key] !== null) form.append(key, String(data[key]));
+    });
+    (data.meeting_types || []).forEach((m) => form.append('meeting_types[]', m));
+    (data.languages || []).forEach((l) => form.append('languages[]', l));
+    if (data.photo) form.append('photo', data.photo);
+    return api.post(ENDPOINTS.speakerPersona, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 30000,
+    });
+};
+
+// data: { date, start_time, end_time }  (times as 'HH:mm')
+export const addSpeakerAvailability = (data) =>
+    api.post(ENDPOINTS.speakerAvailabilities, data);
+
+export const deleteSpeakerAvailability = (id) =>
+    api.delete(ENDPOINTS.speakerAvailabilityDelete(id));
+
+export const getSpeakerAppointments = () => api.get(ENDPOINTS.speakerAppointments);
+
+// status: 'confirmed' | 'cancelled' | 'completed'
+export const updateSpeakerAppointment = (id, status, internalNote) =>
+    api.patch(ENDPOINTS.speakerAppointmentUpdate(id), {
+        status,
+        internal_note: internalNote,
+    });
+
 // ─── Profile ──────────────────────────────────────────────────────────────────
 export const getProfile = () => api.get(ENDPOINTS.profile);
 

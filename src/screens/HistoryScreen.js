@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
+  Image,
   ScrollView,
   RefreshControl,
   Alert,
@@ -192,6 +193,9 @@ export default function HistoryScreen() {
               const company = item?.person?.company || t('common.independent');
               const initial = name[0]?.toUpperCase() || '?';
               const isExposant = role === 'Exposant';
+              const photo = isExposant
+                ? item?.person?.exhibitor_logo || item?.person?.image
+                : item?.person?.image;
 
               const dateStr = item.scanned_at
                 ? new Date(item.scanned_at).toLocaleDateString('fr-FR', {
@@ -211,13 +215,21 @@ export default function HistoryScreen() {
                   {index > 0 && <Separator className="mx-4" />}
                   <ListGroup.Item onPress={() => setSelectedItem(item)}>
                     <ListGroup.ItemPrefix>
-                      <Avatar
-                        size="sm"
-                        color={isExposant ? 'success' : 'default'}
-                        variant="soft"
-                      >
-                        <Avatar.Fallback>{initial}</Avatar.Fallback>
-                      </Avatar>
+                      {photo ? (
+                        <Image
+                          source={{ uri: photo }}
+                          style={{ width: 32, height: 32, borderRadius: 16 }}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <Avatar
+                          size="sm"
+                          color={isExposant ? 'success' : 'default'}
+                          variant="soft"
+                        >
+                          <Avatar.Fallback>{initial}</Avatar.Fallback>
+                        </Avatar>
+                      )}
                     </ListGroup.ItemPrefix>
                     <ListGroup.ItemContent>
                       <ListGroup.ItemTitle>{name}</ListGroup.ItemTitle>

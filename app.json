@@ -26,7 +26,7 @@
       },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#DCE9F5"
       },
       "package": "com.logiterre",
       "versionCode": 12,
@@ -70,7 +70,7 @@
           "backgroundColor": "#ffffff",
           "dark": {
             "image": "./assets/splash-icon-dark.png",
-            "backgroundColor": "#000000"
+            "backgroundColor": "#1A2030"
           }
         }
       ]

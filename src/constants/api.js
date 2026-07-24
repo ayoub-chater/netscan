@@ -19,6 +19,18 @@ export const ENDPOINTS = {
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,
     networkingDelete: (id, badge) => `${BASE_URL}/networking/history/${id}?badge_number=${encodeURIComponent(badge)}`,
     exposants: `${BASE_URL}/exposants`,
+    personas: `${BASE_URL}/personas?event_slug=${EVENT_SLUG}`,
+    personaSlots: (slug, date) =>
+        `${BASE_URL}/personas/${encodeURIComponent(slug)}/slots?event_slug=${EVENT_SLUG}&date=${encodeURIComponent(date)}`,
+    appointments: `${BASE_URL}/appointments?event_slug=${EVENT_SLUG}`,
+    appointmentBook: `${BASE_URL}/appointments`,
+    appointmentCancel: (id) => `${BASE_URL}/appointments/${id}`,
+    // Speaker (Intervenant) self-service
+    speakerPersona: `${BASE_URL}/speaker/persona`,
+    speakerAvailabilities: `${BASE_URL}/speaker/persona/availabilities`,
+    speakerAvailabilityDelete: (id) => `${BASE_URL}/speaker/persona/availabilities/${id}`,
+    speakerAppointments: `${BASE_URL}/speaker/appointments`,
+    speakerAppointmentUpdate: (id) => `${BASE_URL}/speaker/appointments/${id}`,
     profile: `${BASE_URL}/profile`,
     devicesRegister: `${BASE_URL}/devices/register`,
     devicesUnregister: `${BASE_URL}/devices/unregister`,

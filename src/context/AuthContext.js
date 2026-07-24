@@ -177,6 +177,7 @@ export function AuthProvider({ children }) {
             // is approved. Default to true when the flag is absent (old sessions).
             isApproved: scanner?.is_approved !== false,
             isExposant: (scanner?.role || '').toLowerCase() === 'exposant',
+            isSpeaker: (scanner?.role || '').toLowerCase() === 'intervenant',
             signIn,
             signOut,
             updateBadgeNumber,

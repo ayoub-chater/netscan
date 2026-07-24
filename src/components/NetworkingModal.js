@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Image } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
@@ -24,6 +24,9 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
   const role = targetPerson?.role || t('profile.defaultRole');
   const isExposant = role === 'Exposant';
   const initial = name[0]?.toUpperCase() || '?';
+  const photo = isExposant
+    ? targetPerson?.exhibitor_logo || targetPerson?.image
+    : targetPerson?.image;
 
   const infoItems = targetPerson
     ? [
@@ -53,18 +56,21 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
           <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 48 }}>
             {/* ── Icon + Title ───────────────────────── */}
             <View className="items-center pt-3 pb-5 px-6">
-              <View
-                className={[
-                  'w-16 h-16 rounded-full items-center justify-center mb-4',
-                  viewOnly ? 'bg-surface' : 'bg-surface',
-                ].join(' ')}
-              >
-                <Ionicons
-                  name={viewOnly ? 'person-outline' : 'checkmark-circle'}
-                  size={32}
-                  color={viewOnly ? '#6B7280' : '#2db067'}
+              {photo ? (
+                <Image
+                  source={{ uri: photo }}
+                  style={{ width: 64, height: 64, borderRadius: 32, marginBottom: 16 }}
+                  resizeMode="cover"
                 />
-              </View>
+              ) : (
+                <View className="w-16 h-16 rounded-full items-center justify-center mb-4 bg-surface">
+                  <Ionicons
+                    name={viewOnly ? 'person-outline' : 'checkmark-circle'}
+                    size={32}
+                    color={viewOnly ? '#6B7280' : '#2db067'}
+                  />
+                </View>
+              )}
               <Text className="text-2xl font-extrabold text-foreground mb-2 text-center">
                 {viewOnly ? name : t('networking.sharedMoment')}
               </Text>
@@ -80,9 +86,17 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
               <Surface className="rounded-2xl p-5">
                 {/* Avatar + name */}
                 <View className="flex-row items-center mb-4" style={{ gap: 12 }}>
-                  <Avatar size="md" color={isExposant ? 'success' : 'default'} variant="soft">
-                    <Avatar.Fallback>{initial}</Avatar.Fallback>
-                  </Avatar>
+                  {photo ? (
+                    <Image
+                      source={{ uri: photo }}
+                      style={{ width: 40, height: 40, borderRadius: 20 }}
+                      resizeMode="cover"
+                    />
+                  ) : (
+                    <Avatar size="md" color={isExposant ? 'success' : 'default'} variant="soft">
+                      <Avatar.Fallback>{initial}</Avatar.Fallback>
+                    </Avatar>
+                  )}
                   <View className="flex-1" style={{ gap: 4 }}>
                     <Text className="text-base font-bold text-foreground">{name}</Text>
                     <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
