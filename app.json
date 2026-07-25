@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "LOGITERRE",
-    "slug": "logiterre",
+    "slug": "logittere",
     "version": "1.6.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -32,7 +32,8 @@
       "versionCode": 12,
       "permissions": [
         "CAMERA",
-        "android.permission.CAMERA"
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO"
       ],
       "edgeToEdgeEnabled": true,
       "supportsTablet": false
@@ -80,9 +81,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "49d9e8d2-d8fa-4666-9e20-64d5b467c63d"
+        "projectId": "285c6452-63c7-4554-81f0-3d03039793e9"
       }
     },
-    "owner": "mzlouafi"
+    "owner": "aigorithme"
   }
 }
