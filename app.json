@@ -29,7 +29,7 @@
         "backgroundColor": "#DCE9F5"
       },
       "package": "com.logiterre",
-      "versionCode": 12,
+      "versionCode": 13,
       "permissions": [
         "CAMERA",
         "android.permission.CAMERA",
