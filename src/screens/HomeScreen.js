@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
 import { withUniwind } from 'uniwind';
 import { withTiming } from 'react-native-reanimated';
 import {
@@ -25,8 +26,9 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
-import { networkingHistory } from '../services/api';
+import { networkingHistory, getUnreadNotificationCount } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
+import AppMenu from '../components/AppMenu';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -93,9 +95,60 @@ function ContactRow({ item, onPress }) {
   );
 }
 
+// Big entry point into the "Participer" flow. Its look follows where the user
+// stands: an invitation before applying, a status card after.
+function ParticipateBanner({ status, role, onPress }) {
+  const { t } = useTranslation();
+
+  // Class names are written out in full — Uniwind resolves them statically,
+  // so an interpolated `bg-${tint}-soft` would never be generated.
+  const variant =
+    status === 'approved'
+      ? { icon: 'checkmark-circle', bubble: 'bg-success-soft', iconColor: 'text-success', titleKey: 'participate.bannerApprovedTitle', bodyKey: 'participate.bannerApprovedBody' }
+      : status === 'pending'
+      ? { icon: 'time-outline', bubble: 'bg-warning-soft', iconColor: 'text-warning', titleKey: 'participate.bannerPendingTitle', bodyKey: 'participate.bannerPendingBody' }
+      : status === 'rejected'
+      ? { icon: 'refresh-circle-outline', bubble: 'bg-warning-soft', iconColor: 'text-warning', titleKey: 'participate.bannerRejectedTitle', bodyKey: 'participate.bannerRejectedBody' }
+      : { icon: 'sparkles', bubble: 'bg-accent-soft', iconColor: 'text-accent', titleKey: 'participate.bannerTitle', bodyKey: 'participate.bannerBody' };
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className="mx-4 mb-4 rounded-2xl bg-surface border border-separator px-4 py-4 flex-row items-center active:opacity-80"
+      style={{ gap: 14 }}
+    >
+      <View className={`w-12 h-12 rounded-2xl items-center justify-center ${variant.bubble}`}>
+        <StyledIonicons name={variant.icon} size={24} className={variant.iconColor} />
+      </View>
+      <View className="flex-1">
+        <View className="flex-row items-center" style={{ gap: 8 }}>
+          <Text className="text-base font-extrabold text-foreground">
+            {t(variant.titleKey)}
+          </Text>
+          {role && status ? (
+            <Chip size="sm" variant="soft" color={status === 'approved' ? 'success' : 'warning'}>
+              <Chip.Label>{role}</Chip.Label>
+            </Chip>
+          ) : null}
+        </View>
+        <Text className="text-xs text-muted mt-1 leading-5">{t(variant.bodyKey)}</Text>
+      </View>
+      <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+    </Pressable>
+  );
+}
+
 export default function HomeScreen({ navigation }) {
-  const { t, i18n } = useTranslation();
-  const { scanner, badgeNumber, eventInfo } = useAuth();
+  const { t } = useTranslation();
+  const {
+    scanner,
+    badgeNumber,
+    eventInfo,
+    participationStatus,
+    participationRole,
+    isExhibitorStaff,
+    refreshProfile,
+  } = useAuth();
   const { translateY } = useTabBar();
   const insets = useSafeAreaInsets();
   const lastScrollY = useRef(0);
@@ -104,9 +157,10 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [badgeModalVisible, setBadgeModalVisible] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
+  const closeMenu = useCallback(() => setMenuVisible(false), []);
+  const [unreadCount, setUnreadCount] = useState(0);
   const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' });
-  const [displayedHi, setDisplayedHi] = useState('');
-  const [displayedName, setDisplayedName] = useState('');
 
   const loadHistory = async () => {
     if (!badgeNumber) return;
@@ -120,49 +174,28 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const loadUnreadCount = async () => {
+    try {
+      const res = await getUnreadNotificationCount();
+      setUnreadCount(res?.data?.unread_count || 0);
+    } catch {}
+  };
+
   useFocusEffect(
     React.useCallback(() => {
       loadHistory();
+      loadUnreadCount();
+      // Picks up participation decisions and the B2B pending count, which the
+      // tab bar reads to draw its red dot — Home is the screen users return to.
+      refreshProfile();
     }, [badgeNumber])
   );
 
-  useFocusEffect(
-    React.useCallback(() => {
-      const fullHi = t('home.greeting');
-      const fullName = scanner?.name || t('home.friend');
-      let hiIndex = 0;
-      let nameIndex = 0;
-      let timeout1, timeout2;
-
-      setDisplayedHi('');
-      setDisplayedName('');
-
-      const typeHi = () => {
-        if (hiIndex < fullHi.length) {
-          setDisplayedHi(fullHi.slice(0, hiIndex + 1));
-          hiIndex++;
-          timeout1 = setTimeout(typeHi, 40);
-        } else {
-          timeout1 = setTimeout(typeName, 100);
-        }
-      };
-
-      const typeName = () => {
-        if (nameIndex < fullName.length) {
-          setDisplayedName(fullName.slice(0, nameIndex + 1));
-          nameIndex++;
-          timeout2 = setTimeout(typeName, 40);
-        }
-      };
-
-      timeout1 = setTimeout(typeHi, 300);
-
-      return () => {
-        clearTimeout(timeout1);
-        clearTimeout(timeout2);
-      };
-    }, [scanner?.name, i18n.language])
-  );
+  // A push arriving while Home is on screen should bump the bell badge.
+  useEffect(() => {
+    const sub = Notifications.addNotificationReceivedListener(() => loadUnreadCount());
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     if (!eventInfo?.start_date) return;
@@ -197,6 +230,7 @@ export default function HomeScreen({ navigation }) {
   const onRefresh = () => {
     setRefreshing(true);
     loadHistory();
+    loadUnreadCount();
   };
 
   // Reveal the tab bar whenever the Home screen regains focus.
@@ -222,11 +256,6 @@ export default function HomeScreen({ navigation }) {
   };
 
   const role = scanner?.role || t('profile.defaultRole');
-  const isExposant = role === 'Exposant';
-  const scannerInitial = (scanner?.name || t('home.friend'))[0]?.toUpperCase() || '?';
-  const profileImage = isExposant
-    ? scanner?.exhibitor_logo || scanner?.image
-    : scanner?.image;
   const currentDayIndex = (new Date().getDay() + 6) % 7;
 
   const todayCount = history.filter(h => {
@@ -235,211 +264,236 @@ export default function HomeScreen({ navigation }) {
   }).length;
 
   return (
-    <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        onScroll={handleScroll}
-        scrollEventThrottle={16}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#286EAD" />
-        }
-        contentContainerStyle={{ paddingBottom: 120 }}
-      >
-        {/* ── Header ─────────────────────────────────── */}
-        <View className="px-3 pt-5 pb-4 flex-row items-end justify-between">
-          <View className="flex-row items-center" style={{ gap: 12, flex: 1 }}>
-            {profileImage ? (
-              <Image
-                source={{ uri: profileImage }}
-                style={{ width: 48, height: 48, borderRadius: 24 }}
-                resizeMode="cover"
-              />
-            ) : (
-              <Avatar size="lg" color={isExposant ? 'success' : 'default'} variant="soft">
-                <Avatar.Fallback>{scannerInitial}</Avatar.Fallback>
-              </Avatar>
-            )}
-            <View style={{ minHeight: 64, justifyContent: 'flex-end', flex: 1 }}>
-              <Text className="text-base font-medium text-muted">
-                {displayedHi || '​'}
-              </Text>
-              <Text
-                className="text-2xl font-extrabold text-foreground leading-tight"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {displayedName || '​'}
-              </Text>
-            </View>
-          </View>
-          <Pressable
-            onPress={() => navigation.navigate('MyBadge')}
-            className="flex-row items-center bg-surface rounded-xl py-1.5 pl-3 pr-1.5 active:opacity-70"
-            hitSlop={8}
-            style={{ gap: 8, flexShrink: 0, marginLeft: 8 }}
-          >
-            <Text className="text-xs font-bold text-foreground">{role}</Text>
-            <View className="w-7 h-7 rounded-lg bg-accent items-center justify-center">
-              <Ionicons name="qr-code" size={15} color="#FFFFFF" />
-            </View>
-          </Pressable>
-        </View>
-
-        {/* ── Day Selector ───────────────────────────── */}
+    // Safe-area padding lives on the inner container so overlays mounted at the
+    // root (the menu) can still cover the status bar area.
+    <View className="flex-1 bg-background">
+      <View style={{ flex: 1, paddingTop: insets.top }}>
         <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
-          style={{ marginBottom: 20 }}
+          showsVerticalScrollIndicator={false}
+          onScroll={handleScroll}
+          scrollEventThrottle={16}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#286EAD" />
+          }
+          contentContainerStyle={{ paddingBottom: 120 }}
         >
-          {DAYS.map((d, i) => {
-            const isActive = i === currentDayIndex;
-            return (
-              <View
-                key={d}
-                className={[
-                  'items-center px-3 py-2 rounded-xl',
-                  isActive ? 'bg-accent' : 'bg-surface',
-                ].join(' ')}
+          {/* ── Header ─────────────────────────────────── */}
+          <View className="px-3 pt-5 pb-4 flex-row items-center justify-between">
+            <View className="flex-row items-center" style={{ gap: 10, flex: 1 }}>
+              <Pressable
+                onPress={() => setMenuVisible(true)}
+                hitSlop={10}
+                accessibilityRole="button"
+                accessibilityLabel={t('menu.open')}
+                className="w-10 h-10 rounded-2xl bg-surface border border-separator items-center justify-center active:opacity-70"
               >
-                <Text
-                  className={`text-xs font-bold ${isActive ? 'text-accent-foreground' : 'text-muted'}`}
-                >
-                  {d}
-                </Text>
+                <Ionicons name="menu" size={20} color="#286EAD" />
+              </Pressable>
+              <View style={{ flex: 1 }} />
+            </View>
+            <Pressable
+              onPress={() => navigation.navigate('Notifications')}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t('notifications.title')}
+              className="w-10 h-10 rounded-2xl bg-surface border border-separator items-center justify-center active:opacity-70"
+              style={{ flexShrink: 0 }}
+            >
+              <Ionicons name="notifications-outline" size={19} color="#286EAD" />
+              {unreadCount > 0 && (
                 <View
-                  className={[
-                    'w-1 h-1 rounded-full mt-1',
-                    isActive ? 'bg-accent-foreground' : 'bg-transparent',
-                  ].join(' ')}
-                />
-              </View>
-            );
-          })}
-        </ScrollView>
-
-        {/* ── Badge Banner ───────────────────────────── */}
-        <Pressable
-          onPress={() => setBadgeModalVisible(true)}
-          className="mx-4 mb-5 rounded-2xl overflow-hidden active:opacity-80"
-          style={{ height: 140 }}
-        >
-          <Image
-            source={require('../../assets/banner-badge.png')}
-            style={{ width: '100%', height: '100%' }}
-            resizeMode="cover"
-          />
-        </Pressable>
-
-        {/* ── Countdown ──────────────────────────────── */}
-        <Card className="mx-4 mb-4">
-          <Card.Body>
-            <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
-              {t('home.eventOpening')}
-            </Text>
-            <View className="flex-row justify-center items-start" style={{ gap: 8 }}>
-              <CountdownDigit value={timeLeft.d} label={t('home.days')} />
-              <Text className="text-xl font-light text-muted" style={{ marginTop: 16 }}>:</Text>
-              <CountdownDigit value={timeLeft.h} label={t('home.hours')} />
-              <Text className="text-xl font-light text-muted" style={{ marginTop: 16 }}>:</Text>
-              <CountdownDigit value={timeLeft.m} label={t('home.minutes')} />
-              <Text className="text-xl font-light text-muted" style={{ marginTop: 16 }}>:</Text>
-              <CountdownDigit value={timeLeft.s} label={t('home.seconds')} />
-            </View>
-          </Card.Body>
-        </Card>
-
-        {/* ── Stats ──────────────────────────────────── */}
-        <View className="flex-row px-4 mb-4" style={{ gap: 12 }}>
-          <Card className="flex-1">
-            <Card.Body className="items-center py-4">
-              <Text className="text-3xl font-extrabold text-accent">{todayCount}</Text>
-              <Text className="text-[11px] text-muted font-semibold mt-1 text-center">
-                {t('home.scansToday')}
-              </Text>
-            </Card.Body>
-          </Card>
-          <Card className="flex-1">
-            <Card.Body className="items-center py-4">
-              <Text className="text-3xl font-extrabold text-foreground">{history.length}</Text>
-              <Text className="text-[11px] text-muted font-semibold mt-1 text-center">
-                {t('home.totalNetwork')}
-              </Text>
-            </Card.Body>
-          </Card>
-        </View>
-
-        {/* ── Scan CTA ───────────────────────────────── */}
-        <View className="px-4 mb-6">
-          <Button
-            variant="primary"
-            size="lg"
-            className="rounded-2xl"
-            onPress={() => navigation.navigate('Scanner')}
-          >
-            <Ionicons name="qr-code-outline" size={20} color="#FFFFFF" />
-            <Button.Label>{t('home.scanNow')}</Button.Label>
-          </Button>
-        </View>
-
-        {/* ── Recent Contacts ────────────────────────── */}
-        <View className="px-4">
-          <View className="flex-row justify-between items-center mb-3">
-            <View className="flex-row items-center" style={{ gap: 8 }}>
-              <Text className="text-base font-bold text-foreground">
-                {t('home.meetingsJournal')}
-              </Text>
-              {history.length > 0 && (
-                <Chip size="sm" variant="soft" color="default">
-                  <Chip.Label>{history.length}</Chip.Label>
-                </Chip>
+                  className="absolute bg-danger rounded-full items-center justify-center"
+                  style={{ top: -4, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4 }}
+                >
+                  <Text className="text-[10px] font-extrabold text-danger-foreground">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Text>
+                </View>
               )}
-            </View>
-            <Pressable onPress={() => navigation.navigate('History')} hitSlop={8}>
-              <Text className="text-sm font-semibold text-accent">{t('home.seeAll')}</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => navigation.navigate('MyBadge')}
+              className="flex-row items-center bg-surface rounded-xl py-1.5 pl-3 pr-1.5 active:opacity-70"
+              hitSlop={8}
+              style={{ gap: 8, flexShrink: 0, marginLeft: 8 }}
+            >
+              <Text className="text-xs font-bold text-foreground">{role}</Text>
+              <View className="w-7 h-7 rounded-lg bg-accent items-center justify-center">
+                <Ionicons name="qr-code" size={15} color="#FFFFFF" />
+              </View>
             </Pressable>
           </View>
 
-          {loadingHistory ? (
-            [0, 1, 2].map(i => (
-              <View
-                key={i}
-                className="flex-row items-center bg-surface rounded-xl px-4 py-3.5 mb-2.5"
-              >
-                <Skeleton isLoading variant="shimmer">
-                  <View className="w-10 h-10 rounded-full bg-surface-secondary" />
-                </Skeleton>
-                <View className="flex-1 ml-3" style={{ gap: 8 }}>
-                  <Skeleton isLoading variant="shimmer">
-                    <View className="h-3.5 rounded-full bg-surface-secondary" style={{ width: 128 }} />
-                  </Skeleton>
-                  <Skeleton isLoading variant="shimmer">
-                    <View className="h-3 rounded-full bg-surface-secondary" style={{ width: 96 }} />
-                  </Skeleton>
+          {/* ── Day Selector ───────────────────────────── */}
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
+            style={{ marginBottom: 20 }}
+          >
+            {DAYS.map((d, i) => {
+              const isActive = i === currentDayIndex;
+              return (
+                <View
+                  key={d}
+                  className={[
+                    'items-center px-3 py-2 rounded-xl',
+                    isActive ? 'bg-accent' : 'bg-surface',
+                  ].join(' ')}
+                >
+                  <Text
+                    className={`text-xs font-bold ${isActive ? 'text-accent-foreground' : 'text-muted'}`}
+                  >
+                    {d}
+                  </Text>
+                  <View
+                    className={[
+                      'w-1 h-1 rounded-full mt-1',
+                      isActive ? 'bg-accent-foreground' : 'bg-transparent',
+                    ].join(' ')}
+                  />
                 </View>
-              </View>
-            ))
-          ) : history.length === 0 ? (
-            <View className="items-center py-10 bg-surface rounded-2xl border border-separator">
-              <Ionicons name="people-outline" size={40} color="#286EAD" />
-              <Text className="text-sm font-bold text-foreground mt-3 mb-1">
-                {t('home.emptyTitle')}
-              </Text>
-              <Text className="text-xs text-muted text-center leading-5 px-8">
-                {t('home.emptyBody')}
-              </Text>
-            </View>
-          ) : (
-            history.slice(0, 4).map((item, index) => (
-              <ContactRow
-                key={item.id || index}
-                item={item}
-                onPress={setSelectedItem}
-              />
-            ))
+              );
+            })}
+          </ScrollView>
+
+          {/* ── Participer ─────────────────────────────── */}
+          {/* Staff take part through the exhibitor that added them, so there
+              is nothing for them to apply for. */}
+          {!isExhibitorStaff && (
+            <ParticipateBanner
+              status={participationStatus}
+              role={participationRole}
+              onPress={() => navigation.navigate('Participate')}
+            />
           )}
-        </View>
-      </ScrollView>
+
+          {/* ── Badge Banner ───────────────────────────── */}
+          <Pressable
+            onPress={() => setBadgeModalVisible(true)}
+            className="mx-4 mb-5 rounded-2xl overflow-hidden active:opacity-80"
+            style={{ height: 140 }}
+          >
+            <Image
+              source={require('../../assets/banner-badge.png')}
+              style={{ width: '100%', height: '100%' }}
+              resizeMode="cover"
+            />
+          </Pressable>
+
+          {/* ── Countdown ──────────────────────────────── */}
+          <Card className="mx-4 mb-4">
+            <Card.Body>
+              <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
+                {t('home.eventOpening')}
+              </Text>
+              <View className="flex-row justify-center items-start" style={{ gap: 8 }}>
+                <CountdownDigit value={timeLeft.d} label={t('home.days')} />
+                <Text className="text-xl font-light text-muted" style={{ marginTop: 16 }}>:</Text>
+                <CountdownDigit value={timeLeft.h} label={t('home.hours')} />
+                <Text className="text-xl font-light text-muted" style={{ marginTop: 16 }}>:</Text>
+                <CountdownDigit value={timeLeft.m} label={t('home.minutes')} />
+                <Text className="text-xl font-light text-muted" style={{ marginTop: 16 }}>:</Text>
+                <CountdownDigit value={timeLeft.s} label={t('home.seconds')} />
+              </View>
+            </Card.Body>
+          </Card>
+
+          {/* ── Stats ──────────────────────────────────── */}
+          <View className="flex-row px-4 mb-4" style={{ gap: 12 }}>
+            <Card className="flex-1">
+              <Card.Body className="items-center py-4">
+                <Text className="text-3xl font-extrabold text-accent">{todayCount}</Text>
+                <Text className="text-[11px] text-muted font-semibold mt-1 text-center">
+                  {t('home.scansToday')}
+                </Text>
+              </Card.Body>
+            </Card>
+            <Card className="flex-1">
+              <Card.Body className="items-center py-4">
+                <Text className="text-3xl font-extrabold text-foreground">{history.length}</Text>
+                <Text className="text-[11px] text-muted font-semibold mt-1 text-center">
+                  {t('home.totalNetwork')}
+                </Text>
+              </Card.Body>
+            </Card>
+          </View>
+
+          {/* ── Scan CTA ───────────────────────────────── */}
+          <View className="px-4 mb-6">
+            <Button
+              variant="primary"
+              size="lg"
+              className="rounded-2xl"
+              onPress={() => navigation.navigate('Scanner')}
+            >
+              <Ionicons name="qr-code-outline" size={20} color="#FFFFFF" />
+              <Button.Label>{t('home.scanNow')}</Button.Label>
+            </Button>
+          </View>
+
+          {/* ── Recent Contacts ────────────────────────── */}
+          <View className="px-4">
+            <View className="flex-row justify-between items-center mb-3">
+              <View className="flex-row items-center" style={{ gap: 8 }}>
+                <Text className="text-base font-bold text-foreground">
+                  {t('home.meetingsJournal')}
+                </Text>
+                {history.length > 0 && (
+                  <Chip size="sm" variant="soft" color="default">
+                    <Chip.Label>{history.length}</Chip.Label>
+                  </Chip>
+                )}
+              </View>
+              <Pressable onPress={() => navigation.navigate('History')} hitSlop={8}>
+                <Text className="text-sm font-semibold text-accent">{t('home.seeAll')}</Text>
+              </Pressable>
+            </View>
+
+            {loadingHistory ? (
+              [0, 1, 2].map(i => (
+                <View
+                  key={i}
+                  className="flex-row items-center bg-surface rounded-xl px-4 py-3.5 mb-2.5"
+                >
+                  <Skeleton isLoading variant="shimmer">
+                    <View className="w-10 h-10 rounded-full bg-surface-secondary" />
+                  </Skeleton>
+                  <View className="flex-1 ml-3" style={{ gap: 8 }}>
+                    <Skeleton isLoading variant="shimmer">
+                      <View className="h-3.5 rounded-full bg-surface-secondary" style={{ width: 128 }} />
+                    </Skeleton>
+                    <Skeleton isLoading variant="shimmer">
+                      <View className="h-3 rounded-full bg-surface-secondary" style={{ width: 96 }} />
+                    </Skeleton>
+                  </View>
+                </View>
+              ))
+            ) : history.length === 0 ? (
+              <View className="items-center py-10 bg-surface rounded-2xl border border-separator">
+                <Ionicons name="people-outline" size={40} color="#286EAD" />
+                <Text className="text-sm font-bold text-foreground mt-3 mb-1">
+                  {t('home.emptyTitle')}
+                </Text>
+                <Text className="text-xs text-muted text-center leading-5 px-8">
+                  {t('home.emptyBody')}
+                </Text>
+              </View>
+            ) : (
+              history.slice(0, 4).map((item, index) => (
+                <ContactRow
+                  key={item.id || index}
+                  item={item}
+                  onPress={setSelectedItem}
+                />
+              ))
+            )}
+          </View>
+        </ScrollView>
+      </View>
+
+      {/* ── Slide-out Menu ─────────────────────────── */}
+      <AppMenu visible={menuVisible} onClose={closeMenu} />
 
       {/* ── Networking Modal ───────────────────────── */}
       <NetworkingModal

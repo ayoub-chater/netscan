@@ -6,6 +6,7 @@ import { BlurView } from 'expo-blur';
 import { Ionicons } from '@expo/vector-icons';
 import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 
 // [active icon, inactive icon] per route. Routes not listed here are not shown in the bar.
 const ICONS = {
@@ -24,6 +25,7 @@ export default function FloatingTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
   const { translateY } = useTabBar();
   const { isDark } = useTheme();
+  const { b2bPendingCount } = useAuth();
 
   // Sit above the phone's system nav strip with a bit of breathing room, so
   // the floating bar doesn't look stuck to the OS navigation bar.
@@ -85,6 +87,10 @@ export default function FloatingTabBar({ state, navigation }) {
                 <View style={styles.iconContainer}>
                   {focused && <View style={styles.iconContainerActive} pointerEvents="none" />}
                   <Ionicons name={focused ? active : inactive} size={24} color={color} />
+                  {/* Someone requested a meeting and is waiting on an answer. */}
+                  {route.name === 'RDV' && b2bPendingCount > 0 && (
+                    <View style={styles.dot} pointerEvents="none" />
+                  )}
                 </View>
               </Pressable>
             );
@@ -136,5 +142,17 @@ const styles = StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     borderRadius: 22,
     backgroundColor: 'rgba(255,255,255,0.18)',
+  },
+  // Ringed so it stays legible against the blue bar and the active pill.
+  dot: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#EF4444',
+    borderWidth: 1.5,
+    borderColor: NAVBAR_COLOR,
   },
 });

@@ -170,19 +170,26 @@ export default function LoginScreen({ navigation }) {
               </View>
             </TextField>
 
-            {/* Remember me */}
-            <ControlField
-              isSelected={rememberMe}
-              onSelectedChange={setRememberMe}
-              className="items-center"
-            >
-              <ControlField.Indicator>
-                <Checkbox className="mt-0.5 border-2 border-muted" />
-              </ControlField.Indicator>
-              <Label className="text-sm font-medium text-muted">
-                {t('login.rememberMe')}
-              </Label>
-            </ControlField>
+            {/* Remember me + forgot password */}
+            <View className="flex-row items-center justify-between">
+              <ControlField
+                isSelected={rememberMe}
+                onSelectedChange={setRememberMe}
+                className="items-center"
+              >
+                <ControlField.Indicator>
+                  <Checkbox className="mt-0.5 border-2 border-muted" />
+                </ControlField.Indicator>
+                <Label className="text-sm font-medium text-muted">
+                  {t('login.rememberMe')}
+                </Label>
+              </ControlField>
+              <LinkButton size="sm" onPress={() => navigation.navigate('ForgotPassword')}>
+                <LinkButton.Label className="text-accent font-semibold">
+                  {t('login.forgotPassword')}
+                </LinkButton.Label>
+              </LinkButton>
+            </View>
 
             {/* Login button */}
             <Button

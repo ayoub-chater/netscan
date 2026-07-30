@@ -1,6 +1,11 @@
 import 'react-native-gesture-handler';
 import React, { useEffect, useRef, useState } from 'react';
-import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import {
+  NavigationContainer,
+  createNavigationContainerRef,
+  DefaultTheme,
+  DarkTheme,
+} from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View } from 'react-native';
@@ -17,12 +22,15 @@ import { LanguageProvider } from './src/context/LanguageContext';
 import { TabBarProvider } from './src/context/TabBarContext';
 import FloatingTabBar from './src/components/FloatingTabBar';
 import ConnectionToast from './src/components/ConnectionToast';
+import { withPageTransition } from './src/components/PageTransition';
+import { stackTransition, tabTransition } from './src/navigation/transitions';
 
 const navigationRef = createNavigationContainerRef();
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 import TeamScreen from './src/screens/TeamScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ScannerScreen from './src/screens/ScannerScreen';
@@ -35,26 +43,60 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import TermsScreen from './src/screens/TermsScreen';
 import MyBadgeScreen from './src/screens/MyBadgeScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import NotificationsScreen from './src/screens/NotificationsScreen';
+import ConferenceScreen from './src/screens/ConferenceScreen';
+import ProgrammeScreen from './src/screens/ProgrammeScreen';
+import ParticipateScreen from './src/screens/ParticipateScreen';
+import B2BAgendaScreen from './src/screens/B2BAgendaScreen';
 
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
+// Screens animate their content in on focus. ScannerScreen is left untouched —
+// fading a live camera preview flickers on Android.
+const Home = withPageTransition(HomeScreen);
+const Plan = withPageTransition(PlanScreen);
+const Website = withPageTransition(WebsiteScreen);
+const Exposants = withPageTransition(ExposantsScreen);
+const Appointments = withPageTransition(AppointmentsScreen);
+const Profile = withPageTransition(ProfileScreen);
+const History = withPageTransition(HistoryScreen);
+const MyBadge = withPageTransition(MyBadgeScreen);
+const Team = withPageTransition(TeamScreen);
+const Terms = withPageTransition(TermsScreen);
+const EditProfile = withPageTransition(EditProfileScreen);
+const NotificationsHistory = withPageTransition(NotificationsScreen);
+const Conference = withPageTransition(ConferenceScreen);
+const Programme = withPageTransition(ProgrammeScreen);
+const Participate = withPageTransition(ParticipateScreen);
+const B2BAgenda = withPageTransition(B2BAgendaScreen);
+const Login = withPageTransition(LoginScreen);
+const Register = withPageTransition(RegisterScreen);
+const ForgotPassword = withPageTransition(ForgotPasswordScreen);
+
 function MainTabs() {
   return (
     <Tab.Navigator
-      screenOptions={{ headerShown: false }}
+      screenOptions={{ headerShown: false, ...tabTransition }}
       tabBar={(props) => <FloatingTabBar {...props} />}
+      // Default detach destroys and rebuilds each tab's native view when it
+      // loses/regains focus. That rebuild can desync Reanimated shared
+      // values (AppMenu's open/close `progress`) from the new native view,
+      // which is why the drawer stopped animating open only after a tab
+      // switch away from Dashboard and back. A handful of lightweight tabs
+      // doesn't need the memory optimization detach buys.
+      detachInactiveScreens={false}
     >
-      <Tab.Screen name="Dashboard" component={HomeScreen} />
+      <Tab.Screen name="Dashboard" component={Home} />
       <Tab.Screen name="ScannerTab" component={ScannerScreen} />
-      <Tab.Screen name="Plan" component={PlanScreen} />
-      <Tab.Screen name="Expos" component={WebsiteScreen} />
-      <Tab.Screen name="Exposants" component={ExposantsScreen} />
-      <Tab.Screen name="RDV" component={AppointmentsScreen} />
-      <Tab.Screen name="Détails" component={ProfileScreen} />
+      <Tab.Screen name="Plan" component={Plan} />
+      <Tab.Screen name="Expos" component={Website} />
+      <Tab.Screen name="Exposants" component={Exposants} />
+      <Tab.Screen name="RDV" component={Appointments} />
+      <Tab.Screen name="Détails" component={Profile} />
       {/* Sub-page kept inside the tabs so the floating navbar stays visible.
           Hidden from the bar itself via the ICONS filter in FloatingTabBar. */}
-      <Tab.Screen name="History" component={HistoryScreen} />
+      <Tab.Screen name="History" component={History} />
     </Tab.Navigator>
   );
 }
@@ -98,28 +140,48 @@ function ConnectionNotifications() {
   );
 }
 
+// Hex of the --background token in global.css, so screens fading in/out never
+// flash the navigator's default white card underneath.
+const NAV_THEME = {
+  light: {
+    ...DefaultTheme,
+    colors: { ...DefaultTheme.colors, background: '#F2F6F8', card: '#F2F6F8' },
+  },
+  dark: {
+    ...DarkTheme,
+    colors: { ...DarkTheme.colors, background: '#09141C', card: '#09141C' },
+  },
+};
+
 function NavigationRoot() {
   const { isBootstrapping, isAuthenticated } = useAuth();
+  const { isDark } = useTheme();
 
   if (isBootstrapping) return null;
 
   return (
     <View style={{ flex: 1 }}>
-      <NavigationContainer ref={navigationRef}>
-        <Stack.Navigator screenOptions={{ headerShown: false }}>
+      <NavigationContainer ref={navigationRef} theme={isDark ? NAV_THEME.dark : NAV_THEME.light}>
+        <Stack.Navigator screenOptions={{ headerShown: false, ...stackTransition }}>
           {!isAuthenticated ? (
             <>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Register" component={RegisterScreen} />
+              <Stack.Screen name="Login" component={Login} />
+              <Stack.Screen name="Register" component={Register} />
+              <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
             </>
           ) : (
             <>
               <Stack.Screen name="Main" component={MainTabs} />
               <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'fullScreenModal' }} />
-              <Stack.Screen name="Team" component={TeamScreen} />
-              <Stack.Screen name="Terms" component={TermsScreen} />
-              <Stack.Screen name="MyBadge" component={MyBadgeScreen} />
-              <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+              <Stack.Screen name="Team" component={Team} />
+              <Stack.Screen name="Terms" component={Terms} />
+              <Stack.Screen name="MyBadge" component={MyBadge} />
+              <Stack.Screen name="EditProfile" component={EditProfile} />
+              <Stack.Screen name="Notifications" component={NotificationsHistory} />
+              <Stack.Screen name="Conference" component={Conference} />
+              <Stack.Screen name="Programme" component={Programme} />
+              <Stack.Screen name="Participate" component={Participate} />
+              <Stack.Screen name="B2BAgenda" component={B2BAgenda} />
             </>
           )}
         </Stack.Navigator>

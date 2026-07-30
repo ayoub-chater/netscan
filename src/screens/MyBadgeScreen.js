@@ -8,7 +8,6 @@ import { withUniwind } from 'uniwind';
 import QRCode from 'react-native-qrcode-svg';
 import { Chip } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
-import PendingApproval from '../components/PendingApproval';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -20,12 +19,13 @@ export default function MyBadgeScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { scanner, badgeNumber, isApproved } = useAuth();
+  const { scanner, badgeNumber, isExhibitorStaff } = useAuth();
 
   const scannerName = scanner?.name || t('profile.defaultName');
   const scannerRole = scanner?.role || t('profile.defaultRole');
   const isExposant = scannerRole.toLowerCase() === 'exposant';
-  const hasBadge = !!badgeNumber && isApproved;
+  const company = isExhibitorStaff || isExposant ? scanner?.company : null;
+  const hasBadge = !!badgeNumber;
   const qrValue = hasBadge
     ? `${BADGE_BASE_URL}/${encodeURIComponent(badgeNumber)}`
     : null;
@@ -57,9 +57,7 @@ export default function MyBadgeScreen() {
 
       {/* ── Content ────────────────────────────────── */}
       <View className="flex-1 items-center justify-center px-4" style={{ gap: 24 }}>
-        {!isApproved ? (
-          <PendingApproval />
-        ) : hasBadge ? (
+        {hasBadge ? (
           <>
             {/* QR card — always light for reliable scanning in any theme */}
             <View
@@ -88,6 +86,20 @@ export default function MyBadgeScreen() {
               >
                 <Chip.Label>{scannerRole}</Chip.Label>
               </Chip>
+              {/* The organisation the badge holder represents — staff carry
+                  their exhibitor's name, so it must read on the badge too. */}
+              {company ? (
+                <View className="flex-row items-center" style={{ gap: 6 }}>
+                  <StyledIonicons
+                    name="business-outline"
+                    size={14}
+                    className="text-muted"
+                  />
+                  <Text className="text-sm font-semibold text-foreground">
+                    {company}
+                  </Text>
+                </View>
+              ) : null}
               <Text className="text-sm text-muted tracking-widest mt-1">
                 {badgeNumber}
               </Text>

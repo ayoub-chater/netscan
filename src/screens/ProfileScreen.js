@@ -43,7 +43,8 @@ const SUPPORT_WEBSITE = 'https://logiterre-expo.com';
 
 export default function ProfileScreen() {
   const { t } = useTranslation();
-  const { scanner, badgeNumber, signOut, isApproved, refreshProfile } = useAuth();
+  const { scanner, badgeNumber, signOut, participationStatus, isExhibitorStaff, refreshProfile } =
+    useAuth();
 
   // Refresh profile whenever the screen regains focus (approval status, edits).
   useFocusEffect(
@@ -67,7 +68,9 @@ export default function ProfileScreen() {
   const profileImage = isExposant
     ? scanner?.exhibitor_logo || scanner?.image
     : scanner?.image;
-  const isPending = isExposant && !isApproved;
+  // A "Participer" request still awaiting an organiser's decision.
+  const isPending = participationStatus === 'pending';
+  const company = isExhibitorStaff || isExposant ? scanner?.company : null;
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -100,6 +103,16 @@ export default function ProfileScreen() {
             <Text className="text-lg font-extrabold text-foreground">{scannerName}</Text>
             {scannerEmail ? (
               <Text className="text-sm text-muted">{scannerEmail}</Text>
+            ) : null}
+            {/* The organisation a staff member represents — set by the
+                exhibitor that added them, so it's read-only here. */}
+            {company ? (
+              <View className="flex-row items-center" style={{ gap: 6 }}>
+                <Ionicons name="business-outline" size={14} color="#9CA3AF" />
+                <Text className="text-sm font-semibold text-foreground flex-1" numberOfLines={1}>
+                  {company}
+                </Text>
+              </View>
             ) : null}
             <View className="flex-row items-center" style={{ gap: 6 }}>
               <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>

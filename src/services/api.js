@@ -104,7 +104,29 @@ export const getMyAppointments = () => api.get(ENDPOINTS.appointments);
 
 export const cancelAppointment = (id) => api.delete(ENDPOINTS.appointmentCancel(id));
 
-// ─── Speaker (Intervenant) self-service ────────────────────────────────────────
+// ─── Participation ("Participer": apply for a participant role) ────────────────
+// Roles available for this event, each with the extra form fields to fill.
+export const getParticipationRoles = () => api.get(ENDPOINTS.participationRoles);
+
+// The signed-in user's own request: { role, status, note, data, submitted_at }.
+export const getParticipation = () =>
+    api.get(ENDPOINTS.participation, { params: { event_slug: EVENT_SLUG } });
+
+// fields: { <field_name>: <value> } as described by getParticipationRoles().
+export const submitParticipation = (role, fields) =>
+    api.post(ENDPOINTS.participation, { role, fields, event_slug: EVENT_SLUG });
+
+export const cancelParticipation = () =>
+    api.delete(ENDPOINTS.participation, { params: { event_slug: EVENT_SLUG } });
+
+// ─── Conference (published agenda: panels + speakers) ──────────────────────────
+export const getConference = () => api.get(ENDPOINTS.conference);
+
+export const reservePanelSeat = (panelId) => api.post(ENDPOINTS.conferencePanelReserve(panelId));
+
+export const cancelPanelSeat = (panelId) => api.delete(ENDPOINTS.conferencePanelReserve(panelId));
+
+// ─── B2B self-service (any approved participant) ───────────────────────────────
 export const getSpeakerPersona = () => api.get(ENDPOINTS.speakerPersona);
 
 // data: { name?, title, company, bio, location, video_link, appointment_duration,
@@ -163,6 +185,15 @@ export const updateProfile = (data) => {
     });
 };
 
+// ─── In-app notifications ─────────────────────────────────────────────────────
+export const getNotifications = () => api.get(ENDPOINTS.notifications);
+
+export const getUnreadNotificationCount = () => api.get(ENDPOINTS.notificationsUnreadCount);
+
+export const markNotificationRead = (id) => api.post(ENDPOINTS.notificationRead(id));
+
+export const markAllNotificationsRead = () => api.post(ENDPOINTS.notificationsReadAll);
+
 // ─── Push notification devices ────────────────────────────────────────────────
 export const registerDevice = (expoPushToken, platform) =>
     api.post(ENDPOINTS.devicesRegister, { expo_push_token: expoPushToken, platform });
@@ -173,6 +204,24 @@ export const unregisterDevice = (expoPushToken) =>
 // ─── Register ─────────────────────────────────────────────────────────────────
 export const register = (data) =>
     axios.post(ENDPOINTS.register, { ...data, event_slug: EVENT_SLUG }, {
+        timeout: 12000,
+        headers: { Accept: 'application/json' },
+    });
+
+// ─── Forgot / reset password ────────────────────────────────────────────────
+export const sendPasswordResetCode = (email) =>
+    axios.post(ENDPOINTS.forgotPassword, { email }, {
+        timeout: 12000,
+        headers: { Accept: 'application/json' },
+    });
+
+export const resetPasswordWithCode = (email, code, password, passwordConfirmation) =>
+    axios.post(ENDPOINTS.resetPassword, {
+        email,
+        code,
+        password,
+        password_confirmation: passwordConfirmation,
+    }, {
         timeout: 12000,
         headers: { Accept: 'application/json' },
     });

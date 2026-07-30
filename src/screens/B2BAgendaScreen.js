@@ -40,6 +40,7 @@ import {
   updateSpeakerAppointment,
 } from '../services/api';
 import { useTabBarScroll } from '../context/TabBarContext';
+import { useAuth } from '../context/AuthContext';
 
 const ACCENT = '#286EAD';
 
@@ -259,11 +260,16 @@ function SheetField({ label, ...props }) {
   );
 }
 
-export default function SpeakerAppointmentsScreen() {
+// The host side of B2B: any approved participant (exposant, intervenant,
+// sponsor, partenaire…) manages their bookable profile, opens time slots, and
+// confirms or declines the meetings others request with them. Adding a slot is
+// what actually makes them appear in the B2B directory.
+export default function B2BAgendaScreen({ navigation }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language || 'fr';
   const tabScroll = useTabBarScroll();
   const insets = useSafeAreaInsets();
+  const { refreshProfile } = useAuth();
 
   const [tab, setTab] = useState('meetings'); // 'meetings' | 'profile'
   const [persona, setPersona] = useState(null);
@@ -302,6 +308,9 @@ export default function SpeakerAppointmentsScreen() {
         setUpcoming(aRes.value?.data?.upcoming || []);
         setPast(aRes.value?.data?.past || []);
         setPendingCount(aRes.value?.data?.pending_count || 0);
+        // Answering a request here must clear the red dot the tab bar and the
+        // agenda button draw from the auth context's cached count.
+        refreshProfile();
       }
     } finally {
       setLoading(false);
@@ -485,9 +494,20 @@ export default function SpeakerAppointmentsScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="px-4 pt-5 pb-3">
-        <Text className="text-2xl font-extrabold text-foreground">{t('speaker.title')}</Text>
-        <Text className="text-sm text-muted mt-1">{t('speaker.subtitle')}</Text>
+      <View className="px-4 pt-5 pb-3 flex-row items-center" style={{ gap: 12 }}>
+        {navigation ? (
+          <Pressable
+            onPress={() => navigation.goBack()}
+            className="w-10 h-10 items-center justify-center rounded-xl bg-surface"
+            hitSlop={8}
+          >
+            <Ionicons name="chevron-back" size={22} color={ACCENT} />
+          </Pressable>
+        ) : null}
+        <View className="flex-1">
+          <Text className="text-2xl font-extrabold text-foreground">{t('speaker.title')}</Text>
+          <Text className="text-sm text-muted mt-1">{t('speaker.subtitle')}</Text>
+        </View>
       </View>
 
       {/* Segmented */}

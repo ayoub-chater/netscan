@@ -1,0 +1,449 @@
+import React, { useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Image,
+  I18nManager,
+  BackHandler,
+  useWindowDimensions,
+  StyleSheet,
+} from 'react-native';
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  withSpring,
+  interpolate,
+  Extrapolation,
+  Easing,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
+import { Avatar, Chip } from 'heroui-native';
+import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
+import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
+
+const ACCENT = '#286EAD';
+// Hoisted out of the worklets below — native modules can't be read on the UI thread.
+const RTL = I18nManager.isRTL;
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
+
+// Each entry reuses the icon the destination already uses elsewhere in the app
+// (floating tab bar / profile list), so the menu reads as the same navigation.
+const ITEMS = [
+  // Highlighted: this is how a plain visitor becomes an exposant, intervenant,
+  // sponsor… so it sits first and gets accent styling.
+  { key: 'participate', icon: 'sparkles', route: 'Participate', highlight: true },
+  { key: 'exhibitors', icon: 'storefront', route: 'Exposants' },
+  { key: 'scan', icon: 'qr-code', route: 'Scanner' },
+  { key: 'network', icon: 'people', route: 'History' },
+  { key: 'b2b', icon: 'briefcase', route: 'RDV' },
+  { key: 'conference', icon: 'easel', route: 'Conference' },
+  { key: 'programme', icon: 'document-text', route: 'Programme' },
+  { key: 'plan', icon: 'map', route: 'Plan' },
+  { key: 'event', icon: 'globe', route: 'Expos' },
+  { key: 'badge', icon: 'id-card', route: 'MyBadge' },
+  { key: 'team', icon: 'people-circle', route: 'Team', exposantOnly: true },
+  { key: 'settings', icon: 'person', route: 'Détails' },
+];
+
+function MenuRow({ item, index, progress, onPress, badge }) {
+  const { t } = useTranslation();
+
+  // Rows cascade out of the corner as the panel opens, and fold back on close.
+  const style = useAnimatedStyle(() => {
+    const start = Math.min(0.1 + index * 0.05, 0.55);
+    const end = start + 0.45;
+    const p = interpolate(progress.value, [start, end], [0, 1], Extrapolation.CLAMP);
+    return {
+      opacity: p,
+      transform: [
+        { translateX: interpolate(p, [0, 1], [RTL ? 22 : -22, 0]) },
+        { translateY: interpolate(p, [0, 1], [10, 0]) },
+      ],
+    };
+  });
+
+  return (
+    <Animated.View style={style}>
+      <Pressable
+        onPress={onPress}
+        className={[
+          'flex-row items-center rounded-2xl px-3 py-3 active:opacity-60',
+          item.highlight ? 'bg-accent-soft' : '',
+        ].join(' ')}
+        style={{ gap: 14 }}
+        android_ripple={{ color: 'rgba(40,110,173,0.12)' }}
+      >
+        <View
+          className={[
+            'w-11 h-11 rounded-2xl items-center justify-center',
+            item.highlight ? 'bg-accent' : 'bg-accent-soft',
+          ].join(' ')}
+        >
+          <Ionicons name={item.icon} size={20} color={item.highlight ? '#FFFFFF' : ACCENT} />
+        </View>
+        <View className="flex-1">
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <Text className="text-[15px] font-bold text-foreground">
+              {t(`menu.${item.key}`)}
+            </Text>
+            {badge ? (
+              <Chip size="sm" variant="soft" color={badge.color}>
+                <Chip.Label>{badge.label}</Chip.Label>
+              </Chip>
+            ) : null}
+          </View>
+          <Text className="text-[11px] text-muted mt-0.5" numberOfLines={1}>
+            {t(`menu.${item.key}Desc`)}
+          </Text>
+        </View>
+        <Ionicons
+          name={I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'}
+          size={16}
+          color="#9CA3AF"
+        />
+      </Pressable>
+    </Animated.View>
+  );
+}
+
+const THEME_MODES = [
+  { mode: 'system', labelKey: 'profile.system', icon: 'phone-portrait-outline' },
+  { mode: 'light', labelKey: 'profile.light', icon: 'sunny-outline' },
+  { mode: 'dark', labelKey: 'profile.dark', icon: 'moon-outline' },
+];
+
+// Segmented system/light/dark shortcut — same three modes as the Settings screen.
+function ThemeSwitch({ progress }) {
+  const { t } = useTranslation();
+  const { themeMode, setThemeMode } = useTheme();
+
+  const style = useAnimatedStyle(() => {
+    const p = interpolate(progress.value, [0.45, 0.95], [0, 1], Extrapolation.CLAMP);
+    return {
+      opacity: p,
+      transform: [{ translateY: interpolate(p, [0, 1], [10, 0]) }],
+    };
+  });
+
+  return (
+    <Animated.View style={style} className="px-4 pt-3 pb-4">
+      <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2">
+        {t('profile.appearance')}
+      </Text>
+      <View className="flex-row bg-surface rounded-2xl p-1 border border-separator" style={{ gap: 4 }}>
+        {THEME_MODES.map((option) => {
+          const active = themeMode === option.mode;
+          return (
+            <Pressable
+              key={option.mode}
+              onPress={() => setThemeMode(option.mode)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: active }}
+              className={[
+                'flex-1 flex-row items-center justify-center rounded-xl py-2 active:opacity-70',
+                active ? 'bg-accent' : 'bg-transparent',
+              ].join(' ')}
+              style={{ gap: 5 }}
+            >
+              <Ionicons
+                name={option.icon}
+                size={14}
+                color={active ? '#FFFFFF' : '#9CA3AF'}
+              />
+              <Text
+                className={`text-[11px] font-bold ${active ? 'text-accent-foreground' : 'text-muted'}`}
+                numberOfLines={1}
+              >
+                {t(option.labelKey)}
+              </Text>
+            </Pressable>
+          );
+        })}
+      </View>
+    </Animated.View>
+  );
+}
+
+export default function AppMenu({ visible, onClose }) {
+  const { t } = useTranslation();
+  const navigation = useNavigation();
+  const insets = useSafeAreaInsets();
+  const { width, height } = useWindowDimensions();
+  const { scanner, participationStatus, participationRole, isExhibitorStaff } = useAuth();
+  const { translateY } = useTabBar();
+
+  // Keep the panel mounted through the closing animation.
+  const [mounted, setMounted] = useState(visible);
+  const progress = useSharedValue(0);
+
+  // `onClose` is passed as an inline arrow from the host screen, so its
+  // identity churns on every parent re-render (e.g. HomeScreen's 1s countdown
+  // timer). Read it through a ref so the focus-effect callback below stays
+  // referentially stable and doesn't get re-subscribed (and its stale
+  // cleanup re-fired) on every unrelated re-render.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
+
+  useEffect(() => {
+    if (visible) {
+      setMounted(true);
+      progress.value = withSpring(1, { damping: 18, stiffness: 170, mass: 0.6 });
+      // The floating tab bar is a sibling of the screens, so it would sit on top
+      // of the overlay on Android — tuck it away while the menu is open.
+      translateY.value = withTiming(TAB_BAR_HIDDEN_OFFSET);
+      return;
+    }
+
+    progress.value = withTiming(0, { duration: 200, easing: Easing.in(Easing.cubic) });
+    translateY.value = withTiming(0);
+
+    // Unmount on a timer rather than the animation callback: an interrupted
+    // animation never reports `finished`, which used to leave an invisible
+    // full-screen overlay swallowing every tap.
+    const timer = setTimeout(() => setMounted(false), 220);
+    return () => clearTimeout(timer);
+  }, [visible]);
+
+  // Leaving the screen (bottom nav, deep link, back) must not strand the
+  // hidden tab bar behind us. Route the actual close through `onClose` (the
+  // same path a normal close takes) rather than poking `mounted`/`progress`
+  // directly here too — two places writing the same state was the source of
+  // a bug where the panel could come back stuck non-interactive after a
+  // tab switch. `translateY` is the one exception: it's owned by the
+  // TabBarContext, not local state, and must always resolve on blur even if
+  // this component unmounts entirely (e.g. logout) before its own effects
+  // get a chance to run.
+  useFocusEffect(
+    React.useCallback(
+      () => () => {
+        translateY.value = 0;
+        onCloseRef.current();
+      },
+      []
+    )
+  );
+
+  // Android hardware back closes the menu instead of leaving the screen.
+  useEffect(() => {
+    if (!visible) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      onClose();
+      return true;
+    });
+    return () => sub.remove();
+  }, [visible, onClose]);
+
+  const role = scanner?.role || t('profile.defaultRole');
+  const isExposant = role.toLowerCase() === 'exposant';
+  const name = scanner?.name || t('profile.defaultName');
+  const initial = name[0]?.toUpperCase() || '?';
+  const photo = isExposant ? scanner?.exhibitor_logo || scanner?.image : scanner?.image;
+  const isPending = participationStatus === 'pending';
+  // Shown for anyone attached to an organisation; for staff it's the exhibitor
+  // that added them, which the backend resolves into `company`.
+  const company = isExhibitorStaff || isExposant ? scanner?.company : null;
+
+  // Staff already take part through the exhibitor that added them — hide the
+  // Participer row for them, and Team stays owner-only.
+  const items = ITEMS.filter((i) => {
+    if (i.key === 'participate' && isExhibitorStaff) return false;
+    return !i.exposantOnly || (isExposant && !isExhibitorStaff);
+  });
+
+  // The Participer row carries the request's state so the drawer answers
+  // "where is my application?" without opening the screen.
+  const participateBadge =
+    participationStatus === 'pending'
+      ? { label: t('participate.badgePending'), color: 'warning' }
+      : participationStatus === 'approved'
+      ? { label: participationRole || t('participate.badgeApproved'), color: 'success' }
+      : participationStatus === 'rejected'
+      ? { label: t('participate.badgeRejected'), color: 'danger' }
+      : null;
+
+  const panelWidth = Math.min(width - 32, 340);
+  const anchorSide = RTL ? { right: 16 } : { left: 16 };
+  // Centre the halo on the hamburger button itself so the burst starts at the corner.
+  const haloAnchor = RTL ? { right: -44 } : { left: -44 };
+
+  const go = (route) => {
+    onClose();
+    // Let the fold-back animation play before the screen swaps underneath.
+    setTimeout(() => navigation.navigate(route), 180);
+  };
+
+  const backdropStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 1], [0, 1], Extrapolation.CLAMP),
+  }));
+
+  // Grows out of the top corner: scale + a short slide along both axes.
+  const panelStyle = useAnimatedStyle(() => {
+    const p = progress.value;
+    return {
+      opacity: interpolate(p, [0, 0.35, 1], [0, 1, 1], Extrapolation.CLAMP),
+      transform: [
+        { translateX: interpolate(p, [0, 1], [RTL ? 34 : -34, 0]) },
+        { translateY: interpolate(p, [0, 1], [-34, 0]) },
+        { scale: interpolate(p, [0, 1], [0.55, 1]) },
+      ],
+    };
+  });
+
+  // Accent halo bursting from the same corner as the hamburger button.
+  const haloStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(progress.value, [0, 0.4, 1], [0, 0.35, 0], Extrapolation.CLAMP),
+    transform: [{ scale: interpolate(progress.value, [0, 1], [0.2, 2.4], Extrapolation.CLAMP) }],
+  }));
+
+  if (!mounted) return null;
+
+  return (
+    // Rendered inline (not in a native Modal) so it shares the app's window:
+    // a Modal is a separate Android window, and the screens behind it don't
+    // repaint when the theme flips, which made the switch look drawer-only.
+    // Must be mounted outside the host screen's safe-area padding — the panel
+    // adds its own inset below.
+    // `visible` (not `mounted`) gates touches: the panel stays mounted for
+    // ~220ms after closing to let the fade-out animation finish, and this
+    // full-screen overlay must stop intercepting taps for the screen behind
+    // it (e.g. the hamburger button) the instant it's no longer open, not
+    // once its fade-out is done.
+    <View style={styles.overlay} pointerEvents={visible ? 'auto' : 'none'}>
+      <AnimatedPressable
+        style={[StyleSheet.absoluteFill, { backgroundColor: 'rgba(3,10,20,0.55)' }, backdropStyle]}
+        onPress={onClose}
+      />
+
+      <Animated.View
+        pointerEvents="none"
+        style={[
+          styles.halo,
+          haloAnchor,
+          { top: insets.top - 44, backgroundColor: ACCENT },
+          haloStyle,
+        ]}
+      />
+
+      <Animated.View
+        style={[
+          styles.panel,
+          anchorSide,
+          {
+            top: insets.top + 8,
+            width: panelWidth,
+            maxHeight: height - insets.top - insets.bottom - 48,
+            transformOrigin: RTL ? 'top right' : 'top left',
+          },
+          panelStyle,
+        ]}
+        className="bg-background rounded-3xl border border-separator overflow-hidden"
+      >
+        {/* ── Panel header ─────────────────────────── */}
+        <View className="px-4 pt-4 pb-3 flex-row items-center" style={{ gap: 12 }}>
+          {photo ? (
+            <Image
+              source={{ uri: photo }}
+              style={{ width: 42, height: 42, borderRadius: 21 }}
+              resizeMode="cover"
+            />
+          ) : (
+            <Avatar size="md" color={isExposant ? 'success' : 'default'} variant="soft">
+              <Avatar.Fallback>{initial}</Avatar.Fallback>
+            </Avatar>
+          )}
+          <View className="flex-1">
+            <Text className="text-[15px] font-extrabold text-foreground" numberOfLines={1}>
+              {name}
+            </Text>
+            <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
+              <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
+                <Chip.Label>{role}</Chip.Label>
+              </Chip>
+              {isPending ? (
+                <Chip size="sm" variant="soft" color="warning">
+                  <Chip.Label>{t('pending.badge')}</Chip.Label>
+                </Chip>
+              ) : null}
+            </View>
+            {/* Staff act on behalf of the exhibitor that added them, so the
+                organisation is part of their identity, not a detail. */}
+            {company ? (
+              <View className="flex-row items-center mt-1.5" style={{ gap: 5 }}>
+                <Ionicons name="business-outline" size={12} color="#9CA3AF" />
+                <Text className="text-[11px] font-semibold text-muted flex-1" numberOfLines={1}>
+                  {company}
+                </Text>
+              </View>
+            ) : null}
+          </View>
+          <Pressable
+            onPress={onClose}
+            hitSlop={10}
+            className="w-8 h-8 rounded-full bg-surface items-center justify-center active:opacity-60"
+          >
+            <Ionicons name="close" size={16} color="#9CA3AF" />
+          </Pressable>
+        </View>
+
+        <View className="mx-4 border-b border-separator" />
+
+        <Text className="text-[10px] font-bold text-muted uppercase tracking-widest px-5 pt-4 pb-1">
+          {t('menu.title')}
+        </Text>
+
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingHorizontal: 8, paddingBottom: 4 }}
+          style={{ flexShrink: 1 }}
+          bounces={false}
+        >
+          {items.map((item, index) => (
+            <MenuRow
+              key={item.key}
+              item={item}
+              index={index}
+              progress={progress}
+              badge={item.key === 'participate' ? participateBadge : null}
+              onPress={() => go(item.route)}
+            />
+          ))}
+        </ScrollView>
+
+        {/* ── Theme shortcut ───────────────────────── */}
+        <View className="mx-4 border-b border-separator" />
+        <ThemeSwitch progress={progress} />
+        </Animated.View>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    zIndex: 100,
+    elevation: 100,
+  },
+  panel: {
+    position: 'absolute',
+    elevation: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.32,
+    shadowRadius: 24,
+  },
+  halo: {
+    position: 'absolute',
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+  },
+});

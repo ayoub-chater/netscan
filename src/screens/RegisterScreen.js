@@ -18,12 +18,10 @@ import {
   Alert,
   Button,
   Checkbox,
-  Chip,
   ControlField,
   Input,
   Label,
   LinkButton,
-  Separator,
   Surface,
   TextField,
 } from 'heroui-native';
@@ -32,30 +30,10 @@ import { register } from '../services/api';
 
 const StyledIonicons = withUniwind(Ionicons);
 
-const ROLES = [
-  {
-    key: 'Visiteur',
-    icon: 'person-outline',
-    labelKey: 'register.visitorLabel',
-    descKey: 'register.visitorDesc',
-    chipColor: 'default',
-  },
-  {
-    key: 'Exposant',
-    icon: 'storefront-outline',
-    labelKey: 'register.exhibitorLabel',
-    descKey: 'register.exhibitorDesc',
-    chipColor: 'accent',
-  },
-  {
-    key: 'Intervenant',
-    icon: 'mic-outline',
-    labelKey: 'register.speakerLabel',
-    descKey: 'register.speakerDesc',
-    chipColor: 'accent',
-  },
-];
-
+// Signup only asks for what every role shares. Becoming an exposant,
+// intervenant, sponsor… happens afterwards from the "Participer" flow
+// (ParticipateScreen), which collects the role's own fields and waits for an
+// organiser to approve it.
 export default function RegisterScreen({ navigation }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
@@ -63,8 +41,6 @@ export default function RegisterScreen({ navigation }) {
   const isTablet = width >= 768;
   const scrollRef = useRef(null);
   const { applySession } = useAuth();
-  const [step, setStep] = useState('role');
-  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [acceptCgu, setAcceptCgu] = useState(false);
@@ -77,14 +53,8 @@ export default function RegisterScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [company, setCompany] = useState('');
   const [ville, setVille] = useState('');
   const [pays, setPays] = useState('');
-  const [secteur, setSecteur] = useState('');
-  const [website, setWebsite] = useState('');
-  const [jobTitle, setJobTitle] = useState('');
-  const [topic, setTopic] = useState('');
-  const [bio, setBio] = useState('');
 
   // Scroll the error into view when it appears (error alert sits at the top of the form)
   useEffect(() => {
@@ -117,16 +87,9 @@ export default function RegisterScreen({ navigation }) {
         name: name.trim(),
         email: email.trim(),
         password,
-        role,
         phone: phone.trim() || undefined,
-        company: company.trim() || undefined,
-        website: website.trim() || undefined,
         ville: ville.trim() || undefined,
         pays: pays.trim() || undefined,
-        secteur_activite: secteur.trim() || undefined,
-        job_title: role === 'Intervenant' ? jobTitle.trim() || undefined : undefined,
-        topic: role === 'Intervenant' ? topic.trim() || undefined : undefined,
-        bio: role === 'Intervenant' ? bio.trim() || undefined : undefined,
       });
       await applySession(res.data);
     } catch (e) {
@@ -141,145 +104,6 @@ export default function RegisterScreen({ navigation }) {
       setLoading(false);
     }
   };
-
-  // ─── Step 1: Role Selection ────────────────────────────────────────────────
-  if (step === 'role') {
-    return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-        <ScrollView
-          contentContainerStyle={{
-            flexGrow: 1,
-            paddingHorizontal: 24,
-            paddingTop: 24,
-            paddingBottom: 40,
-          }}
-          showsVerticalScrollIndicator={false}
-        >
-          {/* Header */}
-          <View className="flex-row items-center mb-10">
-            <Pressable
-              onPress={() => navigation.goBack()}
-              className="w-10 h-10 items-center justify-center rounded-xl bg-surface"
-              hitSlop={8}
-            >
-              <StyledIonicons
-                name="chevron-back"
-                size={22}
-                className="text-foreground"
-              />
-            </Pressable>
-          </View>
-
-          {/* Logo */}
-          <View className="items-center mb-10">
-            <Image
-              source={require('../../assets/Logo_Logiterre-colored.webp')}
-              style={{ width: 180, height: 73 }}
-              resizeMode="contain"
-            />
-          </View>
-
-          {/* Title */}
-          <Text className="text-2xl font-extrabold text-foreground text-center mb-1">
-            {t('register.iAm')}
-          </Text>
-          <Text className="text-sm text-muted text-center mb-8">
-            {t('register.chooseProfile')}
-          </Text>
-
-          {/* Step dots */}
-          <View className="flex-row justify-center gap-2 mb-8">
-            <View className="w-6 h-1.5 rounded-full bg-accent" />
-            <View className="w-2 h-1.5 rounded-full bg-surface-secondary" />
-          </View>
-
-          {/* Role cards */}
-          <View className="gap-3">
-            {ROLES.map(r => {
-              const isSelected = role === r.key;
-              return (
-                <Pressable
-                  key={r.key}
-                  onPress={() => setRole(r.key)}
-                  className={[
-                    'flex-row items-center p-5 rounded-2xl',
-                    isSelected
-                      ? 'bg-surface border-2 border-accent'
-                      : 'bg-surface border-2 border-transparent',
-                  ].join(' ')}
-                  style={{ opacity: 1 }}
-                >
-                  {/* Icon circle */}
-                  <View
-                    className={[
-                      'w-14 h-14 rounded-full items-center justify-center mr-4',
-                      isSelected ? 'bg-accent-soft' : 'bg-surface-secondary',
-                    ].join(' ')}
-                  >
-                    <StyledIonicons
-                      name={r.icon}
-                      size={26}
-                      className={isSelected ? 'text-accent' : 'text-muted'}
-                    />
-                  </View>
-
-                  {/* Info */}
-                  <View className="flex-1">
-                    <Text
-                      className={[
-                        'text-base font-bold mb-0.5',
-                        isSelected ? 'text-accent' : 'text-foreground',
-                      ].join(' ')}
-                    >
-                      {t(r.labelKey)}
-                    </Text>
-                    <Text className="text-xs text-muted">{t(r.descKey)}</Text>
-                  </View>
-
-                  {/* Selected checkmark */}
-                  {isSelected ? (
-                    <View className="w-6 h-6 rounded-full bg-accent items-center justify-center">
-                      <StyledIonicons
-                        name="checkmark"
-                        size={14}
-                        className="text-accent-foreground"
-                      />
-                    </View>
-                  ) : (
-                    <View className="w-6 h-6 rounded-full border-2 border-separator" />
-                  )}
-                </Pressable>
-              );
-            })}
-          </View>
-
-          {/* Continue button */}
-          <Button
-            variant="primary"
-            size="lg"
-            className="mt-8 rounded-2xl"
-            onPress={() => role && setStep('form')}
-            isDisabled={!role}
-          >
-            <Button.Label>{t('register.continue')}</Button.Label>
-          </Button>
-
-          {/* Login link */}
-          <View className="flex-row justify-center items-center mt-6 gap-1">
-            <Text className="text-sm text-muted">{t('register.haveAccount')}</Text>
-            <LinkButton size="sm" onPress={() => navigation.goBack()}>
-              <LinkButton.Label className="text-accent font-semibold">
-                {t('register.signIn')}
-              </LinkButton.Label>
-            </LinkButton>
-          </View>
-        </ScrollView>
-      </View>
-    );
-  }
-
-  // ─── Step 2: Registration Form ─────────────────────────────────────────────
-  const roleData = ROLES.find(r => r.key === role);
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -300,9 +124,9 @@ export default function RegisterScreen({ navigation }) {
           keyboardShouldPersistTaps="always"
         >
           {/* Header row */}
-          <View className="flex-row items-center justify-between mb-8">
+          <View className="flex-row items-center mb-8">
             <Pressable
-              onPress={() => setStep('role')}
+              onPress={() => navigation.goBack()}
               className="w-10 h-10 items-center justify-center rounded-xl bg-surface"
               hitSlop={8}
             >
@@ -312,31 +136,23 @@ export default function RegisterScreen({ navigation }) {
                 className="text-foreground"
               />
             </Pressable>
-            {/* Role chip */}
-            <Chip
-              size="sm"
-              variant="soft"
-              color={role === 'Exposant' ? 'warning' : 'default'}
-            >
-              <StyledIonicons
-                name={roleData?.icon}
-                size={12}
-                className={
-                  role === 'Exposant' ? 'text-warning-soft-foreground' : 'text-muted'
-                }
-              />
-              <Chip.Label>{role}</Chip.Label>
-            </Chip>
-            {/* Step dots */}
-            <View className="flex-row gap-1.5 items-center">
-              <View className="w-2 h-1.5 rounded-full bg-surface-secondary" />
-              <View className="w-6 h-1.5 rounded-full bg-accent" />
-            </View>
+          </View>
+
+          {/* Logo */}
+          <View className="items-center mb-8">
+            <Image
+              source={require('../../assets/Logo_Logiterre-colored.webp')}
+              style={{ width: 180, height: 73 }}
+              resizeMode="contain"
+            />
           </View>
 
           {/* Title */}
-          <Text className="text-2xl font-extrabold text-foreground mb-6">
+          <Text className="text-2xl font-extrabold text-foreground mb-1">
             {t('register.createAccount')}
+          </Text>
+          <Text className="text-sm text-muted mb-6">
+            {t('register.subtitle')}
           </Text>
 
           {/* Error */}
@@ -438,92 +254,6 @@ export default function RegisterScreen({ navigation }) {
             </TextField>
           </Surface>
 
-          {/* Exposant-only fields */}
-          {role === 'Exposant' && (
-            <Surface className="rounded-2xl px-5 py-5 gap-4 mb-4">
-              <Text className="text-sm font-semibold text-muted mb-1">
-                {t('register.companyInfo')}
-              </Text>
-              <TextField>
-                <Label>{t('register.company')}</Label>
-                <Input
-                  placeholder={t('register.companyPlaceholder')}
-                  value={company}
-                  onChangeText={setCompany}
-                  editable={!loading}
-                />
-              </TextField>
-              <TextField>
-                <Label>{t('register.sector')}</Label>
-                <Input
-                  placeholder={t('register.sectorPlaceholder')}
-                  value={secteur}
-                  onChangeText={setSecteur}
-                  editable={!loading}
-                />
-              </TextField>
-              <TextField>
-                <Label>{t('register.website')}</Label>
-                <Input
-                  placeholder={t('register.websitePlaceholder')}
-                  autoCapitalize="none"
-                  keyboardType="url"
-                  value={website}
-                  onChangeText={setWebsite}
-                  editable={!loading}
-                />
-              </TextField>
-            </Surface>
-          )}
-
-          {/* Speaker-only fields */}
-          {role === 'Intervenant' && (
-            <Surface className="rounded-2xl px-5 py-5 gap-4 mb-4">
-              <Text className="text-sm font-semibold text-muted mb-1">
-                {t('register.speakerInfo')}
-              </Text>
-              <TextField>
-                <Label>{t('register.company')}</Label>
-                <Input
-                  placeholder={t('register.companyPlaceholder')}
-                  value={company}
-                  onChangeText={setCompany}
-                  editable={!loading}
-                />
-              </TextField>
-              <TextField>
-                <Label>{t('register.jobTitle')}</Label>
-                <Input
-                  placeholder={t('register.jobTitlePlaceholder')}
-                  value={jobTitle}
-                  onChangeText={setJobTitle}
-                  editable={!loading}
-                />
-              </TextField>
-              <TextField>
-                <Label>{t('register.topic')}</Label>
-                <Input
-                  placeholder={t('register.topicPlaceholder')}
-                  value={topic}
-                  onChangeText={setTopic}
-                  editable={!loading}
-                />
-              </TextField>
-              <TextField>
-                <Label>{t('register.bio')}</Label>
-                <Input
-                  placeholder={t('register.bioPlaceholder')}
-                  value={bio}
-                  onChangeText={setBio}
-                  editable={!loading}
-                  multiline
-                  numberOfLines={3}
-                  style={{ minHeight: 72, textAlignVertical: 'top' }}
-                />
-              </TextField>
-            </Surface>
-          )}
-
           {/* Location */}
           <Surface className="rounded-2xl px-5 py-5 gap-4 mb-4">
             <Text className="text-sm font-semibold text-muted mb-1">
@@ -552,6 +282,21 @@ export default function RegisterScreen({ navigation }) {
                   />
                 </TextField>
               </View>
+            </View>
+          </Surface>
+
+          {/* Where roles went */}
+          <Surface className="rounded-2xl px-5 py-4 mb-4 flex-row items-start" style={{ gap: 12 }}>
+            <View className="w-9 h-9 rounded-xl bg-accent-soft items-center justify-center">
+              <StyledIonicons name="sparkles-outline" size={18} className="text-accent" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-bold text-foreground mb-0.5">
+                {t('register.participateHintTitle')}
+              </Text>
+              <Text className="text-xs text-muted leading-5">
+                {t('register.participateHintBody')}
+              </Text>
             </View>
           </Surface>
 
@@ -589,6 +334,16 @@ export default function RegisterScreen({ navigation }) {
               {loading ? t('register.submitting') : t('register.submit')}
             </Button.Label>
           </Button>
+
+          {/* Login link */}
+          <View className="flex-row justify-center items-center mt-6 gap-1">
+            <Text className="text-sm text-muted">{t('register.haveAccount')}</Text>
+            <LinkButton size="sm" onPress={() => navigation.goBack()}>
+              <LinkButton.Label className="text-accent font-semibold">
+                {t('register.signIn')}
+              </LinkButton.Label>
+            </LinkButton>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
 

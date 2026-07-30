@@ -30,7 +30,6 @@ import {
 import { getExposants, networkingHistory, deleteNetworkingRecord } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTabBarScroll } from '../context/TabBarContext';
-import PendingApproval from '../components/PendingApproval';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -98,7 +97,7 @@ export default function ExposantsScreen({ navigation }) {
   const { t } = useTranslation();
   const tabScroll = useTabBarScroll();
   const insets = useSafeAreaInsets();
-  const { exhibitorId, badgeNumber, isApproved } = useAuth();
+  const { exhibitorId, badgeNumber } = useAuth();
   const [connectedMap, setConnectedMap] = useState(new Map()); // email → scan_id
   const [deletingConnection, setDeletingConnection] = useState(false);
   const [exposants, setExposants] = useState([]);
@@ -255,17 +254,6 @@ export default function ExposantsScreen({ navigation }) {
         },
       ].filter(Boolean)
     : [];
-
-  if (!isApproved) {
-    return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-        <View className="px-4 pt-5 pb-4">
-          <Text className="text-2xl font-extrabold text-foreground">{t('exposants.title')}</Text>
-        </View>
-        <PendingApproval />
-      </View>
-    );
-  }
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>

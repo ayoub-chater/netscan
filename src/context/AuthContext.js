@@ -173,9 +173,19 @@ export function AuthProvider({ children }) {
             badgeNumber,
             eventInfo,
             exhibitorId,
-            // Exhibitors are gated until an admin approves them; everyone else
-            // is approved. Default to true when the flag is absent (old sessions).
-            isApproved: scanner?.is_approved !== false,
+            // "Participer": everyone signs up as a visitor and applies for a
+            // participant role afterwards. `null` = never applied.
+            participationStatus: scanner?.participation_status ?? null,
+            participationRole: scanner?.participation_role ?? null,
+            participationNote: scanner?.participation_note ?? null,
+            // Approved participants get the role features (B2B, team, …).
+            isParticipant: scanner?.is_participant === true,
+            // Added to an exhibitor's team by that exhibitor: they already
+            // take part through their organisation, so no "Participer" CTA.
+            isExhibitorStaff: scanner?.is_exhibitor_staff === true,
+            // Meetings others requested with me that I haven't answered yet —
+            // surfaced as a red dot on the B2B tab and the agenda button.
+            b2bPendingCount: scanner?.b2b_pending_count ?? 0,
             isExposant: (scanner?.role || '').toLowerCase() === 'exposant',
             isSpeaker: (scanner?.role || '').toLowerCase() === 'intervenant',
             signIn,

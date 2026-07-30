@@ -37,8 +37,6 @@ import {
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTabBarScroll } from '../context/TabBarContext';
-import PendingApproval from '../components/PendingApproval';
-import SpeakerAppointmentsScreen from './SpeakerAppointmentsScreen';
 
 const ACCENT = '#286EAD';
 
@@ -96,9 +94,10 @@ function statusDot(status) {
 function PersonaCard({ item, onBook, onView }) {
   const { t } = useTranslation();
   const initials = (item.name || '?').slice(0, 2).toUpperCase();
-  // Backend flags: `bookable` = active + has availability. Fall back to
-  // available_dates for older payloads.
-  const bookable = item.bookable ?? ((item.available_dates?.length || 0) > 0);
+  // Backend's `bookable` flag can say true even when `available_dates` ends up
+  // empty (e.g. its only slots are already past or blocked) — always require
+  // real dates client-side too, so the button never opens an empty booking sheet.
+  const bookable = (item.bookable ?? true) && (item.available_dates?.length || 0) > 0;
   const status = item.status || 'active';
   const off = status !== 'active';
 
@@ -264,7 +263,10 @@ export default function AppointmentsScreen({ navigation }) {
   const locale = i18n.language || 'fr';
   const tabScroll = useTabBarScroll();
   const insets = useSafeAreaInsets();
-  const { isApproved, isSpeaker } = useAuth();
+  // B2B is peer-to-peer between approved participants — a plain visitor can
+  // neither book nor be booked, and is sent to "Participer" instead.
+  const { isParticipant, participationStatus, participationRole, b2bPendingCount, refreshProfile } =
+    useAuth();
 
   const [tab, setTab] = useState('contacts'); // 'contacts' | 'mine'
   const [personas, setPersonas] = useState([]);
@@ -288,6 +290,14 @@ export default function AppointmentsScreen({ navigation }) {
   const [booking, setBooking] = useState(false);
 
   const load = async () => {
+    // Also re-reads `b2b_pending_count`, so the dot on the agenda button and
+    // the tab bar reflects requests that arrived since the last visit.
+    refreshProfile();
+    if (!isParticipant) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
     try {
       const [pRes, aRes] = await Promise.allSettled([getPersonas(), getMyAppointments()]);
       if (pRes.status === 'fulfilled') setPersonas(pRes.value?.data?.data || []);
@@ -301,11 +311,15 @@ export default function AppointmentsScreen({ navigation }) {
     }
   };
 
+  // `isParticipant` is a dependency on purpose: `load` short-circuits for
+  // non-participants, so an account approved while the app was open must
+  // rebuild the callback — otherwise focusing the tab keeps running the stale
+  // "not a participant" version and the directory stays empty.
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
       load();
-    }, [])
+    }, [isParticipant])
   );
 
   const onRefresh = () => {
@@ -320,6 +334,9 @@ export default function AppointmentsScreen({ navigation }) {
 
   // ── Booking flow ──────────────────────────────────────────────────────────
   const openBooking = (persona) => {
+    // Never open the sheet for a persona with no real availability — surfaces
+    // as a blank/broken sheet otherwise (see bookable computation above).
+    if (!persona?.available_dates?.length) return;
     setProfileOpen(false);
     setActivePersona(persona);
     setSelectedSlot(null);
@@ -411,29 +428,52 @@ export default function AppointmentsScreen({ navigation }) {
     );
   };
 
-  // Speakers get their own management dashboard — but only once an admin has
-  // approved them (same gating as exhibitors).
-  if (isSpeaker) {
-    if (!isApproved) {
-      return (
-        <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-          <View className="px-4 pt-5 pb-4">
-            <Text className="text-2xl font-extrabold text-foreground">{t('speaker.title')}</Text>
-          </View>
-          <PendingApproval />
-        </View>
-      );
-    }
-    return <SpeakerAppointmentsScreen />;
-  }
-
-  if (!isApproved) {
+  // Locked for anyone who isn't an approved participant yet: plain visitors,
+  // pending requests, and refused ones all land here with a way forward.
+  if (!isParticipant) {
+    const pending = participationStatus === 'pending';
     return (
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
         <View className="px-4 pt-5 pb-4">
-          <Text className="text-2xl font-extrabold text-foreground">{t('appointments.title')}</Text>
+          <Text className="text-2xl font-extrabold text-foreground">{t('b2b.title')}</Text>
+          <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
         </View>
-        <PendingApproval />
+        <View className="flex-1 items-center justify-center px-8">
+          <View
+            className={`w-20 h-20 rounded-full items-center justify-center mb-6 ${
+              pending ? 'bg-warning-soft' : 'bg-accent-soft'
+            }`}
+          >
+            <Ionicons
+              name={pending ? 'time-outline' : 'lock-closed-outline'}
+              size={40}
+              color={pending ? '#F59E0B' : ACCENT}
+            />
+          </View>
+          <Text className="text-xl font-extrabold text-foreground text-center mb-3">
+            {pending ? t('b2b.lockedPendingTitle') : t('b2b.lockedTitle')}
+          </Text>
+          <Text className="text-sm text-muted text-center leading-6 mb-8">
+            {pending
+              ? t('b2b.lockedPendingBody', { role: participationRole || '' })
+              : t('b2b.lockedBody')}
+          </Text>
+          <Button
+            variant={pending ? 'secondary' : 'primary'}
+            size="lg"
+            className="rounded-2xl"
+            onPress={() => navigation.navigate('Participate')}
+          >
+            <Ionicons
+              name={pending ? 'refresh-outline' : 'sparkles-outline'}
+              size={18}
+              color={pending ? ACCENT : '#FFFFFF'}
+            />
+            <Button.Label>
+              {pending ? t('b2b.lockedPendingCta') : t('b2b.lockedCta')}
+            </Button.Label>
+          </Button>
+        </View>
       </View>
     );
   }
@@ -443,9 +483,33 @@ export default function AppointmentsScreen({ navigation }) {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* ── Header ─────────────────────────────────── */}
-      <View className="px-4 pt-5 pb-3">
-        <Text className="text-2xl font-extrabold text-foreground">{t('appointments.title')}</Text>
-        <Text className="text-sm text-muted mt-1">{t('appointments.subtitle')}</Text>
+      <View className="px-4 pt-5 pb-3 flex-row items-start" style={{ gap: 12 }}>
+        <View className="flex-1">
+          <Text className="text-2xl font-extrabold text-foreground">{t('b2b.title')}</Text>
+          <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
+        </View>
+        {/* The other side of B2B: my own availability + the requests I received.
+            The dot mirrors the one on the tab bar so an unanswered request is
+            visible at both steps of the path to the agenda. */}
+        <Pressable
+          onPress={() => navigation.navigate('B2BAgenda')}
+          hitSlop={8}
+          accessibilityRole="button"
+          accessibilityLabel={t('b2b.myAgenda')}
+          className="w-11 h-11 rounded-2xl bg-accent items-center justify-center active:opacity-70"
+        >
+          <Ionicons name="briefcase-outline" size={20} color="#FFFFFF" />
+          {b2bPendingCount > 0 && (
+            <View
+              className="absolute bg-danger rounded-full items-center justify-center"
+              style={{ top: -3, right: -3, minWidth: 18, height: 18, paddingHorizontal: 4 }}
+            >
+              <Text className="text-[10px] font-extrabold text-danger-foreground">
+                {b2bPendingCount > 9 ? '9+' : b2bPendingCount}
+              </Text>
+            </View>
+          )}
+        </Pressable>
       </View>
 
       {/* ── Segmented control ──────────────────────── */}
@@ -640,7 +704,7 @@ export default function AppointmentsScreen({ navigation }) {
               </View>
 
               <View className="px-4 pt-6" style={{ gap: 12 }}>
-                {(profilePersona?.bookable ?? ((profilePersona?.available_dates?.length || 0) > 0)) ? (
+                {((profilePersona?.bookable ?? true) && (profilePersona?.available_dates?.length || 0) > 0) ? (
                   <Button variant="primary" size="lg" className="rounded-2xl" onPress={() => openBooking(profilePersona)}>
                     <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
                     <Button.Label>{t('appointments.book')}</Button.Label>
