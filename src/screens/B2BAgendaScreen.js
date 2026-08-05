@@ -41,6 +41,9 @@ import {
 } from '../services/api';
 import { useTabBarScroll } from '../context/TabBarContext';
 import { useAuth } from '../context/AuthContext';
+import { MEETING_LOCATION } from '../constants/b2b';
+import useSheetGuard from '../components/useSheetGuard';
+import MenuButton from '../components/MenuButton';
 
 const ACCENT = '#286EAD';
 
@@ -294,6 +297,12 @@ export default function B2BAgendaScreen({ navigation }) {
   const [avEnd, setAvEnd] = useState(null);
   const [savingAvail, setSavingAvail] = useState(false);
 
+  // Keeps each sheet's native state in sync with ours — see useSheetGuard.
+  const editSheet = useSheetGuard(editOpen, () => setEditOpen(false));
+  const availSheet = useSheetGuard(availOpen, () => setAvailOpen(false));
+  const closeEdit = editSheet.close;
+  const closeAvail = availSheet.close;
+
   const load = async () => {
     try {
       const [pRes, aRes] = await Promise.allSettled([
@@ -368,7 +377,8 @@ export default function B2BAgendaScreen({ navigation }) {
       title: persona.title || '',
       company: persona.company || '',
       bio: persona.bio || '',
-      location: persona.location || '',
+      // Fixed for everyone — shown read-only, never taken from the form.
+      location: MEETING_LOCATION,
       appointment_duration: String(persona.appointment_duration || 30),
       buffer_time: String(persona.buffer_time ?? 0),
       status: persona.status || 'active',
@@ -430,14 +440,14 @@ export default function B2BAgendaScreen({ navigation }) {
         name: form.name.trim(),
         title: form.title.trim(),
         bio: form.bio.trim(),
-        location: form.location.trim(),
+        location: MEETING_LOCATION,
         appointment_duration: parseInt(form.appointment_duration, 10) || 30,
         buffer_time: parseInt(form.buffer_time, 10) || 0,
         status: form.status,
         photo: form.photo || undefined,
       });
       setPersona(res?.data?.persona || persona);
-      setEditOpen(false);
+      closeEdit();
     } catch (e) {
       Alert.alert(t('common.error'), e?.response?.data?.message || t('speaker.saveError'));
     } finally {
@@ -462,7 +472,7 @@ export default function B2BAgendaScreen({ navigation }) {
     setSavingAvail(true);
     try {
       await addSpeakerAvailability({ date: avDate, start_time: avStart, end_time: avEnd });
-      setAvailOpen(false);
+      closeAvail();
       await load();
     } catch (e) {
       Alert.alert(t('common.error'), e?.response?.data?.message || t('speaker.saveError'));
@@ -508,6 +518,7 @@ export default function B2BAgendaScreen({ navigation }) {
           <Text className="text-2xl font-extrabold text-foreground">{t('speaker.title')}</Text>
           <Text className="text-sm text-muted mt-1">{t('speaker.subtitle')}</Text>
         </View>
+        <MenuButton />
       </View>
 
       {/* Segmented */}
@@ -643,12 +654,12 @@ export default function B2BAgendaScreen({ navigation }) {
                     {t('appointments.duration', { min: persona?.appointment_duration || 30 })}
                   </Text>
                 </View>
-                {persona?.location ? (
-                  <View className="flex-row items-center" style={{ gap: 6 }}>
-                    <Ionicons name="location-outline" size={14} color={ACCENT} />
-                    <Text className="text-xs text-foreground font-semibold">{persona.location}</Text>
-                  </View>
-                ) : null}
+                <View className="flex-row items-center" style={{ gap: 6 }}>
+                  <Ionicons name="location-outline" size={14} color={ACCENT} />
+                  <Text className="text-xs text-foreground font-semibold">
+                    {persona?.location || MEETING_LOCATION}
+                  </Text>
+                </View>
               </View>
               <Button variant="secondary" size="sm" className="rounded-xl mt-4" onPress={openEdit}>
                 <Ionicons name="create-outline" size={16} color={ACCENT} />
@@ -690,10 +701,13 @@ export default function B2BAgendaScreen({ navigation }) {
       )}
 
       {/* ── Edit profile sheet ─────────────────────────── */}
-      <BottomSheet isOpen={editOpen} onOpenChange={(o) => !o && setEditOpen(false)}>
+      {editSheet.mounted ? (
+      <BottomSheet key={editSheet.key} isOpen={editSheet.isOpen} onOpenChange={(o) => !o && closeEdit()}>
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content
+            ref={editSheet.ref}
+            {...editSheet.contentProps}
             snapPoints={['90%']}
             enableOverDrag={false}
             enableDynamicSizing={false}
@@ -737,7 +751,17 @@ export default function B2BAgendaScreen({ navigation }) {
                   numberOfLines={3}
                   style={{ minHeight: 72, textAlignVertical: 'top' }}
                 />
-                <SheetField label={t('speaker.location')} value={form?.location} onChangeText={(v) => setForm((f) => ({ ...f, location: v }))} />
+                {/* All B2B meetings happen in the networking room — read-only. */}
+                <View>
+                  <Label>{t('speaker.location')}</Label>
+                  <View className="bg-surface-secondary rounded-xl px-4 py-3 mt-1.5 flex-row items-center justify-between">
+                    <Text className="text-sm text-muted flex-1" numberOfLines={1}>
+                      {MEETING_LOCATION}
+                    </Text>
+                    <Ionicons name="lock-closed-outline" size={15} color="#9CA3AF" />
+                  </View>
+                  <Text className="text-xs text-muted mt-1.5">{t('speaker.locationLocked')}</Text>
+                </View>
               </Surface>
 
               {/* Duration (presets + custom) */}
@@ -817,19 +841,23 @@ export default function B2BAgendaScreen({ navigation }) {
               <Button variant="primary" size="lg" className="rounded-2xl mt-2" onPress={saveProfile} disabled={savingProfile}>
                 <Button.Label>{savingProfile ? t('speaker.saving') : t('speaker.save')}</Button.Label>
               </Button>
-              <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={() => setEditOpen(false)}>
+              <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={closeEdit}>
                 <Button.Label>{t('common.cancel')}</Button.Label>
               </Button>
             </BottomSheetScrollView>
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
 
       {/* ── Add availability sheet ─────────────────────── */}
-      <BottomSheet isOpen={availOpen} onOpenChange={(o) => !o && setAvailOpen(false)}>
+      {availSheet.mounted ? (
+      <BottomSheet key={availSheet.key} isOpen={availSheet.isOpen} onOpenChange={(o) => !o && closeAvail()}>
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content
+            ref={availSheet.ref}
+            {...availSheet.contentProps}
             snapPoints={['80%']}
             enableOverDrag={false}
             enableDynamicSizing={false}
@@ -906,13 +934,14 @@ export default function B2BAgendaScreen({ navigation }) {
               >
                 <Button.Label>{savingAvail ? t('speaker.saving') : t('speaker.addSlot')}</Button.Label>
               </Button>
-              <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={() => setAvailOpen(false)}>
+              <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={closeAvail}>
                 <Button.Label>{t('common.cancel')}</Button.Label>
               </Button>
             </BottomSheetScrollView>
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
     </View>
   );
 }

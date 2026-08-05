@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
 import { useTranslation } from 'react-i18next';
+import MenuButton from '../components/MenuButton';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -22,9 +23,10 @@ export default function ProgrammeScreen({ navigation }) {
           >
             <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
           </Pressable>
-          <Text className="text-xl font-extrabold text-foreground">
+          <Text className="flex-1 text-xl font-extrabold text-foreground">
             {t('programme.title')}
           </Text>
+          <MenuButton />
         </View>
       </View>
 

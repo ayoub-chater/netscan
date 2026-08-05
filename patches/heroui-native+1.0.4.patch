@@ -1,0 +1,43 @@
+diff --git a/node_modules/heroui-native/lib/module/primitives/portal/portal.js b/node_modules/heroui-native/lib/module/primitives/portal/portal.js
+index 50ee1c2..ec8876a 100644
+--- a/node_modules/heroui-native/lib/module/primitives/portal/portal.js
++++ b/node_modules/heroui-native/lib/module/primitives/portal/portal.js
+@@ -49,8 +49,14 @@ export function PortalHost({
+   const map = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+   const portalMap = map.get(name) ?? new Map();
+   if (portalMap.size === 0) return null;
++  // Keyed by portal name: an unkeyed array is reconciled by index, so adding or
++  // removing a portal (screen mount/unmount) shifts the rest and React reuses a
++  // mounted bottom sheet instance for a different sheet's content — the native
++  // sheet stays open while its body swaps.
+   return /*#__PURE__*/_jsx(_Fragment, {
+-    children: Array.from(portalMap.values())
++    children: Array.from(portalMap.entries()).map(([portalName, portalChildren]) => /*#__PURE__*/_jsx(_Fragment, {
++      children: portalChildren
++    }, portalName))
+   });
+ }
+ 
+diff --git a/node_modules/heroui-native/src/primitives/portal/portal.tsx b/node_modules/heroui-native/src/primitives/portal/portal.tsx
+index ae5c406..18eedc5 100644
+--- a/node_modules/heroui-native/src/primitives/portal/portal.tsx
++++ b/node_modules/heroui-native/src/primitives/portal/portal.tsx
+@@ -65,7 +65,17 @@ export function PortalHost({ name = DEFAULT_PORTAL_HOST }: { name?: string }) {
+   const map = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+   const portalMap = map.get(name) ?? new Map<string, React.ReactNode>();
+   if (portalMap.size === 0) return null;
+-  return <>{Array.from(portalMap.values())}</>;
++  // Keyed by portal name: an unkeyed array is reconciled by index, so adding or
++  // removing a portal (screen mount/unmount) shifts the rest and React reuses a
++  // mounted bottom sheet instance for a different sheet's content — the native
++  // sheet stays open while its body swaps.
++  return (
++    <>
++      {Array.from(portalMap.entries()).map(([portalName, portalChildren]) => (
++        <React.Fragment key={portalName}>{portalChildren}</React.Fragment>
++      ))}
++    </>
++  );
+ }
+ 
+ // --------------------------------------------------

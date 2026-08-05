@@ -20,11 +20,14 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { withUniwind } from 'uniwind';
+import { useIsFocused } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { Button, Surface } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { networkingScan } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
+import MenuButton from '../components/MenuButton';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -35,6 +38,7 @@ const BLUE = '#286EAD';
 export default function ScannerScreen({ navigation }) {
   const { t } = useTranslation();
   const { badgeNumber } = useAuth();
+  const isFocused = useIsFocused();
   const [permission, requestPermission] = useCameraPermissions();
   const [scanning, setScanning] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -52,6 +56,15 @@ export default function ScannerScreen({ navigation }) {
   }, []);
 
   const ambientStyle = useAnimatedStyle(() => ({ opacity: ambientOpacity.value }));
+
+  // This screen stays mounted as a tab, and its result sheet renders through a
+  // global Portal — leaving it behind would keep the sheet (and the camera)
+  // alive on top of whatever screen the user moved to.
+  useEffect(() => {
+    if (isFocused) return;
+    setResult(null);
+    setScanning(false);
+  }, [isFocused]);
 
   const extractBadgeNumber = (qrData) => {
     if (!qrData) return null;
@@ -136,8 +149,8 @@ export default function ScannerScreen({ navigation }) {
     }
   };
 
-  // ── Single render tree — NetworkingModal always mounted so BottomSheet
-  // gets the false→true isOpen transition instead of mounting with isOpen=true.
+  // ── Single render tree. NetworkingModal mounts its own sheet only once a
+  // scan result exists and handles the false→true isOpen transition itself.
   return (
     <>
       {scanning ? (
@@ -175,6 +188,15 @@ export default function ScannerScreen({ navigation }) {
       ) : (
         // ── Welcome / loading state ─────────────────────────────────────────
         <View className="flex-1 bg-background items-center justify-center px-8">
+          {/* This state has no header, and the camera state is deliberately
+              chrome-free, so the menu lives here only. */}
+          <SafeAreaView
+            style={{ position: 'absolute', top: 0, left: 16 }}
+            edges={['top']}
+            pointerEvents="box-none"
+          >
+            <MenuButton style={{ marginTop: 20 }} />
+          </SafeAreaView>
           {loading ? (
             <>
               <ActivityIndicator color={BLUE} size="large" />
@@ -240,9 +262,9 @@ export default function ScannerScreen({ navigation }) {
         </View>
       )}
 
-      {/* Always mounted — BottomSheet needs the false→true transition to open */}
+      {/* Only while this screen is on top — the sheet renders in a global portal */}
       <NetworkingModal
-        visible={!!result}
+        visible={isFocused && !!result}
         result={result}
         onClose={() => {
           setResult(null);

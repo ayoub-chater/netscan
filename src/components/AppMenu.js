@@ -9,6 +9,7 @@ import {
   BackHandler,
   useWindowDimensions,
   StyleSheet,
+  Linking,
 } from 'react-native';
 import Animated, {
   useSharedValue,
@@ -20,13 +21,15 @@ import Animated, {
   Easing,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { Avatar, Chip } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
+import { navigationRef, navigateFromRoot } from '../navigation/navigationRef';
+import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
+import { EVENT_WEBSITE_URL } from '../constants/api';
 
 const ACCENT = '#286EAD';
 // Hoisted out of the worklets below — native modules can't be read on the UI thread.
@@ -38,7 +41,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 const ITEMS = [
   // Highlighted: this is how a plain visitor becomes an exposant, intervenant,
   // sponsor… so it sits first and gets accent styling.
-  { key: 'participate', icon: 'sparkles', route: 'Participate', highlight: true },
+  { key: 'participate', icon: PARTICIPATE_ICON, route: 'Participate', highlight: true },
   { key: 'exhibitors', icon: 'storefront', route: 'Exposants' },
   { key: 'scan', icon: 'qr-code', route: 'Scanner' },
   { key: 'network', icon: 'people', route: 'History' },
@@ -46,7 +49,8 @@ const ITEMS = [
   { key: 'conference', icon: 'easel', route: 'Conference' },
   { key: 'programme', icon: 'document-text', route: 'Programme' },
   { key: 'plan', icon: 'map', route: 'Plan' },
-  { key: 'event', icon: 'globe', route: 'Expos' },
+  // Opens the event site in the phone's browser, not in an in-app WebView.
+  { key: 'event', icon: 'globe', url: EVENT_WEBSITE_URL },
   { key: 'badge', icon: 'id-card', route: 'MyBadge' },
   { key: 'team', icon: 'people-circle', route: 'Team', exposantOnly: true },
   { key: 'settings', icon: 'person', route: 'Détails' },
@@ -173,10 +177,9 @@ function ThemeSwitch({ progress }) {
 
 export default function AppMenu({ visible, onClose }) {
   const { t } = useTranslation();
-  const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const { scanner, participationStatus, participationRole, isExhibitorStaff } = useAuth();
+  const { scanner, participationStatus, participationRole, isExhibitorStaff, isVip } = useAuth();
   const { translateY } = useTabBar();
 
   // Keep the panel mounted through the closing animation.
@@ -213,23 +216,43 @@ export default function AppMenu({ visible, onClose }) {
     return () => clearTimeout(timer);
   }, [visible]);
 
-  // Leaving the screen (bottom nav, deep link, back) must not strand the
-  // hidden tab bar behind us. Route the actual close through `onClose` (the
-  // same path a normal close takes) rather than poking `mounted`/`progress`
-  // directly here too — two places writing the same state was the source of
-  // a bug where the panel could come back stuck non-interactive after a
-  // tab switch. `translateY` is the one exception: it's owned by the
-  // TabBarContext, not local state, and must always resolve on blur even if
-  // this component unmounts entirely (e.g. logout) before its own effects
-  // get a chance to run.
-  useFocusEffect(
-    React.useCallback(
-      () => () => {
+  // The panel lives above the navigator now, so it survives screen changes.
+  // Any navigation (bottom nav, deep link, hardware back) must still fold it
+  // away and hand the tab bar back. Route the close through `onClose` — the
+  // same path a normal close takes — rather than poking `mounted`/`progress`
+  // directly, which used to leave the panel stuck non-interactive.
+  useEffect(() => {
+    let cancelled = false;
+    let unsubscribe;
+
+    const attach = () => {
+      if (cancelled) return;
+      // The container mounts alongside this panel, so on a cold start the ref
+      // can still be a frame away from ready.
+      if (!navigationRef.isReady()) {
+        requestAnimationFrame(attach);
+        return;
+      }
+      unsubscribe = navigationRef.addListener('state', () => {
         translateY.value = 0;
         onCloseRef.current();
-      },
-      []
-    )
+      });
+    };
+
+    attach();
+    return () => {
+      cancelled = true;
+      if (unsubscribe) unsubscribe();
+    };
+  }, []);
+
+  // `translateY` is owned by the TabBarContext, so it must always resolve even
+  // if this component unmounts while open (e.g. logout).
+  useEffect(
+    () => () => {
+      translateY.value = 0;
+    },
+    []
   );
 
   // Android hardware back closes the menu instead of leaving the screen.
@@ -255,7 +278,7 @@ export default function AppMenu({ visible, onClose }) {
   // Staff already take part through the exhibitor that added them — hide the
   // Participer row for them, and Team stays owner-only.
   const items = ITEMS.filter((i) => {
-    if (i.key === 'participate' && isExhibitorStaff) return false;
+    if (i.key === 'participate' && (isExhibitorStaff || isVip)) return false;
     return !i.exposantOnly || (isExposant && !isExhibitorStaff);
   });
 
@@ -265,7 +288,7 @@ export default function AppMenu({ visible, onClose }) {
     participationStatus === 'pending'
       ? { label: t('participate.badgePending'), color: 'warning' }
       : participationStatus === 'approved'
-      ? { label: participationRole || t('participate.badgeApproved'), color: 'success' }
+      ? { label: roleLabel(participationRole) || t('participate.badgeApproved'), color: 'success' }
       : participationStatus === 'rejected'
       ? { label: t('participate.badgeRejected'), color: 'danger' }
       : null;
@@ -275,10 +298,14 @@ export default function AppMenu({ visible, onClose }) {
   // Centre the halo on the hamburger button itself so the burst starts at the corner.
   const haloAnchor = RTL ? { right: -44 } : { left: -44 };
 
-  const go = (route) => {
+  const go = (item) => {
     onClose();
+    if (item.url) {
+      Linking.openURL(item.url).catch(() => {});
+      return;
+    }
     // Let the fold-back animation play before the screen swaps underneath.
-    setTimeout(() => navigation.navigate(route), 180);
+    setTimeout(() => navigateFromRoot(item.route), 180);
   };
 
   const backdropStyle = useAnimatedStyle(() => ({
@@ -366,7 +393,7 @@ export default function AppMenu({ visible, onClose }) {
             </Text>
             <View className="flex-row items-center mt-1" style={{ gap: 6 }}>
               <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-                <Chip.Label>{role}</Chip.Label>
+                <Chip.Label>{roleLabel(role)}</Chip.Label>
               </Chip>
               {isPending ? (
                 <Chip size="sm" variant="soft" color="warning">
@@ -413,7 +440,7 @@ export default function AppMenu({ visible, onClose }) {
               index={index}
               progress={progress}
               badge={item.key === 'participate' ? participateBadge : null}
-              onPress={() => go(item.route)}
+              onPress={() => go(item)}
             />
           ))}
         </ScrollView>

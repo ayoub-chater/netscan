@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,10 @@ import {
   Image,
   RefreshControl,
   Modal,
+  StyleSheet,
+  I18nManager,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -28,11 +31,23 @@ import { useTheme } from '../context/ThemeContext';
 import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
 import { networkingHistory, getUnreadNotificationCount } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
-import AppMenu from '../components/AppMenu';
+import MenuButton from '../components/MenuButton';
+import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
 
 const StyledIonicons = withUniwind(Ionicons);
 
-const DAYS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+// Keep the banner's own proportions so nothing is cropped on any screen width.
+const BADGE_BANNER = require('../../assets/banner-badge.png');
+const badgeBannerSource = Image.resolveAssetSource(BADGE_BANNER);
+const BADGE_BANNER_RATIO =
+  badgeBannerSource?.width && badgeBannerSource?.height
+    ? badgeBannerSource.width / badgeBannerSource.height
+    : 16 / 9;
+
+// Accent (#286EAD) lifted and deepened at the two ends of the diagonal.
+const PARTICIPATE_GRADIENT = ['#4A9BE0', '#286EAD', '#1B4E7C'];
 
 function CountdownDigit({ value, label }) {
   const { isDark } = useTheme();
@@ -87,7 +102,7 @@ function ContactRow({ item, onPress }) {
       </View>
       <View className="items-end" style={{ gap: 6 }}>
         <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-          <Chip.Label>{role}</Chip.Label>
+          <Chip.Label>{roleLabel(role)}</Chip.Label>
         </Chip>
         <Text className="text-[10px] text-muted font-medium">{timeStr}</Text>
       </View>
@@ -99,7 +114,59 @@ function ContactRow({ item, onPress }) {
 // stands: an invitation before applying, a status card after.
 function ParticipateBanner({ status, role, onPress }) {
   const { t } = useTranslation();
+  const forward = I18nManager.isRTL ? 'arrow-back' : 'arrow-forward';
 
+  // ── Invitation ──────────────────────────────────────────────────────────
+  // Nothing requested yet: this is the dashboard's primary call to action, so
+  // it gets the full accent treatment instead of blending into the surface
+  // cards around it. Colours are literals rather than theme tokens — the
+  // gradient is the same in light and dark, and white always reads on it.
+  if (!status) {
+    return (
+      <Pressable
+        onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={t('participate.bannerTitle')}
+        className="mx-4 mb-4 active:opacity-90"
+        style={styles.participateShadow}
+      >
+        <LinearGradient
+          colors={PARTICIPATE_GRADIENT}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.participateCard}
+        >
+          {/* Soft highlights give the flat gradient some depth. */}
+          <View style={styles.participateGlowTop} pointerEvents="none" />
+          <View style={styles.participateGlowBottom} pointerEvents="none" />
+
+          <View className="flex-row items-center" style={{ gap: 14 }}>
+            <View style={styles.participateIcon}>
+              <Ionicons name={PARTICIPATE_ICON} size={26} color="#FFFFFF" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-[17px] font-extrabold" style={{ color: '#FFFFFF' }}>
+                {t('participate.bannerTitle')}
+              </Text>
+              <Text
+                className="text-xs mt-1 leading-5"
+                style={{ color: 'rgba(255,255,255,0.85)' }}
+              >
+                {t('participate.bannerBody')}
+              </Text>
+            </View>
+            <View style={styles.participateArrow}>
+              <Ionicons name={forward} size={18} color="#FFFFFF" />
+            </View>
+          </View>
+        </LinearGradient>
+      </Pressable>
+    );
+  }
+
+  // ── Status ──────────────────────────────────────────────────────────────
+  // A request exists, so the card is informational and steps back to the
+  // surface styling shared with the rest of the dashboard.
   // Class names are written out in full — Uniwind resolves them statically,
   // so an interpolated `bg-${tint}-soft` would never be generated.
   const variant =
@@ -107,9 +174,7 @@ function ParticipateBanner({ status, role, onPress }) {
       ? { icon: 'checkmark-circle', bubble: 'bg-success-soft', iconColor: 'text-success', titleKey: 'participate.bannerApprovedTitle', bodyKey: 'participate.bannerApprovedBody' }
       : status === 'pending'
       ? { icon: 'time-outline', bubble: 'bg-warning-soft', iconColor: 'text-warning', titleKey: 'participate.bannerPendingTitle', bodyKey: 'participate.bannerPendingBody' }
-      : status === 'rejected'
-      ? { icon: 'refresh-circle-outline', bubble: 'bg-warning-soft', iconColor: 'text-warning', titleKey: 'participate.bannerRejectedTitle', bodyKey: 'participate.bannerRejectedBody' }
-      : { icon: 'sparkles', bubble: 'bg-accent-soft', iconColor: 'text-accent', titleKey: 'participate.bannerTitle', bodyKey: 'participate.bannerBody' };
+      : { icon: 'refresh-circle-outline', bubble: 'bg-warning-soft', iconColor: 'text-warning', titleKey: 'participate.bannerRejectedTitle', bodyKey: 'participate.bannerRejectedBody' };
 
   return (
     <Pressable
@@ -125,9 +190,9 @@ function ParticipateBanner({ status, role, onPress }) {
           <Text className="text-base font-extrabold text-foreground">
             {t(variant.titleKey)}
           </Text>
-          {role && status ? (
+          {role ? (
             <Chip size="sm" variant="soft" color={status === 'approved' ? 'success' : 'warning'}>
-              <Chip.Label>{role}</Chip.Label>
+              <Chip.Label>{roleLabel(role)}</Chip.Label>
             </Chip>
           ) : null}
         </View>
@@ -147,6 +212,7 @@ export default function HomeScreen({ navigation }) {
     participationStatus,
     participationRole,
     isExhibitorStaff,
+    isVip,
     refreshProfile,
   } = useAuth();
   const { translateY } = useTabBar();
@@ -157,8 +223,6 @@ export default function HomeScreen({ navigation }) {
   const [refreshing, setRefreshing] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [badgeModalVisible, setBadgeModalVisible] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
-  const closeMenu = useCallback(() => setMenuVisible(false), []);
   const [unreadCount, setUnreadCount] = useState(0);
   const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' });
 
@@ -280,15 +344,7 @@ export default function HomeScreen({ navigation }) {
           {/* ── Header ─────────────────────────────────── */}
           <View className="px-3 pt-5 pb-4 flex-row items-center justify-between">
             <View className="flex-row items-center" style={{ gap: 10, flex: 1 }}>
-              <Pressable
-                onPress={() => setMenuVisible(true)}
-                hitSlop={10}
-                accessibilityRole="button"
-                accessibilityLabel={t('menu.open')}
-                className="w-10 h-10 rounded-2xl bg-surface border border-separator items-center justify-center active:opacity-70"
-              >
-                <Ionicons name="menu" size={20} color="#286EAD" />
-              </Pressable>
+              <MenuButton />
               <View style={{ flex: 1 }} />
             </View>
             <Pressable
@@ -331,11 +387,11 @@ export default function HomeScreen({ navigation }) {
             contentContainerStyle={{ paddingHorizontal: 16, gap: 8 }}
             style={{ marginBottom: 20 }}
           >
-            {DAYS.map((d, i) => {
+            {DAY_KEYS.map((dayKey, i) => {
               const isActive = i === currentDayIndex;
               return (
                 <View
-                  key={d}
+                  key={dayKey}
                   className={[
                     'items-center px-3 py-2 rounded-xl',
                     isActive ? 'bg-accent' : 'bg-surface',
@@ -344,7 +400,7 @@ export default function HomeScreen({ navigation }) {
                   <Text
                     className={`text-xs font-bold ${isActive ? 'text-accent-foreground' : 'text-muted'}`}
                   >
-                    {d}
+                    {t(`home.dayShort.${dayKey}`)}
                   </Text>
                   <View
                     className={[
@@ -358,9 +414,10 @@ export default function HomeScreen({ navigation }) {
           </ScrollView>
 
           {/* ── Participer ─────────────────────────────── */}
-          {/* Staff take part through the exhibitor that added them, so there
-              is nothing for them to apply for. */}
-          {!isExhibitorStaff && (
+          {/* Staff take part through the exhibitor that added them, and VIPs
+              were registered in their role already — neither has anything to
+              apply for. */}
+          {!isExhibitorStaff && !isVip && (
             <ParticipateBanner
               status={participationStatus}
               role={participationRole}
@@ -372,12 +429,11 @@ export default function HomeScreen({ navigation }) {
           <Pressable
             onPress={() => setBadgeModalVisible(true)}
             className="mx-4 mb-5 rounded-2xl overflow-hidden active:opacity-80"
-            style={{ height: 140 }}
           >
             <Image
-              source={require('../../assets/banner-badge.png')}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
+              source={BADGE_BANNER}
+              style={{ width: '100%', height: undefined, aspectRatio: BADGE_BANNER_RATIO }}
+              resizeMode="stretch"
             />
           </Pressable>
 
@@ -492,9 +548,6 @@ export default function HomeScreen({ navigation }) {
         </ScrollView>
       </View>
 
-      {/* ── Slide-out Menu ─────────────────────────── */}
-      <AppMenu visible={menuVisible} onClose={closeMenu} />
-
       {/* ── Networking Modal ───────────────────────── */}
       <NetworkingModal
         visible={!!selectedItem}
@@ -546,3 +599,57 @@ export default function HomeScreen({ navigation }) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  // Lifted off the background so the CTA reads as the top layer of the page.
+  participateShadow: {
+    shadowColor: '#286EAD',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  participateCard: {
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 20,
+    overflow: 'hidden',
+  },
+  participateIcon: {
+    width: 52,
+    height: 52,
+    borderRadius: 26,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.20)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.30)',
+  },
+  participateArrow: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255,255,255,0.22)',
+  },
+  // Decorative only — clipped by the card's `overflow: hidden`.
+  participateGlowTop: {
+    position: 'absolute',
+    top: -56,
+    right: -32,
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    backgroundColor: 'rgba(255,255,255,0.13)',
+  },
+  participateGlowBottom: {
+    position: 'absolute',
+    bottom: -70,
+    left: -30,
+    width: 130,
+    height: 130,
+    borderRadius: 65,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+  },
+});

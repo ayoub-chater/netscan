@@ -15,7 +15,8 @@
     "independent": "Independent",
     "restartTitle": "Restart required",
     "restartBody": "Please close and reopen the app to apply the new language.",
-    "confirm": "Confirm"
+    "confirm": "Confirm",
+    "noResults": "No results"
   },
   "auth": {
     "sessionExpiredTitle": "Session expired",
@@ -96,9 +97,14 @@
     "topicPlaceholder": "What will you talk about?",
     "bio": "Bio",
     "bioPlaceholder": "Short bio shown to attendees",
-    "subtitle": "Sign up in seconds. You'll pick your role right after.",
+    "subtitle": "Sign up in seconds. You'll pick how you take part right after.",
     "participateHintTitle": "Exhibitor, speaker, sponsor?",
-    "participateHintBody": "Create your visitor account first, then tap “Participate” on the home screen to request your role."
+    "participateHintBody": "Create your visitor account first, then tap “Participate” on the home screen to request your participation.",
+    "selectCountry": "Select a country",
+    "selectCity": "Select a city",
+    "searchCountry": "Search a country...",
+    "searchCity": "Search a city...",
+    "cityNeedsCountry": "Select a country first"
   },
   "pending": {
     "title": "Account awaiting approval",
@@ -164,7 +170,16 @@
     "emptyTitle": "No connections yet",
     "emptyBody": "Scan your first badge to start building your logistics network.",
     "badgeModalTitle": "Badge Request",
-    "badgeModalBody": "Your badge will be available two weeks before the event starts. Please hold on a little longer!"
+    "badgeModalBody": "Your badge will be available two weeks before the event starts. Please hold on a little longer!",
+    "dayShort": {
+      "mon": "Mon",
+      "tue": "Tue",
+      "wed": "Wed",
+      "thu": "Thu",
+      "fri": "Fri",
+      "sat": "Sat",
+      "sun": "Sun"
+    }
   },
   "scanner": {
     "centerBadge": "Center the badge here",
@@ -195,7 +210,7 @@
   "history": {
     "title": "Log",
     "meetings": "{{count}} meetings",
-    "searchPlaceholder": "Name, company, role...",
+    "searchPlaceholder": "Name, company, exhibitor...",
     "noResults": "No results",
     "noMeetingsTitle": "No meetings yet",
     "noResultsBody": "No contact matching \"{{query}}\".",
@@ -264,7 +279,10 @@
   "website": {
     "errorTitle": "Connection problem",
     "errorBody": "Make sure your phone is connected to the Internet (WiFi or Data) to access the site.",
-    "retry": "Retry"
+    "retry": "Retry",
+    "openTitle": "Event website",
+    "openBody": "The website opens in your browser.",
+    "openButton": "Open the website"
   },
   "networking": {
     "sharedMoment": "Shared Moment!",
@@ -334,7 +352,7 @@
   "profile": {
     "settings": "Settings",
     "identity": "My Identity",
-    "role": "Role",
+    "role": "Participation",
     "badgeLinked": "Linked Badge",
     "noBadge": "No badge linked",
     "myBadgeQr": "My QR Badge",
@@ -352,10 +370,10 @@
     "supportPhone": "Call us",
     "supportWebsite": "Visit our website",
     "legalMentions": "Legal Notice",
-    "logout": "Log out of LOGITTERRE",
+    "logout": "Log out of LOGITERRE",
     "version": "Version {{version}}",
     "logoutTitle": "Log out",
-    "logoutBody": "Do you want to close your LOGITTERRE session?",
+    "logoutBody": "Do you want to close your LOGITERRE session?",
     "stay": "Stay",
     "logoutConfirm": "Log out",
     "defaultName": "User",
@@ -369,16 +387,16 @@
   },
   "terms": {
     "title": "Terms and Conditions",
-    "subtitle": "Legal Notice · LOGITTERRE",
+    "subtitle": "Legal Notice · LOGITERRE",
     "lastUpdate": "Last updated: July 6, 2026",
     "sections": [
       {
         "title": "1. Acceptance of terms",
-        "body": "By creating an account or using the LOGITTERRE application, you fully accept these terms and conditions of use. If you do not accept these terms, please do not use the application."
+        "body": "By creating an account or using the LOGITERRE application, you fully accept these terms and conditions of use. If you do not accept these terms, please do not use the application."
       },
       {
         "title": "2. Purpose of the service",
-        "body": "LOGITTERRE is a QR badge networking tool intended for exhibitors and visitors of the Logiterre Expo event. It allows you to scan badges to establish professional connections, browse the exhibitor directory, and manage the members of a booth team."
+        "body": "LOGITERRE is a QR badge networking tool intended for exhibitors and visitors of the Logiterre Expo event. It allows you to scan badges to establish professional connections, browse the exhibitor directory, and manage the members of a booth team."
       },
       {
         "title": "3. User account",
@@ -386,7 +404,7 @@
       },
       {
         "title": "4. Personal data",
-        "body": "The data collected (name, email, company, role, scan history) is used only within the scope of the application and the Logiterre Expo event. It is not resold to third parties. You may request access to, correction of, or deletion of your data at any time from the event organizer, in accordance with the GDPR."
+        "body": "The data collected (name, email, company, participation type, scan history) is used only within the scope of the application and the Logiterre Expo event. It is not resold to third parties. You may request access to, correction of, or deletion of your data at any time from the event organizer, in accordance with the GDPR."
       },
       {
         "title": "5. Badge scanning and consent",
@@ -398,11 +416,11 @@
       },
       {
         "title": "7. Intellectual property",
-        "body": "All elements of the application (the LOGITTERRE brand, interface, content, logos) are protected and may not be reproduced without prior authorization."
+        "body": "All elements of the application (the LOGITERRE brand, interface, content, logos) are protected and may not be reproduced without prior authorization."
       },
       {
         "title": "8. Limitation of liability",
-        "body": "LOGITTERRE is provided \"as is\". The publisher cannot be held responsible for service interruptions, data loss, or indirect damages resulting from the use of the application, to the extent permitted by law."
+        "body": "LOGITERRE is provided \"as is\". The publisher cannot be held responsible for service interruptions, data loss, or indirect damages resulting from the use of the application, to the extent permitted by law."
       },
       {
         "title": "9. Changes to the terms",
@@ -438,6 +456,7 @@
     "saveError": "Unable to save. Please try again.",
     "changePhoto": "Change photo",
     "location": "Location",
+    "locationLocked": "All B2B meetings take place in the networking room.",
     "videoLink": "Video call link",
     "duration": "Meeting duration",
     "statusLabel": "Availability status",
@@ -468,7 +487,21 @@
     "todayAt": "Today at {{time}}",
     "emptyTitle": "No notifications",
     "emptyBody": "Your connections and appointments will show up here.",
+    "body": {
+      "connection": "You exchanged profiles with {{name}}.",
+      "appointment": "Meeting confirmed with {{name}} on {{date}} at {{time}}.",
+      "appointmentRequest": "{{name}} would like to meet you on {{date}} at {{time}}.",
+      "appointmentStatus": "Your meeting with {{name}} is now: {{status}}.",
+      "participation": {
+        "approved": "Your participation as {{role}} has been approved. Your access is now active.",
+        "pending": "Your participation as {{role}} is under review again. The features tied to your role are paused meanwhile.",
+        "rejected": "Your participation request as {{role}} was not accepted."
+      }
+    },
     "type": {
+      "appointment_request": "Meeting request",
+      "appointment_status": "Meeting updated",
+      "participation": "Participation",
       "connection": "New connection",
       "appointment": "Appointment",
       "general": "Notification"
@@ -498,8 +531,9 @@
     "title": "B2B",
     "subtitle": "Book meetings with the other participants",
     "myAgenda": "My B2B agenda",
+    "myAgendaShort": "My agenda",
     "lockedTitle": "Participants only",
-    "lockedBody": "B2B connects exhibitors, speakers, sponsors and partners. Request your role to get access.",
+    "lockedBody": "B2B connects exhibitors, speakers, sponsors and partners. Request your participation to get access.",
     "lockedCta": "Participate",
     "lockedPendingTitle": "Request under review",
     "lockedPendingBody": "Your participation request ({{role}}) is awaiting approval. B2B unlocks as soon as it is accepted.",
@@ -507,12 +541,11 @@
   },
   "participate": {
     "title": "Participate",
-    "subtitle": "Request your role for the event",
-    "pickRole": "Pick the role you want to take part under. You'll then fill in the details the organiser asks for.",
-    "roleDefaultDesc": "Take part in the event under this role",
+    "subtitle": "Request your participation in the event",
+    "pickRole": "Pick how you want to take part. You'll then fill in the details the organiser asks for.",
     "formHint": "Additional details",
-    "noExtraFields": "No extra details are required for this role. Send your request directly.",
-    "approvalNotice": "Your request will be reviewed by the organiser. Your role features (B2B, team…) unlock once it is approved.",
+    "noExtraFields": "No extra details are required. Send your request directly.",
+    "approvalNotice": "Your request will be reviewed by the organiser. The features tied to your participation (B2B, team…) unlock once it is approved.",
     "submit": "Send my request",
     "submitting": "Sending...",
     "errorRequired": "The “{{field}}” field is required.",
@@ -520,7 +553,7 @@
     "pendingTitle": "Request pending",
     "pendingBody": "The organiser is reviewing your request. You'll get a notification as soon as it's handled.",
     "approvedTitle": "Participation approved",
-    "approvedBody": "Your role is active. You can now book and receive B2B meetings.",
+    "approvedBody": "Your participation is active. You can now book and receive B2B meetings.",
     "rejectedTitle": "Request declined",
     "rejectedBody": "Your previous request wasn't accepted. You can submit a new one.",
     "recheck": "Check status",
@@ -529,13 +562,13 @@
     "withdrawBody": "Your request will be removed. You can submit a new one at any time.",
     "withdrawConfirm": "Withdraw",
     "goToB2B": "Go to B2B",
-    "emptyTitle": "No role available",
-    "emptyBody": "The organiser hasn't opened any participation role for this event.",
+    "emptyTitle": "No participation available",
+    "emptyBody": "The organiser hasn't opened any participation for this event.",
     "badgePending": "Pending",
     "badgeApproved": "Approved",
     "badgeRejected": "Declined",
-    "bannerTitle": "Take part in the event",
-    "bannerBody": "Exhibitor, speaker, sponsor, partner… request your role.",
+    "bannerTitle": "Take Part in the Event",
+    "bannerBody": "Partner, sponsor, exhibitor, speaker… request your participation.",
     "bannerPendingTitle": "Request sent",
     "bannerPendingBody": "Awaiting the organiser's approval.",
     "bannerApprovedTitle": "Participation approved",
@@ -543,6 +576,8 @@
     "bannerRejectedTitle": "Request declined",
     "bannerRejectedBody": "Tap to submit a new request.",
     "staffTitle": "You already take part",
-    "staffBody": "You're on this organisation's team — they added you to their stand. Your access follows theirs, so there's no participation request to send."
+    "staffBody": "You're on this organisation's team — they added you to their stand. Your access follows theirs, so there's no participation request to send.",
+    "vipTitle": "Full access",
+    "vipBody": "You are registered as a participant: every feature is already unlocked, no request needed."
   }
 }

@@ -37,6 +37,10 @@ import {
 } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTabBarScroll } from '../context/TabBarContext';
+import { MEETING_LOCATION } from '../constants/b2b';
+import useSheetGuard from '../components/useSheetGuard';
+import MenuButton from '../components/MenuButton';
+import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
 
 const ACCENT = '#286EAD';
 
@@ -327,6 +331,12 @@ export default function AppointmentsScreen({ navigation }) {
     load();
   };
 
+  // Keeps each sheet's native state in sync with ours — see useSheetGuard.
+  const profileSheet = useSheetGuard(profileOpen, () => setProfileOpen(false));
+  const bookingSheet = useSheetGuard(sheetOpen, () => setSheetOpen(false));
+  const closeProfile = profileSheet.close;
+  const closeBooking = bookingSheet.close;
+
   const openProfile = (persona) => {
     setProfilePersona(persona);
     setProfileOpen(true);
@@ -337,7 +347,7 @@ export default function AppointmentsScreen({ navigation }) {
     // Never open the sheet for a persona with no real availability — surfaces
     // as a blank/broken sheet otherwise (see bookable computation above).
     if (!persona?.available_dates?.length) return;
-    setProfileOpen(false);
+    closeProfile();
     setActivePersona(persona);
     setSelectedSlot(null);
     setSlots([]);
@@ -376,7 +386,7 @@ export default function AppointmentsScreen({ navigation }) {
         start_time: selectedSlot.start,
         note: note.trim() || undefined,
       });
-      setSheetOpen(false);
+      closeBooking();
       // Speaker-managed personas start pending (they confirm); admin personas
       // are auto-confirmed. Message follows the real returned status.
       const pending = res?.data?.appointment?.status === 'pending';
@@ -434,9 +444,12 @@ export default function AppointmentsScreen({ navigation }) {
     const pending = participationStatus === 'pending';
     return (
       <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-        <View className="px-4 pt-5 pb-4">
-          <Text className="text-2xl font-extrabold text-foreground">{t('b2b.title')}</Text>
-          <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
+        <View className="px-4 pt-5 pb-4 flex-row items-center" style={{ gap: 12 }}>
+          <MenuButton />
+          <View className="flex-1">
+            <Text className="text-2xl font-extrabold text-foreground">{t('b2b.title')}</Text>
+            <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
+          </View>
         </View>
         <View className="flex-1 items-center justify-center px-8">
           <View
@@ -455,7 +468,7 @@ export default function AppointmentsScreen({ navigation }) {
           </Text>
           <Text className="text-sm text-muted text-center leading-6 mb-8">
             {pending
-              ? t('b2b.lockedPendingBody', { role: participationRole || '' })
+              ? t('b2b.lockedPendingBody', { role: roleLabel(participationRole) || '' })
               : t('b2b.lockedBody')}
           </Text>
           <Button
@@ -465,7 +478,7 @@ export default function AppointmentsScreen({ navigation }) {
             onPress={() => navigation.navigate('Participate')}
           >
             <Ionicons
-              name={pending ? 'refresh-outline' : 'sparkles-outline'}
+              name={pending ? 'refresh-outline' : PARTICIPATE_ICON}
               size={18}
               color={pending ? ACCENT : '#FFFFFF'}
             />
@@ -484,6 +497,7 @@ export default function AppointmentsScreen({ navigation }) {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* ── Header ─────────────────────────────────── */}
       <View className="px-4 pt-5 pb-3 flex-row items-start" style={{ gap: 12 }}>
+        <MenuButton />
         <View className="flex-1">
           <Text className="text-2xl font-extrabold text-foreground">{t('b2b.title')}</Text>
           <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
@@ -496,9 +510,11 @@ export default function AppointmentsScreen({ navigation }) {
           hitSlop={8}
           accessibilityRole="button"
           accessibilityLabel={t('b2b.myAgenda')}
-          className="w-11 h-11 rounded-2xl bg-accent items-center justify-center active:opacity-70"
+          className="h-11 px-3 rounded-2xl bg-accent flex-row items-center justify-center active:opacity-70"
+          style={{ gap: 6 }}
         >
-          <Ionicons name="briefcase-outline" size={20} color="#FFFFFF" />
+          <Ionicons name="briefcase-outline" size={18} color="#FFFFFF" />
+          <Text className="text-sm font-bold text-accent-foreground">{t('b2b.myAgendaShort')}</Text>
           {b2bPendingCount > 0 && (
             <View
               className="absolute bg-danger rounded-full items-center justify-center"
@@ -604,10 +620,11 @@ export default function AppointmentsScreen({ navigation }) {
       )}
 
       {/* ── Profile view BottomSheet ───────────────── */}
-      <BottomSheet isOpen={profileOpen} onOpenChange={(o) => !o && setProfileOpen(false)}>
+      {profileSheet.mounted ? (
+      <BottomSheet key={profileSheet.key} isOpen={profileSheet.isOpen} onOpenChange={(o) => !o && closeProfile()}>
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
-          <BottomSheet.Content snapPoints={['70%']} enableOverDrag={false} enableDynamicSizing={false} contentContainerClassName="h-full">
+          <BottomSheet.Content ref={profileSheet.ref} {...profileSheet.contentProps} snapPoints={['70%']} enableOverDrag={false} enableDynamicSizing={false} contentContainerClassName="h-full">
             <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
               <View className="items-center pt-3 pb-5 px-4 border-b border-separator">
                 {profilePersona?.photo ? (
@@ -651,12 +668,14 @@ export default function AppointmentsScreen({ navigation }) {
                       <Text className="text-sm text-foreground">{profilePersona.title}</Text>
                     </View>
                   ) : null}
-                  {profilePersona?.location ? (
-                    <View className="flex-row items-center" style={{ gap: 8 }}>
-                      <Ionicons name="location-outline" size={15} color={ACCENT} />
-                      <Text className="text-sm text-foreground">{profilePersona.location}</Text>
-                    </View>
-                  ) : null}
+                  {/* Same room for everyone, so it is shown even on personas
+                      saved before the location was fixed. */}
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    <Ionicons name="location-outline" size={15} color={ACCENT} />
+                    <Text className="text-sm text-foreground">
+                      {profilePersona?.location || MEETING_LOCATION}
+                    </Text>
+                  </View>
                   {profilePersona?.appointment_duration ? (
                     <View className="flex-row items-center" style={{ gap: 8 }}>
                       <Ionicons name="hourglass-outline" size={15} color={ACCENT} />
@@ -720,7 +739,7 @@ export default function AppointmentsScreen({ navigation }) {
                     </Text>
                   </Surface>
                 )}
-                <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={() => setProfileOpen(false)}>
+                <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={closeProfile}>
                   <Button.Label>{t('common.close')}</Button.Label>
                 </Button>
               </View>
@@ -728,17 +747,22 @@ export default function AppointmentsScreen({ navigation }) {
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
 
       {/* ── Booking BottomSheet ────────────────────── */}
+      {bookingSheet.mounted ? (
       <BottomSheet
-        isOpen={sheetOpen}
+        key={bookingSheet.key}
+        isOpen={bookingSheet.isOpen}
         onOpenChange={(open) => {
-          if (!open) setSheetOpen(false);
+          if (!open) closeBooking();
         }}
       >
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content
+            ref={bookingSheet.ref}
+            {...bookingSheet.contentProps}
             snapPoints={['85%']}
             enableOverDrag={false}
             enableDynamicSizing={false}
@@ -884,7 +908,7 @@ export default function AppointmentsScreen({ navigation }) {
                   variant="tertiary"
                   size="lg"
                   className="rounded-2xl"
-                  onPress={() => setSheetOpen(false)}
+                  onPress={closeBooking}
                 >
                   <Button.Label>{t('common.cancel')}</Button.Label>
                 </Button>
@@ -893,6 +917,7 @@ export default function AppointmentsScreen({ navigation }) {
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
     </View>
   );
 }

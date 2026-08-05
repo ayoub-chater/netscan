@@ -26,6 +26,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTabBar, useTabBarScroll } from '../context/TabBarContext';
 import { networkingHistory, deleteNetworkingRecord } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
+import MenuButton from '../components/MenuButton';
+import { roleLabel } from '../constants/roles';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -126,6 +128,7 @@ export default function HistoryScreen() {
             <Chip.Label>{t('history.meetings', { count: history.length })}</Chip.Label>
           </Chip>
         )}
+        <MenuButton />
       </View>
 
       {/* ── Search ─────────────────────────────────── */}
@@ -243,7 +246,7 @@ export default function HistoryScreen() {
                             variant="soft"
                             color={isExposant ? 'success' : 'default'}
                           >
-                            <Chip.Label>{role}</Chip.Label>
+                            <Chip.Label>{roleLabel(role)}</Chip.Label>
                           </Chip>
                           <Text className="text-[10px] text-muted font-medium">
                             {dateStr} {timeStr}

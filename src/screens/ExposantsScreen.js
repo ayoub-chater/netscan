@@ -30,6 +30,8 @@ import {
 import { getExposants, networkingHistory, deleteNetworkingRecord } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useTabBarScroll } from '../context/TabBarContext';
+import useSheetGuard from '../components/useSheetGuard';
+import MenuButton from '../components/MenuButton';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -137,6 +139,9 @@ export default function ExposantsScreen({ navigation }) {
     }
   };
 
+  const sheet = useSheetGuard(sheetOpen, () => setSheetOpen(false));
+  const closeSheet = sheet.close;
+
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -184,7 +189,7 @@ export default function ExposantsScreen({ navigation }) {
                 next.delete(email);
                 return next;
               });
-              setSheetOpen(false);
+              closeSheet();
             } catch {
               Alert.alert(t('common.error'), t('exposants.removeConnectionError'));
             } finally {
@@ -259,8 +264,9 @@ export default function ExposantsScreen({ navigation }) {
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
 
       {/* ── Header ─────────────────────────────────── */}
-      <View className="px-4 pt-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-extrabold text-foreground">{t('exposants.title')}</Text>
+      <View className="px-4 pt-5 pb-4 flex-row items-center" style={{ gap: 12 }}>
+        <MenuButton />
+        <Text className="flex-1 text-2xl font-extrabold text-foreground">{t('exposants.title')}</Text>
         {exposants.length > 0 && (
           <Chip size="sm" variant="soft" color="default">
             <Chip.Label>{exposants.length}</Chip.Label>
@@ -354,16 +360,21 @@ export default function ExposantsScreen({ navigation }) {
         />
       )}
 
-      {/* ── Detail BottomSheet ─────────────────────── */}
+      {/* ── Detail BottomSheet ─────────────────────────
+          Closed automatically when the screen loses focus — see useSheetGuard. */}
+      {sheet.mounted ? (
       <BottomSheet
-        isOpen={sheetOpen}
+        key={sheet.key}
+        isOpen={sheet.isOpen}
         onOpenChange={open => {
-          if (!open) setSheetOpen(false);
+          if (!open) closeSheet();
         }}
       >
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content
+            ref={sheet.ref}
+            {...sheet.contentProps}
             snapPoints={['85%']}
             enableOverDrag={false}
             enableDynamicSizing={false}
@@ -452,7 +463,7 @@ export default function ExposantsScreen({ navigation }) {
                     size="lg"
                     className="rounded-2xl"
                     onPress={() => {
-                      setSheetOpen(false);
+                      closeSheet();
                       navigation.navigate('Team');
                     }}
                   >
@@ -481,7 +492,7 @@ export default function ExposantsScreen({ navigation }) {
                   variant="tertiary"
                   size="lg"
                   className="rounded-2xl"
-                  onPress={() => setSheetOpen(false)}
+                  onPress={closeSheet}
                 >
                   <Button.Label>{t('exposants.close')}</Button.Label>
                 </Button>
@@ -490,6 +501,7 @@ export default function ExposantsScreen({ navigation }) {
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
     </View>
   );
 }

@@ -8,6 +8,8 @@ import { withUniwind } from 'uniwind';
 import QRCode from 'react-native-qrcode-svg';
 import { Chip } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
+import MenuButton from '../components/MenuButton';
+import { roleLabel } from '../constants/roles';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -52,6 +54,7 @@ export default function MyBadgeScreen() {
               {t('myBadge.subtitle')}
             </Text>
           </View>
+          <MenuButton />
         </View>
       </View>
 
@@ -84,7 +87,7 @@ export default function MyBadgeScreen() {
                 color={isExposant ? 'success' : 'default'}
                 style={{ alignSelf: 'center' }}
               >
-                <Chip.Label>{scannerRole}</Chip.Label>
+                <Chip.Label>{roleLabel(scannerRole)}</Chip.Label>
               </Chip>
               {/* The organisation the badge holder represents — staff carry
                   their exhibitor's name, so it must read on the badge too. */}

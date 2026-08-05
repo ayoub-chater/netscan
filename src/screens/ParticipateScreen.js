@@ -27,6 +27,8 @@ import {
   TextField,
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
+import MenuButton from '../components/MenuButton';
+import { roleIcon, roleLabel, sortRoles } from '../constants/roles';
 import {
   getParticipationRoles,
   getParticipation,
@@ -37,19 +39,13 @@ import {
 const StyledIonicons = withUniwind(Ionicons);
 const ACCENT = '#286EAD';
 
-// The back-office defines role names freely; these are the ones this event
-// uses today. Anything else falls back to a neutral icon.
-const ROLE_ICONS = {
-  exposant: 'storefront-outline',
-  intervenant: 'mic-outline',
-  sponsor: 'diamond-outline',
-  partenaire: 'people-outline',
-  institutionnel: 'business-outline',
-  organisation: 'briefcase-outline',
-  presse: 'newspaper-outline',
+// Fields the profile already knows about (backend field name → profile
+// key), so an exhibitor doesn't retype a company they entered once.
+const PREFILL_FROM_PROFILE = {
+  company: 'company',
+  website: 'website',
+  secteur_activite: 'secteur',
 };
-
-const roleIcon = (name) => ROLE_ICONS[(name || '').toLowerCase()] || 'ribbon-outline';
 
 // ── One form-builder field ──────────────────────────────────────────────────
 function DynamicField({ field, value, onChange, disabled, locale }) {
@@ -148,7 +144,7 @@ export default function ParticipateScreen({ navigation }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language || 'fr';
   const insets = useSafeAreaInsets();
-  const { refreshProfile, isExhibitorStaff, scanner } = useAuth();
+  const { refreshProfile, isExhibitorStaff, isVip, scanner } = useAuth();
   const scannerCompany = scanner?.company || null;
 
   const [loading, setLoading] = useState(true);
@@ -166,7 +162,9 @@ export default function ParticipateScreen({ navigation }) {
       getParticipationRoles(),
       getParticipation(),
     ]);
-    if (rolesRes.status === 'fulfilled') setRoles(rolesRes.value?.data?.roles || []);
+    if (rolesRes.status === 'fulfilled') {
+      setRoles(sortRoles(rolesRes.value?.data?.roles || []));
+    }
     if (mineRes.status === 'fulfilled') {
       setParticipation(mineRes.value?.data?.participation || null);
     }
@@ -188,8 +186,17 @@ export default function ParticipateScreen({ navigation }) {
   );
 
   const openForm = (role) => {
+    const prefill = {};
+    (role.categories || [])
+      .flatMap((category) => category.fields)
+      .forEach((field) => {
+        const key = PREFILL_FROM_PROFILE[field.name];
+        const value = key ? scanner?.[key] : null;
+        if (value) prefill[field.name] = String(value);
+      });
+
     setSelectedRole(role);
-    setAnswers({});
+    setAnswers(prefill);
     setErrorMsg(null);
     setStep('form');
   };
@@ -207,7 +214,12 @@ export default function ParticipateScreen({ navigation }) {
   const submit = async () => {
     if (!selectedRole) return;
     if (missingRequired.length > 0) {
-      setErrorMsg(t('participate.errorRequired', { field: missingRequired[0].label }));
+      const missing = missingRequired[0];
+      setErrorMsg(
+        t('participate.errorRequired', {
+          field: missing.translations?.label?.[locale] || missing.label,
+        })
+      );
       return;
     }
     setSubmitting(true);
@@ -273,6 +285,7 @@ export default function ParticipateScreen({ navigation }) {
         </Text>
         <Text className="text-sm text-muted mt-0.5">{t('participate.subtitle')}</Text>
       </View>
+      <MenuButton />
     </View>
   );
 
@@ -287,6 +300,51 @@ export default function ParticipateScreen({ navigation }) {
             </Skeleton>
           ))}
         </View>
+      </View>
+    );
+  }
+
+  // ── VIP ──────────────────────────────────────────────────────────────────
+  // Registered straight into their role (private form / back office), so there
+  // is nothing to apply for. The entry points are hidden; this covers deep
+  // links and stale menus.
+  const vip = isVip || participation?.is_vip;
+  if (vip) {
+    const vipRole = participation?.role || scanner?.role;
+    return (
+      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+        {header}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 20,
+            paddingBottom: 120,
+          }}
+        >
+          <Surface className="rounded-3xl px-6 py-10 items-center">
+            <View className="w-20 h-20 rounded-full bg-success-soft items-center justify-center mb-5">
+              <StyledIonicons name="star" size={38} className="text-success" />
+            </View>
+            <Text className="text-xl font-extrabold text-foreground text-center mb-2">
+              {t('participate.vipTitle')}
+            </Text>
+            {vipRole ? (
+              <Chip
+                size="sm"
+                variant="soft"
+                color="success"
+                className="mb-4"
+                style={{ alignSelf: 'center' }}
+              >
+                <Chip.Label>{roleLabel(vipRole)}</Chip.Label>
+              </Chip>
+            ) : null}
+            <Text className="text-sm text-muted text-center leading-6">
+              {t('participate.vipBody')}
+            </Text>
+          </Surface>
+        </ScrollView>
       </View>
     );
   }
@@ -375,7 +433,7 @@ export default function ParticipateScreen({ navigation }) {
               className="mb-4"
               style={{ alignSelf: 'center' }}
             >
-              <Chip.Label>{participation?.role}</Chip.Label>
+              <Chip.Label>{roleLabel(participation?.role)}</Chip.Label>
             </Chip>
             <Text className="text-sm text-muted text-center leading-6">
               {approved ? t('participate.approvedBody') : t('participate.pendingBody')}
@@ -436,7 +494,7 @@ export default function ParticipateScreen({ navigation }) {
               </View>
               <View className="flex-1">
                 <Text className="text-base font-extrabold text-foreground">
-                  {selectedRole.name}
+                  {roleLabel(selectedRole.name)}
                 </Text>
                 <Text className="text-xs text-muted mt-0.5">{t('participate.formHint')}</Text>
               </View>
@@ -460,7 +518,11 @@ export default function ParticipateScreen({ navigation }) {
             ) : (
               selectedRole.categories.map((category) => (
                 <Surface key={category.id} className="rounded-2xl px-5 py-6 gap-5 mb-5">
-                  <Text className="text-sm font-semibold text-muted">{category.title}</Text>
+                  {/* The role's own extra fields come back in a synthetic
+                      category whose title is French-only server-side. */}
+                  <Text className="text-sm font-semibold text-muted">
+                    {category.id === 'role-extra' ? t('participate.formHint') : category.title}
+                  </Text>
                   {category.fields.map((field) => (
                     <DynamicField
                       key={field.name}
@@ -546,17 +608,14 @@ export default function ParticipateScreen({ navigation }) {
               <Pressable
                 key={role.id}
                 onPress={() => openForm(role)}
-                className="flex-row items-center p-5 rounded-2xl bg-surface border border-separator active:opacity-70"
+                className="flex-row items-center px-5 py-4 rounded-2xl bg-surface border border-separator active:opacity-70"
               >
                 <View className="w-14 h-14 rounded-full bg-accent-soft items-center justify-center mr-4">
                   <Ionicons name={roleIcon(role.name)} size={26} color={ACCENT} />
                 </View>
-                <View className="flex-1">
-                  <Text className="text-base font-bold text-foreground mb-0.5">{role.name}</Text>
-                  <Text className="text-xs text-muted" numberOfLines={2}>
-                    {role.description || t('participate.roleDefaultDesc')}
-                  </Text>
-                </View>
+                <Text className="flex-1 text-base font-bold text-foreground">
+                  {roleLabel(role.name)}
+                </Text>
                 <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
               </Pressable>
             ))}

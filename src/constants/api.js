@@ -9,6 +9,9 @@ export const BASE_URL = 'https://admin.logiterre-expo.com/api/v1'; // Production
 
 export const EVENT_SLUG = 'logiterre-expo';
 
+// Public event site. Opened in the phone's browser, not in an in-app WebView.
+export const EVENT_WEBSITE_URL = 'https://logiterre-expo.com/';
+
 export const ENDPOINTS = {
     login: `${BASE_URL}/login`,
     logout: `${BASE_URL}/logout`,

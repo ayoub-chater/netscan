@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, Image } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,13 +13,44 @@ import {
   Separator,
   Surface,
 } from 'heroui-native';
+import { roleLabel } from '../constants/roles';
+import useSheetGuard from './useSheetGuard';
 
 const StyledIonicons = withUniwind(Ionicons);
 
 export default function NetworkingModal({ visible, result, onClose, onScanAgain, viewOnly = false }) {
   const { t } = useTranslation();
-  const targetPerson = result?.scanner_view?.person || result?.person;
-  const message = result?.scanner_view?.message;
+
+  // The sheet lives in a global Portal, so anything mounted here floats above
+  // every screen of the app — a sheet that opens without data (no scan) shows
+  // up on top of Home, Programme… That happened in production because the
+  // sheet tree stayed mounted at all times and only its `isOpen` flag was
+  // false. Nothing is mounted now unless there is an actual payload to show.
+  const hasPayload = !!visible && !!result;
+  // `onOpenChange(false)` also fires for the programmatic close we trigger
+  // ourselves; without this the parent's onClose would run twice (in Scanner
+  // that means a second navigation.goBack()).
+  const hasPayloadRef = useRef(hasPayload);
+  hasPayloadRef.current = hasPayload;
+
+  // The parent clears `result` as soon as it closes us; keeping the last one
+  // around means the card doesn't blank out mid close-animation.
+  const [payload, setPayload] = useState(result);
+  useEffect(() => {
+    if (hasPayload) setPayload(result);
+  }, [hasPayload, result]);
+
+  // Same lifecycle as every other sheet in the app. The hand-rolled version
+  // this replaces flipped `isOpen` on the next frame and relied on the library
+  // catching that transition — which it misses when the portal publishes its
+  // children late, leaving the sheet parked at the bottom of the screen (or not
+  // appearing at all, depending on how the frames land on a given device).
+  const sheet = useSheetGuard(hasPayload, () => {
+    if (hasPayloadRef.current) onClose();
+  });
+
+  const targetPerson = payload?.scanner_view?.person || payload?.person;
+  const message = payload?.scanner_view?.message;
   const name = targetPerson?.name || t('common.unknown');
   const role = targetPerson?.role || t('profile.defaultRole');
   const isExposant = role === 'Exposant';
@@ -38,16 +69,21 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
       ].filter(Boolean)
     : [];
 
+  if (!sheet.mounted) return null;
+
   return (
     <BottomSheet
-      isOpen={visible}
+      key={sheet.key}
+      isOpen={sheet.isOpen}
       onOpenChange={open => {
-        if (!open) onClose();
+        if (!open) sheet.close();
       }}
     >
       <BottomSheet.Portal>
         <BottomSheet.Overlay />
         <BottomSheet.Content
+          ref={sheet.ref}
+          {...sheet.contentProps}
           snapPoints={['85%']}
           enableOverDrag={false}
           enableDynamicSizing={false}
@@ -100,7 +136,7 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
                   <View className="flex-1" style={{ gap: 4 }}>
                     <Text className="text-base font-bold text-foreground">{name}</Text>
                     <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-                      <Chip.Label>{role}</Chip.Label>
+                      <Chip.Label>{roleLabel(role)}</Chip.Label>
                     </Chip>
                   </View>
                 </View>

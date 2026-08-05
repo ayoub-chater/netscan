@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
@@ -27,6 +27,9 @@ import {
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { register } from '../services/api';
+import { getCountries, fetchCities, countryLabel, sortCountries } from '../services/geo';
+import SearchableSelect from '../components/SearchableSelect';
+import { PARTICIPATE_ICON } from '../constants/roles';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -35,7 +38,7 @@ const StyledIonicons = withUniwind(Ionicons);
 // (ParticipateScreen), which collects the role's own fields and waits for an
 // organiser to approve it.
 export default function RegisterScreen({ navigation }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
@@ -54,7 +57,71 @@ export default function RegisterScreen({ navigation }) {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [ville, setVille] = useState('');
-  const [pays, setPays] = useState('');
+
+  // ── Country / city ──────────────────────────────────────────────────────
+  // Country is asked first: it decides which cities can be offered. The country
+  // list ships with the app (localised), the city list is fetched per country
+  // and degrades into a plain text input when it can't be loaded, so a flaky
+  // network never blocks a signup.
+  const language = i18n.language;
+  const [country, setCountry] = useState(null);
+
+  const [cities, setCities] = useState([]);
+  const [citiesLoading, setCitiesLoading] = useState(false);
+  const [citiesFailed, setCitiesFailed] = useState(false);
+
+  // Switching country twice quickly must not let the first (slower) response
+  // land after the second one.
+  const cityRequestRef = useRef(0);
+
+  const loadCities = useCallback((selected) => {
+    const requestId = ++cityRequestRef.current;
+    if (!selected) {
+      setCities([]);
+      setCitiesFailed(false);
+      return;
+    }
+    setCitiesLoading(true);
+    setCitiesFailed(false);
+    fetchCities(selected)
+      .then((list) => {
+        if (cityRequestRef.current !== requestId) return;
+        setCities(list);
+        // An empty list is a dead end for a picker — let the user type instead.
+        setCitiesFailed(list.length === 0);
+      })
+      .catch(() => {
+        if (cityRequestRef.current !== requestId) return;
+        setCities([]);
+        setCitiesFailed(true);
+      })
+      .finally(() => {
+        if (cityRequestRef.current === requestId) setCitiesLoading(false);
+      });
+  }, []);
+
+  const countryItems = useMemo(
+    () =>
+      sortCountries(getCountries(), language).map((c) => ({
+        key: c.code,
+        label: countryLabel(c, language),
+        prefix: c.flag,
+        country: c,
+      })),
+    [language]
+  );
+
+  const cityItems = useMemo(
+    () => cities.map((city) => ({ key: city, label: city })),
+    [cities]
+  );
+
+  const onSelectCountry = (item) => {
+    setCountry(item.country);
+    // The previous city belongs to another country.
+    setVille('');
+    loadCities(item.country);
+  };
 
   // Scroll the error into view when it appears (error alert sits at the top of the form)
   useEffect(() => {
@@ -83,13 +150,16 @@ export default function RegisterScreen({ navigation }) {
     setLoading(true);
     setErrorMsg(null);
     try {
+      // Stored in French whatever the app's language is — the back office reads
+      // these fields, and one spelling per country keeps them filterable.
+      const paysValue = country ? country.names.fr || country.names.en : '';
       const res = await register({
         name: name.trim(),
         email: email.trim(),
         password,
         phone: phone.trim() || undefined,
         ville: ville.trim() || undefined,
-        pays: pays.trim() || undefined,
+        pays: paysValue || undefined,
       });
       await applySession(res.data);
     } catch (e) {
@@ -259,36 +329,49 @@ export default function RegisterScreen({ navigation }) {
             <Text className="text-sm font-semibold text-muted mb-1">
               {t('register.location')}
             </Text>
-            <View className="flex-row gap-3">
-              <View className="flex-1">
-                <TextField>
-                  <Label>{t('register.city')}</Label>
-                  <Input
-                    placeholder={t('register.cityPlaceholder')}
-                    value={ville}
-                    onChangeText={setVille}
-                    editable={!loading}
-                  />
-                </TextField>
-              </View>
-              <View className="flex-1">
-                <TextField>
-                  <Label>{t('register.country')}</Label>
-                  <Input
-                    placeholder={t('register.countryPlaceholder')}
-                    value={pays}
-                    onChangeText={setPays}
-                    editable={!loading}
-                  />
-                </TextField>
-              </View>
-            </View>
+            {/* Country first — it decides which cities can be offered. */}
+            <SearchableSelect
+              label={t('register.country')}
+              title={t('register.selectCountry')}
+              placeholder={t('register.countryPlaceholder')}
+              searchPlaceholder={t('register.searchCountry')}
+              value={country ? countryLabel(country, language) : ''}
+              items={countryItems}
+              onSelect={onSelectCountry}
+              isDisabled={loading}
+            />
+
+            {/* City — list depends on the selected country. */}
+            {citiesFailed ? (
+              <TextField>
+                <Label>{t('register.city')}</Label>
+                <Input
+                  placeholder={t('register.cityPlaceholder')}
+                  value={ville}
+                  onChangeText={setVille}
+                  editable={!loading}
+                />
+              </TextField>
+            ) : (
+              <SearchableSelect
+                label={t('register.city')}
+                title={t('register.selectCity')}
+                placeholder={t('register.cityPlaceholder')}
+                searchPlaceholder={t('register.searchCity')}
+                value={ville}
+                items={cityItems}
+                onSelect={(item) => setVille(item.label)}
+                isLoading={citiesLoading}
+                isDisabled={loading || !country}
+                disabledHint={!country ? t('register.cityNeedsCountry') : undefined}
+              />
+            )}
           </Surface>
 
-          {/* Where roles went */}
+          {/* Where the participation choice went */}
           <Surface className="rounded-2xl px-5 py-4 mb-4 flex-row items-start" style={{ gap: 12 }}>
             <View className="w-9 h-9 rounded-xl bg-accent-soft items-center justify-center">
-              <StyledIonicons name="sparkles-outline" size={18} className="text-accent" />
+              <StyledIonicons name={PARTICIPATE_ICON} size={18} className="text-accent" />
             </View>
             <View className="flex-1">
               <Text className="text-sm font-bold text-foreground mb-0.5">

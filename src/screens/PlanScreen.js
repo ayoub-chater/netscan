@@ -6,6 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTranslation } from 'react-i18next';
 import { getEventInfo } from '../services/api';
 import { useTabBarScroll } from '../context/TabBarContext';
+import MenuButton from '../components/MenuButton';
 
 export default function PlanScreen() {
   const { t } = useTranslation();
@@ -53,8 +54,9 @@ export default function PlanScreen() {
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* Header */}
-      <View className="px-4 pt-5 pb-4 flex-row items-center justify-between">
-        <Text className="text-2xl font-extrabold text-foreground">{t('plan.title')}</Text>
+      <View className="px-4 pt-5 pb-4 flex-row items-center" style={{ gap: 12 }}>
+        <MenuButton />
+        <Text className="flex-1 text-2xl font-extrabold text-foreground">{t('plan.title')}</Text>
         <Pressable onPress={reload} hitSlop={8} className="w-9 h-9 rounded-xl bg-surface items-center justify-center">
           <Ionicons name="refresh-outline" size={18} color="#2db067" />
         </Pressable>

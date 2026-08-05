@@ -1,8 +1,7 @@
 import 'react-native-gesture-handler';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   NavigationContainer,
-  createNavigationContainerRef,
   DefaultTheme,
   DarkTheme,
 } from '@react-navigation/native';
@@ -20,12 +19,12 @@ import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { ThemeProvider, useTheme } from './src/context/ThemeContext';
 import { LanguageProvider } from './src/context/LanguageContext';
 import { TabBarProvider } from './src/context/TabBarContext';
+import { MenuProvider } from './src/context/MenuContext';
 import FloatingTabBar from './src/components/FloatingTabBar';
 import ConnectionToast from './src/components/ConnectionToast';
 import { withPageTransition } from './src/components/PageTransition';
 import { stackTransition, tabTransition } from './src/navigation/transitions';
-
-const navigationRef = createNavigationContainerRef();
+import { navigationRef } from './src/navigation/navigationRef';
 
 // Screens
 import LoginScreen from './src/screens/LoginScreen';
@@ -205,8 +204,13 @@ export default function App() {
             <SafeAreaProvider>
               <AuthProvider>
                 <TabBarProvider>
-                  <ThemedStatusBar />
-                  <NavigationRoot />
+                  {/* The slide-out menu is mounted once, above the navigator,
+                      so every screen can open it and it draws over the
+                      floating tab bar. */}
+                  <MenuProvider>
+                    <ThemedStatusBar />
+                    <NavigationRoot />
+                  </MenuProvider>
                 </TabBarProvider>
               </AuthProvider>
             </SafeAreaProvider>

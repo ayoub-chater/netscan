@@ -170,8 +170,16 @@ export default function LoginScreen({ navigation }) {
               </View>
             </TextField>
 
-            {/* Remember me + forgot password */}
-            <View className="flex-row items-center justify-between">
+            {/* Forgot password on its own line, then remember me — side by side
+                they overlap on narrow screens / long translations. */}
+            <View className="gap-2">
+              <View className="flex-row justify-end">
+                <LinkButton size="sm" onPress={() => navigation.navigate('ForgotPassword')}>
+                  <LinkButton.Label className="text-accent font-semibold">
+                    {t('login.forgotPassword')}
+                  </LinkButton.Label>
+                </LinkButton>
+              </View>
               <ControlField
                 isSelected={rememberMe}
                 onSelectedChange={setRememberMe}
@@ -184,11 +192,6 @@ export default function LoginScreen({ navigation }) {
                   {t('login.rememberMe')}
                 </Label>
               </ControlField>
-              <LinkButton size="sm" onPress={() => navigation.navigate('ForgotPassword')}>
-                <LinkButton.Label className="text-accent font-semibold">
-                  {t('login.forgotPassword')}
-                </LinkButton.Label>
-              </LinkButton>
             </View>
 
             {/* Login button */}

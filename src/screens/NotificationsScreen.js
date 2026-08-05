@@ -17,6 +17,7 @@ import {
   markNotificationRead,
   markAllNotificationsRead,
 } from '../services/api';
+import MenuButton from '../components/MenuButton';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -24,6 +25,9 @@ const StyledIonicons = withUniwind(Ionicons);
 const TYPE_ICONS = {
   connection: { icon: 'people', color: '#2db067' },
   appointment: { icon: 'calendar', color: '#286EAD' },
+  appointment_request: { icon: 'calendar', color: '#286EAD' },
+  appointment_status: { icon: 'calendar', color: '#286EAD' },
+  participation: { icon: 'ribbon', color: '#286EAD' },
   general: { icon: 'notifications', color: '#286EAD' },
 };
 
@@ -31,8 +35,56 @@ function typeMeta(type) {
   return TYPE_ICONS[type] || TYPE_ICONS.general;
 }
 
+// The backend writes `message` in French, but also ships the placeholders that
+// built it as `params`. When those are present the sentence is rebuilt here in
+// the user's language; rows stored before `params` existed keep the French
+// text, as do free-text admin notes, which cannot be translated.
+function localizedMessage(item, t) {
+  const params = item.params || item.data?.params;
+  if (!params) return item.message;
+
+  switch (item.type) {
+    case 'connection':
+      return t('notifications.body.connection', { name: params.name });
+
+    case 'appointment':
+      return t('notifications.body.appointment', {
+        name: params.name,
+        date: params.date,
+        time: params.time,
+      });
+
+    case 'appointment_request':
+      return t('notifications.body.appointmentRequest', {
+        name: params.name,
+        date: params.date,
+        time: params.time,
+      });
+
+    case 'appointment_status':
+      return t('notifications.body.appointmentStatus', {
+        name: params.name,
+        status: t(`appointments.status.${params.status}`, {
+          defaultValue: params.status,
+        }),
+      });
+
+    case 'participation':
+      if (params.decision === 'rejected' && params.note) return params.note;
+      return t(`notifications.body.participation.${params.decision}`, {
+        role: params.role,
+        defaultValue: item.message,
+      });
+
+    default:
+      return item.message;
+  }
+}
+
 export default function NotificationsScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  // Dates follow the active app language, not a hardcoded fr-FR.
+  const dateLocale = { fr: 'fr-FR', en: 'en-US', ar: 'ar-MA' }[i18n.language?.split('-')[0]] || 'fr-FR';
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
   const [items, setItems] = useState([]);
@@ -91,8 +143,10 @@ export default function NotificationsScreen() {
 
     if (item.type === 'connection') {
       navigation.navigate('Main', { screen: 'History' });
-    } else if (item.type === 'appointment') {
+    } else if (item.type?.startsWith('appointment')) {
       navigation.navigate('Main', { screen: 'RDV' });
+    } else if (item.type === 'participation') {
+      navigation.navigate('Participate');
     }
   };
 
@@ -101,9 +155,9 @@ export default function NotificationsScreen() {
     const date = new Date(iso);
     const today = new Date();
     const isToday = date.toDateString() === today.toDateString();
-    const time = date.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+    const time = date.toLocaleTimeString(dateLocale, { hour: '2-digit', minute: '2-digit' });
     if (isToday) return t('notifications.todayAt', { time });
-    return `${date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })} ${time}`;
+    return `${date.toLocaleDateString(dateLocale, { day: '2-digit', month: 'short' })} ${time}`;
   };
 
   return (
@@ -126,6 +180,7 @@ export default function NotificationsScreen() {
             <Chip.Label>{t('notifications.unreadCount', { count: unreadCount })}</Chip.Label>
           </Chip>
         )}
+        <MenuButton />
       </View>
 
       {/* ── Mark all as read ───────────────────────── */}
@@ -226,7 +281,7 @@ export default function NotificationsScreen() {
                       unread ? 'text-foreground' : 'text-muted',
                     ].join(' ')}
                   >
-                    {item.message}
+                    {localizedMessage(item, t)}
                   </Text>
                   <Text className="text-[10px] text-muted font-medium mt-1.5">
                     {formatDate(item.created_at)}

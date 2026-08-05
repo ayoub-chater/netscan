@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
+import MenuButton from '../components/MenuButton';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -35,6 +36,7 @@ export default function TermsScreen() {
             </Text>
             <Text className="text-xs text-muted mt-0.5">{t('terms.subtitle')}</Text>
           </View>
+          <MenuButton />
         </View>
       </View>
 

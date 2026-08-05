@@ -15,7 +15,9 @@ import {
   Skeleton,
 } from 'heroui-native';
 import { getConference, reservePanelSeat, cancelPanelSeat } from '../services/api';
+import useSheetGuard from '../components/useSheetGuard';
 import { useTabBarScroll } from '../context/TabBarContext';
+import MenuButton from '../components/MenuButton';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -170,6 +172,13 @@ export default function ConferenceScreen({ navigation }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [busyPanelId, setBusyPanelId] = useState(null);
 
+  // Keeps the sheet's native state in sync with ours — see useSheetGuard.
+  const sheet = useSheetGuard(sheetOpen, () => {
+    setSheetOpen(false);
+    setSelectedPanel(null);
+  });
+  const closeSheet = sheet.close;
+
   const load = useCallback(async () => {
     try {
       const res = await getConference();
@@ -262,6 +271,15 @@ export default function ConferenceScreen({ navigation }) {
           <View style={{ position: 'absolute', top: insets.top + 8, left: 16 }}>
             {backButton}
           </View>
+          <View style={{ position: 'absolute', top: insets.top + 8, right: 16 }}>
+            {/* Over the banner artwork the surface chrome disappears — the
+                scrim carries the contrast, so the icon goes white. */}
+            <MenuButton
+              color="#FFFFFF"
+              className="w-10 h-10 rounded-xl items-center justify-center"
+              style={styles.bannerBackButton}
+            />
+          </View>
           <View style={{ position: 'absolute', bottom: 16, left: 16, right: 16 }}>
             <Text className="text-2xl font-extrabold" style={{ color: '#FFFFFF' }}>
               {conference.title || t('conference.title')}
@@ -287,6 +305,7 @@ export default function ConferenceScreen({ navigation }) {
                 </Text>
               ) : null}
             </View>
+            <MenuButton />
           </View>
         </View>
       )}
@@ -325,10 +344,11 @@ export default function ConferenceScreen({ navigation }) {
       )}
 
       {/* ── Panel detail BottomSheet ────────────────── */}
-      <BottomSheet isOpen={sheetOpen} onOpenChange={(o) => { setSheetOpen(o); if (!o) setSelectedPanel(null); }}>
+      {sheet.mounted ? (
+      <BottomSheet key={sheet.key} isOpen={sheet.isOpen} onOpenChange={(o) => { if (!o) closeSheet(); }}>
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
-          <BottomSheet.Content snapPoints={['80%']} enableOverDrag={false} enableDynamicSizing={false} contentContainerClassName="h-full">
+          <BottomSheet.Content ref={sheet.ref} {...sheet.contentProps} snapPoints={['80%']} enableOverDrag={false} enableDynamicSizing={false} contentContainerClassName="h-full">
             {selectedPanel ? (
               <>
                 <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 16 }}>
@@ -414,6 +434,7 @@ export default function ConferenceScreen({ navigation }) {
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
     </View>
   );
 }

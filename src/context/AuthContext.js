@@ -183,6 +183,10 @@ export function AuthProvider({ children }) {
             // Added to an exhibitor's team by that exhibitor: they already
             // take part through their organisation, so no "Participer" CTA.
             isExhibitorStaff: scanner?.is_exhibitor_staff === true,
+            // Registered straight into a participant role (private form or
+            // back office) instead of applying for one: no "Participer" CTA
+            // either, and role features are unlocked from the start.
+            isVip: scanner?.is_vip === true,
             // Meetings others requested with me that I haven't answered yet —
             // surfaced as a red dot on the B2B tab and the agenda button.
             b2bPendingCount: scanner?.b2b_pending_count ?? 0,

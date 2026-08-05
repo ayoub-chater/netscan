@@ -1,84 +1,46 @@
-import React, { useState } from 'react';
-import { View, StyleSheet, ActivityIndicator, Text, TouchableOpacity } from 'react-native';
-import { WebView } from 'react-native-webview';
+import React from 'react';
+import { View, Text, Linking } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
-import { COLORS, SPACING, RADIUS, SHADOWS } from '../constants/theme';
-import { StatusBar } from 'expo-status-bar';
-import { useTabBarScroll } from '../context/TabBarContext';
+import { Ionicons } from '@expo/vector-icons';
+import { Button, Surface } from 'heroui-native';
+import { EVENT_WEBSITE_URL } from '../constants/api';
+import MenuButton from '../components/MenuButton';
 
+// The event site opens in the phone's browser (see FloatingTabBar / AppMenu),
+// so this screen is only a fallback for anything still routing to `Expos`.
 export default function WebsiteScreen() {
     const { t } = useTranslation();
-    const tabScroll = useTabBarScroll();
     const insets = useSafeAreaInsets();
-    const [key, setKey] = useState(0);
 
-    const renderError = () => (
-        <View style={styles.errorContainer}>
-            <Text style={styles.errorEmoji}>🌐</Text>
-            <Text style={styles.errorTitle}>{t('website.errorTitle')}</Text>
-            <Text style={styles.errorSub}>
-                {t('website.errorBody')}
-            </Text>
-            <TouchableOpacity
-                style={styles.retryBtn}
-                onPress={() => setKey(k => k + 1)}
-            >
-                <Text style={styles.retryText}>{t('website.retry')}</Text>
-            </TouchableOpacity>
-        </View>
-    );
+    const openSite = () => {
+        Linking.openURL(EVENT_WEBSITE_URL).catch(() => { });
+    };
 
     return (
-        <View style={[styles.container, { paddingTop: insets.top }]}>
-            <StatusBar style="light" backgroundColor="#000000" />
-            <WebView
-                key={key}
-                source={{ uri: 'https://logiterre-expo.com/' }}
-                style={styles.webview}
-                onScroll={tabScroll.onScroll}
-                startInLoadingState={true}
-                renderLoading={() => (
-                    <View style={styles.loading}>
-                        <ActivityIndicator color={COLORS.secondary} size="large" />
-                    </View>
-                )}
-                renderError={renderError}
-            />
+        <View
+            className="flex-1 bg-background items-center justify-center px-6"
+            style={{ paddingTop: insets.top }}
+        >
+            {/* No header on this screen — the menu button floats in the corner. */}
+            <View style={{ position: 'absolute', top: insets.top + 20, left: 16 }}>
+                <MenuButton />
+            </View>
+            <Surface className="rounded-2xl px-6 py-8 items-center w-full">
+                <View className="w-16 h-16 rounded-full bg-accent-soft items-center justify-center mb-5">
+                    <Ionicons name="globe-outline" size={32} color="#286EAD" />
+                </View>
+                <Text className="text-xl font-extrabold text-foreground text-center mb-2">
+                    {t('website.openTitle')}
+                </Text>
+                <Text className="text-sm text-muted text-center leading-5 mb-6">
+                    {t('website.openBody')}
+                </Text>
+                <Button variant="primary" size="lg" className="rounded-2xl w-full" onPress={openSite}>
+                    <Ionicons name="open-outline" size={18} color="#FFFFFF" />
+                    <Button.Label>{t('website.openButton')}</Button.Label>
+                </Button>
+            </Surface>
         </View>
     );
 }
-
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: COLORS.bg,
-    },
-    webview: {
-        flex: 1,
-    },
-    loading: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: COLORS.bg,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    errorContainer: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: COLORS.bg,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: SPACING.xl,
-    },
-    errorEmoji: { fontSize: 60, marginBottom: SPACING.lg },
-    errorTitle: { fontSize: 22, fontWeight: '800', color: COLORS.textPrimary, marginBottom: 8 },
-    errorSub: { fontSize: 14, color: COLORS.textSecondary, textAlign: 'center', lineHeight: 22, marginBottom: SPACING.xl },
-    retryBtn: {
-        paddingHorizontal: 24,
-        paddingVertical: 12,
-        backgroundColor: COLORS.primary,
-        borderRadius: RADIUS.full,
-        ...SHADOWS.soft,
-    },
-    retryText: { fontWeight: '700', color: COLORS.textPrimary }
-});

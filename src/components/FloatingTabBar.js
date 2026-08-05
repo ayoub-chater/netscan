@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet, Linking } from 'react-native';
 import Animated, { useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurView } from 'expo-blur';
@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
+import { EVENT_WEBSITE_URL } from '../constants/api';
 
 // [active icon, inactive icon] per route. Routes not listed here are not shown in the bar.
 const ICONS = {
@@ -20,6 +21,10 @@ const ICONS = {
 };
 
 const NAVBAR_COLOR = '#286EAD';
+
+// The event site is a full website, not an app screen — it opens in the phone's
+// browser instead of an in-app WebView, so the `Expos` route is never navigated to.
+const EXTERNAL_ROUTES = { Expos: EVENT_WEBSITE_URL };
 
 export default function FloatingTabBar({ state, navigation }) {
   const insets = useSafeAreaInsets();
@@ -66,6 +71,11 @@ export default function FloatingTabBar({ state, navigation }) {
             const onPress = () => {
               // Always reveal the bar when switching tabs.
               translateY.value = withTiming(0);
+              const externalUrl = EXTERNAL_ROUTES[route.name];
+              if (externalUrl) {
+                Linking.openURL(externalUrl).catch(() => {});
+                return;
+              }
               const event = navigation.emit({
                 type: 'tabPress',
                 target: route.key,

@@ -22,6 +22,8 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTabBarScroll } from '../context/TabBarContext';
+import MenuButton from '../components/MenuButton';
+import { roleLabel } from '../constants/roles';
 
 const THEME_OPTIONS = [
   { mode: 'system', labelKey: 'profile.system', icon: 'phone-portrait-outline' },
@@ -80,8 +82,9 @@ export default function ProfileScreen() {
         contentContainerStyle={{ paddingBottom: 140 }}
       >
         {/* ── Header ───────────────────────────────── */}
-        <View className="px-4 pt-5 pb-6">
-          <Text className="text-2xl font-extrabold text-foreground">
+        <View className="px-4 pt-5 pb-6 flex-row items-center" style={{ gap: 12 }}>
+          <MenuButton />
+          <Text className="flex-1 text-2xl font-extrabold text-foreground">
             {t('profile.settings')}
           </Text>
         </View>
@@ -116,7 +119,7 @@ export default function ProfileScreen() {
             ) : null}
             <View className="flex-row items-center" style={{ gap: 6 }}>
               <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-                <Chip.Label>{scannerRole}</Chip.Label>
+                <Chip.Label>{roleLabel(scannerRole)}</Chip.Label>
               </Chip>
               {isPending ? (
                 <Chip size="sm" variant="soft" color="warning">
@@ -159,7 +162,7 @@ export default function ProfileScreen() {
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>
               <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-                <Chip.Label>{scannerRole}</Chip.Label>
+                <Chip.Label>{roleLabel(scannerRole)}</Chip.Label>
               </Chip>
             </ListGroup.ItemSuffix>
           </ListGroup.Item>

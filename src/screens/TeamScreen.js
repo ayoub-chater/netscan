@@ -28,6 +28,8 @@ import {
   useBottomSheetAwareHandlers,
 } from 'heroui-native';
 import { getTeam, addTeamMember, deleteTeamMember, updateTeamMember } from '../services/api';
+import useSheetGuard from '../components/useSheetGuard';
+import MenuButton from '../components/MenuButton';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -174,6 +176,18 @@ export default function TeamScreen({ navigation }) {
 
   const searchTimer = useRef(null);
 
+  // Keeps each sheet's native state in sync with ours — see useSheetGuard.
+  const addSheet = useSheetGuard(showAdd, () => {
+    setShowAdd(false);
+    setAddError(null);
+  });
+  const editSheet = useSheetGuard(!!editMember, () => {
+    setEditMember(null);
+    setEditError(null);
+  });
+  const closeAdd = addSheet.close;
+  const closeEdit = editSheet.close;
+
   const load = useCallback(async (q = '') => {
     try {
       const res = await getTeam(q);
@@ -241,7 +255,7 @@ export default function TeamScreen({ navigation }) {
         phone: phone.trim() || undefined,
       });
       handleAdded(res.data.data);
-      setShowAdd(false);
+      closeAdd();
     } catch (e) {
       const msg =
         e?.response?.data?.message ||
@@ -270,7 +284,7 @@ export default function TeamScreen({ navigation }) {
         phone: phone.trim() || null,
       });
       handleUpdated(res.data.data);
-      setEditMember(null);
+      closeEdit();
     } catch (e) {
       const msg =
         e?.response?.data?.message ||
@@ -312,6 +326,7 @@ export default function TeamScreen({ navigation }) {
           >
             <StyledIonicons name="person-add-outline" size={18} className="text-accent-foreground" />
           </Pressable>
+          <MenuButton />
         </View>
 
         {/* Search */}
@@ -388,18 +403,19 @@ export default function TeamScreen({ navigation }) {
       )}
 
       {/* ── Add Member BottomSheet ─────────────────── */}
+      {addSheet.mounted ? (
       <BottomSheet
-        isOpen={showAdd}
+        key={addSheet.key}
+        isOpen={addSheet.isOpen}
         onOpenChange={open => {
-          if (!open) {
-            setShowAdd(false);
-            setAddError(null);
-          }
+          if (!open) closeAdd();
         }}
       >
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content
+            ref={addSheet.ref}
+            {...addSheet.contentProps}
             keyboardBehavior="interactive"
             keyboardBlurBehavior="restore"
             android_keyboardInputMode="adjustResize"
@@ -423,10 +439,7 @@ export default function TeamScreen({ navigation }) {
                 variant="tertiary"
                 size="lg"
                 className="rounded-2xl mt-3"
-                onPress={() => {
-                  setShowAdd(false);
-                  setAddError(null);
-                }}
+                onPress={closeAdd}
               >
                 <Button.Label>{t('team.cancel')}</Button.Label>
               </Button>
@@ -434,20 +447,22 @@ export default function TeamScreen({ navigation }) {
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
 
       {/* ── Edit Member BottomSheet ────────────────── */}
+      {editSheet.mounted ? (
       <BottomSheet
-        isOpen={!!editMember}
+        key={editSheet.key}
+        isOpen={editSheet.isOpen}
         onOpenChange={open => {
-          if (!open) {
-            setEditMember(null);
-            setEditError(null);
-          }
+          if (!open) closeEdit();
         }}
       >
         <BottomSheet.Portal>
           <BottomSheet.Overlay />
           <BottomSheet.Content
+            ref={editSheet.ref}
+            {...editSheet.contentProps}
             keyboardBehavior="interactive"
             keyboardBlurBehavior="restore"
             android_keyboardInputMode="adjustResize"
@@ -479,10 +494,7 @@ export default function TeamScreen({ navigation }) {
                 variant="tertiary"
                 size="lg"
                 className="rounded-2xl mt-3"
-                onPress={() => {
-                  setEditMember(null);
-                  setEditError(null);
-                }}
+                onPress={closeEdit}
               >
                 <Button.Label>{t('team.cancel')}</Button.Label>
               </Button>
@@ -490,6 +502,7 @@ export default function TeamScreen({ navigation }) {
           </BottomSheet.Content>
         </BottomSheet.Portal>
       </BottomSheet>
+      ) : null}
     </View>
   );
 }
