@@ -241,7 +241,14 @@
     "close": "Fermer",
     "removeConnectionTitle": "Retirer du journal ?",
     "removeConnectionBody": "Supprimer la connexion avec {{name}} ?",
-    "removeConnectionError": "Impossible de supprimer cette connexion."
+    "removeConnectionError": "Impossible de supprimer cette connexion.",
+    "filterAll": "Tous",
+    "filterTech": "Tech",
+    "filterStartups": "Startups",
+    "filterAi": "IA",
+    "filterFinance": "Finance",
+    "filterHealth": "Santé",
+    "filterLogistics": "Logistique"
   },
   "team": {
     "title": "Mon Équipe",
@@ -369,6 +376,8 @@
     "supportEmail": "Nous écrire",
     "supportPhone": "Nous appeler",
     "supportWebsite": "Visiter notre site",
+    "supportAddress": "Adresse",
+    "supportHours": "Dates & horaires",
     "legalMentions": "Mentions Légales",
     "logout": "Se déconnecter de LOGITERRE",
     "version": "Version {{version}}",
@@ -472,6 +481,7 @@
     "removeSlotMsg": "Les participants ne pourront plus réserver ce créneau.",
     "quickStatus": "Statut rapide",
     "customDuration": "Durée personnalisée (min)",
+    "minutesPlaceholder": "Minutes",
     "buffer": "Pause entre les rendez-vous",
     "bufferHint": "Une pause ajoutée après chaque rendez-vous.",
     "noBuffer": "Aucune",
@@ -520,7 +530,9 @@
     "fullMessage": "Ce panel n'a plus de places disponibles.",
     "reserveError": "Impossible de traiter votre demande. Réessayez.",
     "seatsLeft_one": "{{count}} place restante",
-    "seatsLeft_other": "{{count}} places restantes"
+    "seatsLeft_other": "{{count}} places restantes",
+    "speakerCount_one": "{{count}} intervenant",
+    "speakerCount_other": "{{count}} intervenants"
   },
   "programme": {
     "title": "Programme de l'événement",
@@ -557,10 +569,11 @@
     "rejectedTitle": "Demande non retenue",
     "rejectedBody": "Votre précédente demande n'a pas été retenue. Vous pouvez en soumettre une nouvelle.",
     "recheck": "Vérifier le statut",
-    "withdraw": "Annuler ma demande",
-    "withdrawTitle": "Annuler la demande ?",
+    "withdraw": "Retirer ma demande",
+    "withdrawTitle": "Retirer la demande ?",
     "withdrawBody": "Votre demande sera retirée. Vous pourrez en soumettre une nouvelle à tout moment.",
-    "withdrawConfirm": "Annuler la demande",
+    "withdrawConfirm": "Retirer la demande",
+    "withdrawDismiss": "Garder la demande",
     "goToB2B": "Accéder au B2B",
     "emptyTitle": "Aucune participation disponible",
     "emptyBody": "L'organisateur n'a ouvert aucune participation pour cet événement.",

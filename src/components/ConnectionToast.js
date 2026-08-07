@@ -66,7 +66,7 @@ export default function ConnectionToast({ toast, onPress, onHide }) {
             backgroundColor: 'rgba(255,255,255,0.18)',
             alignItems: 'center',
             justifyContent: 'center',
-            marginRight: 12,
+            marginEnd: 12,
           }}
         >
           <Ionicons name="people" size={20} color="#fff" />

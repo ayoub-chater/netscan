@@ -21,7 +21,6 @@ import {
   Card,
   Chip,
   ListGroup,
-  SearchField,
   Separator,
   Skeleton,
   Surface,
@@ -32,10 +31,23 @@ import { useAuth } from '../context/AuthContext';
 import { useTabBarScroll } from '../context/TabBarContext';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
+import SearchBar from '../components/SearchBar';
+import { latinLabel, forwardIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
-const CATEGORIES = ['Tous', 'Tech', 'Startups', 'AI', 'Finance', 'Santé', 'Logistique'];
+// `value` is matched against the backend's `secteur` field, so it stays in
+// French — only the chip label is translated. 'all' is the no-filter pseudo
+// category rather than a sector.
+const CATEGORIES = [
+  { value: 'all', key: 'exposants.filterAll' },
+  { value: 'Tech', key: 'exposants.filterTech' },
+  { value: 'Startups', key: 'exposants.filterStartups' },
+  { value: 'AI', key: 'exposants.filterAi' },
+  { value: 'Finance', key: 'exposants.filterFinance' },
+  { value: 'Santé', key: 'exposants.filterHealth' },
+  { value: 'Logistique', key: 'exposants.filterLogistics' },
+];
 
 function ExposantCard({ item, isMine, onPress }) {
   const { t } = useTranslation();
@@ -108,7 +120,7 @@ export default function ExposantsScreen({ navigation }) {
   const [sheetOpen, setSheetOpen] = useState(false);
   const [sheetExposant, setSheetExposant] = useState(null);
   const [search, setSearch] = useState('');
-  const [activeCategory, setActiveCategory] = useState('Tous');
+  const [activeCategory, setActiveCategory] = useState('all');
 
   const load = async () => {
     try {
@@ -210,7 +222,7 @@ export default function ExposantsScreen({ navigation }) {
         e.secteur?.toLowerCase().includes(search.toLowerCase())
       );
     }
-    if (activeCategory !== 'Tous') {
+    if (activeCategory !== 'all') {
       list = list.filter(e =>
         e.secteur?.toLowerCase().includes(activeCategory.toLowerCase())
       );
@@ -276,13 +288,7 @@ export default function ExposantsScreen({ navigation }) {
 
       {/* ── Search ─────────────────────────────────── */}
       <View className="px-4 mb-4">
-        <SearchField value={search} onChange={setSearch}>
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder={t('exposants.searchPlaceholder')} />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
+        <SearchBar value={search} onChange={setSearch} placeholder={t('exposants.searchPlaceholder')} />
       </View>
 
       {/* ── Category Filter ────────────────────────── */}
@@ -298,7 +304,7 @@ export default function ExposantsScreen({ navigation }) {
         >
           <TagGroup.List style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8 }}>
             {CATEGORIES.map(cat => (
-              <TagGroup.Item key={cat} id={cat}>{cat}</TagGroup.Item>
+              <TagGroup.Item key={cat.value} id={cat.value}>{t(cat.key)}</TagGroup.Item>
             ))}
           </TagGroup.List>
         </TagGroup>
@@ -414,7 +420,7 @@ export default function ExposantsScreen({ navigation }) {
               {/* Contact info */}
               {contactItems.length > 0 ? (
                 <View className="px-4 pt-5">
-                  <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
+                  <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
                     {t('exposants.contact')}
                   </Text>
                   <ListGroup>
@@ -433,7 +439,13 @@ export default function ExposantsScreen({ navigation }) {
                             <ListGroup.ItemDescription>{ci.label}</ListGroup.ItemDescription>
                             <ListGroup.ItemTitle numberOfLines={1}>{ci.value}</ListGroup.ItemTitle>
                           </ListGroup.ItemContent>
-                          {ci.onPress ? <ListGroup.ItemSuffix /> : null}
+                          {/* heroui's default suffix is a hardcoded right
+                              chevron, so supply the glyph ourselves. */}
+                          {ci.onPress ? (
+                            <ListGroup.ItemSuffix>
+                              <Ionicons name={forwardIcon()} size={18} color="#9CA3AF" />
+                            </ListGroup.ItemSuffix>
+                          ) : null}
                         </ListGroup.Item>
                       </React.Fragment>
                     ))}
@@ -444,7 +456,7 @@ export default function ExposantsScreen({ navigation }) {
               {/* Description */}
               {sheetExposant?.description ? (
                 <View className="px-4 pt-5">
-                  <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
+                  <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
                     {t('exposants.about')}
                   </Text>
                   <Surface className="rounded-xl p-4">

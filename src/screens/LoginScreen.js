@@ -151,13 +151,16 @@ export default function LoginScreen({ navigation }) {
                     setPassword(v);
                     setErrorMsg(null);
                   }}
-                  className="flex-1 pr-11"
+                  // `pe-` and `end-` resolve to the same side, so the reserved
+                  // room always lands under the eye — physical `pr`/`right`
+                  // only agreed with it in LTR.
+                  className="flex-1 pe-11"
                   placeholder="••••••••"
                   secureTextEntry={!passwordVisible}
                   editable={!loading}
                 />
                 <Pressable
-                  className="absolute right-3.5 p-1"
+                  className="absolute end-3.5 p-1"
                   onPress={() => setPasswordVisible(v => !v)}
                   hitSlop={8}
                 >

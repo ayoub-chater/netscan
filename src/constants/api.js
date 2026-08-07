@@ -34,6 +34,9 @@ export const ENDPOINTS = {
     appointmentCancel: (id) => `${BASE_URL}/appointments/${id}`,
     // "Participer" — apply for a participant role after signing up
     participationRoles: `${BASE_URL}/participation/roles?event_slug=${EVENT_SLUG}`,
+    // Every role name of the event in fr/en/ar, keyed by an accent-insensitive
+    // key — lets the app translate a role wherever it appears.
+    participationRoleLabels: `${BASE_URL}/participation/role-labels?event_slug=${EVENT_SLUG}`,
     participation: `${BASE_URL}/participation`,
     // B2B self-service (any approved participant)
     speakerPersona: `${BASE_URL}/b2b/persona`,

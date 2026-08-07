@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
   dot: {
     position: 'absolute',
     top: 8,
-    right: 8,
+    insetInlineEnd: 8,
     width: 10,
     height: 10,
     borderRadius: 5,

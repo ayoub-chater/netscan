@@ -31,9 +31,12 @@ import {
   countryLabel,
   sortCountries,
   findCountry,
+  cityLabel,
+  cityOptions,
 } from '../services/geo';
 import SearchableSelect from '../components/SearchableSelect';
 import MenuButton from '../components/MenuButton';
+import { backIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -122,9 +125,17 @@ export default function EditProfileScreen() {
     [language]
   );
 
+  // `ville` holds the API's English spelling, not what is on screen — the
+  // canonical value the back office stores. Same rule as signup, so a profile
+  // saved in one language reads back correctly in another.
   const cityItems = useMemo(
-    () => cities.map((city) => ({ key: city, label: city })),
-    [cities]
+    () =>
+      cityOptions(cities, country?.code, language).map((c) => ({
+        key: c.value,
+        label: c.label,
+        value: c.value,
+      })),
+    [cities, country, language]
   );
 
   const onSelectCountry = (item) => {
@@ -244,7 +255,7 @@ export default function EditProfileScreen() {
             className="w-10 h-10 rounded-xl bg-surface items-center justify-center"
             hitSlop={8}
           >
-            <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+            <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
           </Pressable>
           <Text className="flex-1 text-xl font-extrabold text-foreground">
             {t('editProfile.title')}
@@ -280,7 +291,7 @@ export default function EditProfileScreen() {
                 style={{
                   position: 'absolute',
                   bottom: 0,
-                  right: 0,
+                  insetInlineEnd: 0,
                   width: 34,
                   height: 34,
                   borderRadius: 17,
@@ -400,9 +411,9 @@ export default function EditProfileScreen() {
                 title={t('register.selectCity')}
                 placeholder={t('register.cityPlaceholder')}
                 searchPlaceholder={t('register.searchCity')}
-                value={ville}
+                value={cityLabel(ville, country?.code, language)}
                 items={cityItems}
-                onSelect={(item) => setVille(item.label)}
+                onSelect={(item) => setVille(item.value)}
                 isLoading={citiesLoading}
                 isDisabled={loading || !country}
                 disabledHint={!country ? t('register.cityNeedsCountry') : undefined}

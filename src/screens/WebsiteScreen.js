@@ -23,7 +23,13 @@ export default function WebsiteScreen() {
             style={{ paddingTop: insets.top }}
         >
             {/* No header on this screen — the menu button floats in the corner. */}
-            <View style={{ position: 'absolute', top: insets.top + 20, left: 16 }}>
+            {/* Full width + flex so the corner mirrors without a measurement
+                pass — see the note in ScannerScreen. */}
+            <View
+                style={{ position: 'absolute', top: insets.top + 20, left: 16, right: 16 }}
+                className="flex-row"
+                pointerEvents="box-none"
+            >
                 <MenuButton />
             </View>
             <Surface className="rounded-2xl px-6 py-8 items-center w-full">

@@ -10,6 +10,7 @@ import { Chip } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import MenuButton from '../components/MenuButton';
 import { roleLabel } from '../constants/roles';
+import { backIcon, latinTracking, ltrValue } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -44,7 +45,7 @@ export default function MyBadgeScreen() {
             className="w-10 h-10 rounded-xl bg-surface items-center justify-center"
             hitSlop={8}
           >
-            <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+            <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
           </Pressable>
           <View className="flex-1">
             <Text className="text-xl font-extrabold text-foreground">
@@ -103,7 +104,7 @@ export default function MyBadgeScreen() {
                   </Text>
                 </View>
               ) : null}
-              <Text className="text-sm text-muted tracking-widest mt-1">
+              <Text className={`text-sm text-muted ${latinTracking()} mt-1`} style={ltrValue()}>
                 {badgeNumber}
               </Text>
             </View>

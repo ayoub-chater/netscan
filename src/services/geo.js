@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { COUNTRIES } from '../constants/countries';
+import { CITY_NAMES } from '../constants/cities';
 
 // Countries ship with the app (fr / en / ar names) instead of being fetched:
 // REST Countries retired its keyless API, and every remaining free country API
@@ -105,6 +106,39 @@ async function cityApiNameFor(country) {
     }
   }
   return cityApiNames[country.code] || country.names.en;
+}
+
+/**
+ * City name in the app's current language, falling back to the English spelling
+ * the API gave when there is no entry for it — see `constants/cities` for why
+ * the mapping is bundled rather than fetched, and why it is deliberately partial.
+ *
+ * `city` stays the canonical value throughout: only what is *displayed* changes
+ * with the language, never what is stored or submitted.
+ */
+export function cityLabel(city, countryCode, language) {
+  if (!city) return '';
+  const key = String(language || 'en').split('-')[0];
+  if (key === 'en') return city;
+  return CITY_NAMES[countryCode]?.[city]?.[key] || city;
+}
+
+/**
+ * Cities of a country as `{ value, label }`, localised and sorted for display.
+ *
+ * The API's list carries the same place under several spellings — `Fes`/`Fès`,
+ * `Marrakesh`/`Marrakech`, `Al Hoceima`/`Al Hoceïma`/`Al-Hoceima` — which all
+ * resolve to one Arabic name. Deduping on the *label* is what stops the picker
+ * showing that name three times over; the first spelling wins, so the canonical
+ * value stays stable for a given label.
+ */
+export function cityOptions(cities, countryCode, language) {
+  const seen = new Map();
+  for (const city of cities) {
+    const label = cityLabel(city, countryCode, language);
+    if (!seen.has(label)) seen.set(label, { value: city, label });
+  }
+  return [...seen.values()].sort((a, b) => a.label.localeCompare(b.label));
 }
 
 /**

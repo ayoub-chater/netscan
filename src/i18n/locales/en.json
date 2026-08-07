@@ -241,7 +241,14 @@
     "close": "Close",
     "removeConnectionTitle": "Remove from log?",
     "removeConnectionBody": "Delete the connection with {{name}}?",
-    "removeConnectionError": "Unable to delete this connection."
+    "removeConnectionError": "Unable to delete this connection.",
+    "filterAll": "All",
+    "filterTech": "Tech",
+    "filterStartups": "Startups",
+    "filterAi": "AI",
+    "filterFinance": "Finance",
+    "filterHealth": "Health",
+    "filterLogistics": "Logistics"
   },
   "team": {
     "title": "My Team",
@@ -302,7 +309,7 @@
     "title": "Meetings",
     "subtitle": "Book a networking session with our contacts",
     "tabContacts": "Contacts",
-    "tabMine": "My meetings ({{count}})",
+    "tabMine": "My appointments ({{count}})",
     "book": "Book",
     "noSlots": "No availability",
     "duration": "{{min}} min",
@@ -369,6 +376,8 @@
     "supportEmail": "Email us",
     "supportPhone": "Call us",
     "supportWebsite": "Visit our website",
+    "supportAddress": "Address",
+    "supportHours": "Dates & opening hours",
     "legalMentions": "Legal Notice",
     "logout": "Log out of LOGITERRE",
     "version": "Version {{version}}",
@@ -472,6 +481,7 @@
     "removeSlotMsg": "Attendees will no longer be able to book this window.",
     "quickStatus": "Quick status",
     "customDuration": "Custom duration (min)",
+    "minutesPlaceholder": "Minutes",
     "buffer": "Buffer between meetings",
     "bufferHint": "A pause added after each meeting.",
     "noBuffer": "None",
@@ -520,7 +530,9 @@
     "fullMessage": "This panel has no seats left.",
     "reserveError": "Couldn't process your request. Please try again.",
     "seatsLeft_one": "{{count}} seat left",
-    "seatsLeft_other": "{{count}} seats left"
+    "seatsLeft_other": "{{count}} seats left",
+    "speakerCount_one": "{{count}} speaker",
+    "speakerCount_other": "{{count}} speakers"
   },
   "programme": {
     "title": "Event programme",
@@ -560,7 +572,8 @@
     "withdraw": "Withdraw my request",
     "withdrawTitle": "Withdraw the request?",
     "withdrawBody": "Your request will be removed. You can submit a new one at any time.",
-    "withdrawConfirm": "Withdraw",
+    "withdrawConfirm": "Withdraw request",
+    "withdrawDismiss": "Keep request",
     "goToB2B": "Go to B2B",
     "emptyTitle": "No participation available",
     "emptyBody": "The organiser hasn't opened any participation for this event.",

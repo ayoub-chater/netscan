@@ -44,6 +44,7 @@ import { useAuth } from '../context/AuthContext';
 import { MEETING_LOCATION } from '../constants/b2b';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
+import { backIcon, latinLabel } from '../utils/rtl';
 
 const ACCENT = '#286EAD';
 
@@ -511,7 +512,7 @@ export default function B2BAgendaScreen({ navigation }) {
             className="w-10 h-10 items-center justify-center rounded-xl bg-surface"
             hitSlop={8}
           >
-            <Ionicons name="chevron-back" size={22} color={ACCENT} />
+            <Ionicons name={backIcon()} size={22} color={ACCENT} />
           </Pressable>
         ) : null}
         <View className="flex-1">
@@ -589,7 +590,7 @@ export default function B2BAgendaScreen({ navigation }) {
           {/* Quick status toggle */}
           <Surface className="rounded-2xl px-4 py-3 mb-4">
             <View className="flex-row items-center justify-between mb-2">
-              <Text className="text-xs font-bold text-muted uppercase tracking-wide">
+              <Text className={`text-xs font-bold text-muted ${latinLabel('tracking-wide')}`}>
                 {t('speaker.quickStatus')}
               </Text>
               {statusSaving ? <ActivityIndicator size="small" color={ACCENT} /> : null}
@@ -731,8 +732,8 @@ export default function B2BAgendaScreen({ navigation }) {
               </Pressable>
 
               <Surface className="rounded-2xl px-5 py-5 gap-4">
-                <SheetField label={t('register.fullName')} value={form?.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
-                <SheetField label={t('register.jobTitle')} value={form?.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
+                <SheetField label={t('register.fullName')} placeholder={t('register.fullNamePlaceholder')} value={form?.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
+                <SheetField label={t('register.jobTitle')} placeholder={t('register.jobTitlePlaceholder')} value={form?.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
                 {/* Company is set at registration — read-only here. */}
                 <View>
                   <Label>{t('register.company')}</Label>
@@ -745,6 +746,7 @@ export default function B2BAgendaScreen({ navigation }) {
                 </View>
                 <SheetField
                   label={t('register.bio')}
+                  placeholder={t('register.bioPlaceholder')}
                   value={form?.bio}
                   onChangeText={(v) => setForm((f) => ({ ...f, bio: v }))}
                   multiline
@@ -783,6 +785,7 @@ export default function B2BAgendaScreen({ navigation }) {
                 </View>
                 <SheetField
                   label={t('speaker.customDuration')}
+                  placeholder={t('speaker.minutesPlaceholder')}
                   value={form?.appointment_duration}
                   keyboardType="number-pad"
                   onChangeText={(v) => setForm((f) => ({ ...f, appointment_duration: v.replace(/[^0-9]/g, '') }))}
@@ -811,6 +814,7 @@ export default function B2BAgendaScreen({ navigation }) {
                 </View>
                 <SheetField
                   label={t('speaker.customBuffer')}
+                  placeholder={t('speaker.minutesPlaceholder')}
                   value={form?.buffer_time}
                   keyboardType="number-pad"
                   onChangeText={(v) => setForm((f) => ({ ...f, buffer_time: v.replace(/[^0-9]/g, '') }))}
@@ -870,7 +874,7 @@ export default function B2BAgendaScreen({ navigation }) {
               <Text className="text-lg font-extrabold text-foreground">{t('speaker.addSlot')}</Text>
 
               <View>
-                <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t('appointments.chooseDate')}</Text>
+                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>{t('appointments.chooseDate')}</Text>
                 <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                   {eventDays(eventBounds).map((d) => {
                     const active = d === avDate;
@@ -890,7 +894,7 @@ export default function B2BAgendaScreen({ navigation }) {
               </View>
 
               <View>
-                <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t('speaker.startTime')}</Text>
+                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>{t('speaker.startTime')}</Text>
                 <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                   {TIME_OPTIONS.map((tm) => {
                     const active = tm === avStart;
@@ -908,7 +912,7 @@ export default function B2BAgendaScreen({ navigation }) {
               </View>
 
               <View>
-                <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">{t('speaker.endTime')}</Text>
+                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>{t('speaker.endTime')}</Text>
                 <View className="flex-row flex-wrap" style={{ gap: 8 }}>
                   {TIME_OPTIONS.filter((tm) => !avStart || tm > avStart).map((tm) => {
                     const active = tm === avEnd;

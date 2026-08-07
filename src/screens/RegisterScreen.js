@@ -27,9 +27,17 @@ import {
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { register } from '../services/api';
-import { getCountries, fetchCities, countryLabel, sortCountries } from '../services/geo';
+import {
+  getCountries,
+  fetchCities,
+  countryLabel,
+  sortCountries,
+  cityLabel,
+  cityOptions,
+} from '../services/geo';
 import SearchableSelect from '../components/SearchableSelect';
 import { PARTICIPATE_ICON } from '../constants/roles';
+import { backIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -111,9 +119,17 @@ export default function RegisterScreen({ navigation }) {
     [language]
   );
 
+  // `ville` holds the API's English spelling, not what is on screen: it is the
+  // canonical value the back office stores, so switching language re-labels the
+  // field without changing what gets submitted.
   const cityItems = useMemo(
-    () => cities.map((city) => ({ key: city, label: city })),
-    [cities]
+    () =>
+      cityOptions(cities, country?.code, language).map((c) => ({
+        key: c.value,
+        label: c.label,
+        value: c.value,
+      })),
+    [cities, country, language]
   );
 
   const onSelectCountry = (item) => {
@@ -201,7 +217,7 @@ export default function RegisterScreen({ navigation }) {
               hitSlop={8}
             >
               <StyledIonicons
-                name="chevron-back"
+                name={backIcon()}
                 size={22}
                 className="text-foreground"
               />
@@ -267,7 +283,7 @@ export default function RegisterScreen({ navigation }) {
               <View className="w-full flex-row items-center">
                 <Input
                   placeholder={t('register.passwordPlaceholder')}
-                  className="flex-1 pr-11"
+                  className="flex-1 pe-11"
                   secureTextEntry={!passwordVisible}
                   autoCapitalize="none"
                   value={password}
@@ -275,7 +291,7 @@ export default function RegisterScreen({ navigation }) {
                   editable={!loading}
                 />
                 <Pressable
-                  className="absolute right-3.5 p-1"
+                  className="absolute end-3.5 p-1"
                   onPress={() => setPasswordVisible(v => !v)}
                   hitSlop={8}
                 >
@@ -292,7 +308,7 @@ export default function RegisterScreen({ navigation }) {
               <View className="w-full flex-row items-center">
                 <Input
                   placeholder={t('register.confirmPasswordPlaceholder')}
-                  className="flex-1 pr-11"
+                  className="flex-1 pe-11"
                   secureTextEntry={!confirmVisible}
                   autoCapitalize="none"
                   value={confirmPassword}
@@ -300,7 +316,7 @@ export default function RegisterScreen({ navigation }) {
                   editable={!loading}
                 />
                 <Pressable
-                  className="absolute right-3.5 p-1"
+                  className="absolute end-3.5 p-1"
                   onPress={() => setConfirmVisible(v => !v)}
                   hitSlop={8}
                 >
@@ -358,9 +374,9 @@ export default function RegisterScreen({ navigation }) {
                 title={t('register.selectCity')}
                 placeholder={t('register.cityPlaceholder')}
                 searchPlaceholder={t('register.searchCity')}
-                value={ville}
+                value={cityLabel(ville, country?.code, language)}
                 items={cityItems}
-                onSelect={(item) => setVille(item.label)}
+                onSelect={(item) => setVille(item.value)}
                 isLoading={citiesLoading}
                 isDisabled={loading || !country}
                 disabledHint={!country ? t('register.cityNeedsCountry') : undefined}
@@ -448,7 +464,7 @@ export default function RegisterScreen({ navigation }) {
           >
             {/* Modal header */}
             <View className="flex-row items-center justify-between px-5 pt-5 pb-3 border-b border-separator">
-              <View className="flex-1 pr-3">
+              <View className="flex-1 pe-3">
                 <Text className="text-lg font-extrabold text-foreground">
                   {t('terms.title')}
                 </Text>

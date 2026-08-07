@@ -108,6 +108,11 @@ export const cancelAppointment = (id) => api.delete(ENDPOINTS.appointmentCancel(
 // Roles available for this event, each with the extra form fields to fill.
 export const getParticipationRoles = () => api.get(ENDPOINTS.participationRoles);
 
+// { labels: { "<role key>": { fr, en, ar } } } for every role of the event —
+// including the ones nobody can apply for (Staff, VIP…), since a user who
+// holds one still has to read it in their own language.
+export const getRoleLabels = () => api.get(ENDPOINTS.participationRoleLabels);
+
 // The signed-in user's own request: { role, status, note, data, submitted_at }.
 export const getParticipation = () =>
     api.get(ENDPOINTS.participation, { params: { event_slug: EVENT_SLUG } });

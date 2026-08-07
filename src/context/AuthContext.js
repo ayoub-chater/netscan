@@ -5,6 +5,7 @@ import { Alert } from 'react-native';
 import i18n from '../i18n';
 import { login as apiLogin, logout as apiLogout, fetchMe, getProfile, getEventInfo, setApiToken, setOnUnauthorized } from '../services/api';
 import { loadSession, saveSession, clearSession, loadBadgeNumber, saveBadgeNumber } from '../services/auth';
+import { loadCachedRoleLabels, refreshRoleLabels, clearRoleLabels } from '../services/roleLabels';
 import { SESSION_MAX_AGE_MS } from '../constants/api';
 import { registerForPushNotificationsAsync, unregisterPushNotificationsAsync } from '../services/notifications';
 
@@ -17,7 +18,17 @@ export function AuthProvider({ children }) {
     const [badgeNumber, setBadgeNumber] = useState(null);
     const [eventInfo, setEventInfo] = useState(null);
     const [exhibitorId, setExhibitorId] = useState(null);
+    // Bumped whenever the fr/en/ar role names change. `roleLabel()` reads them
+    // from a module registry rather than from a hook, so this is what tells
+    // the screens using them to paint again once they arrive.
+    const [roleLabelsVersion, setRoleLabelsVersion] = useState(0);
     const timerRef = useRef(null);
+
+    // Cached first (instant, possibly stale), then refreshed from the server.
+    const syncRoleLabels = async () => {
+        if (await loadCachedRoleLabels()) setRoleLabelsVersion((v) => v + 1);
+        if (await refreshRoleLabels()) setRoleLabelsVersion((v) => v + 1);
+    };
 
     const clearAuthState = () => {
         setToken(null);
@@ -55,6 +66,7 @@ export function AuthProvider({ children }) {
                         setApiToken(session.token);
                         scheduleAutoLogout(session.issuedAt);
                         registerForPushNotificationsAsync().catch(() => { });
+                        syncRoleLabels().catch(() => { });
                         setExhibitorId(session.scanner?.exhibitor_id ?? null);
 
                         let storedEventInfo = session.eventInfo;
@@ -115,6 +127,7 @@ export function AuthProvider({ children }) {
         setExhibitorId(sc?.exhibitor_id ?? null);
         setApiToken(t);
         registerForPushNotificationsAsync().catch(() => { });
+        syncRoleLabels().catch(() => { });
         return { token: t, scanner: sc, eventInfo: ev };
     };
 
@@ -130,6 +143,7 @@ export function AuthProvider({ children }) {
         await unregisterPushNotificationsAsync();
         try { await apiLogout(); } catch { }
         await clearSession();
+        await clearRoleLabels();
         if (timerRef.current) clearTimeout(timerRef.current);
         clearAuthState();
     };
@@ -173,6 +187,9 @@ export function AuthProvider({ children }) {
             badgeNumber,
             eventInfo,
             exhibitorId,
+            // Only here to re-render the consumers when the translated role
+            // names land; read the names themselves through `roleLabel()`.
+            roleLabelsVersion,
             // "Participer": everyone signs up as a visitor and applies for a
             // participant role afterwards. `null` = never applied.
             participationStatus: scanner?.participation_status ?? null,

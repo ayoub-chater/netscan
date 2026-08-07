@@ -190,12 +190,18 @@ export default function ScannerScreen({ navigation }) {
         <View className="flex-1 bg-background items-center justify-center px-8">
           {/* This state has no header, and the camera state is deliberately
               chrome-free, so the menu lives here only. */}
+          {/* Spans the full width and lets flex place the button, rather than
+              pinning a physical edge: an auto-width absolute box anchored right
+              (RTL) has nowhere to sit until its child measures, so it rendered
+              left for a frame and then jumped across. */}
           <SafeAreaView
-            style={{ position: 'absolute', top: 0, left: 16 }}
+            style={{ position: 'absolute', top: 0, left: 0, right: 0 }}
             edges={['top']}
             pointerEvents="box-none"
           >
-            <MenuButton style={{ marginTop: 20 }} />
+            <View className="flex-row px-4" style={{ marginTop: 20 }} pointerEvents="box-none">
+              <MenuButton />
+            </View>
           </SafeAreaView>
           {loading ? (
             <>

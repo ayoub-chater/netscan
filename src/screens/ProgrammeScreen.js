@@ -4,6 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
 import { useTranslation } from 'react-i18next';
 import MenuButton from '../components/MenuButton';
+import { backIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -21,7 +22,7 @@ export default function ProgrammeScreen({ navigation }) {
             className="w-10 h-10 rounded-xl bg-surface items-center justify-center"
             hitSlop={8}
           >
-            <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+            <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
           </Pressable>
           <Text className="flex-1 text-xl font-extrabold text-foreground">
             {t('programme.title')}

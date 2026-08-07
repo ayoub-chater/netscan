@@ -18,6 +18,8 @@ import {
   markAllNotificationsRead,
 } from '../services/api';
 import MenuButton from '../components/MenuButton';
+import { backIcon } from '../utils/rtl';
+import { roleLabel } from '../constants/roles';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -72,7 +74,7 @@ function localizedMessage(item, t) {
     case 'participation':
       if (params.decision === 'rejected' && params.note) return params.note;
       return t(`notifications.body.participation.${params.decision}`, {
-        role: params.role,
+        role: roleLabel(params.role),
         defaultValue: item.message,
       });
 
@@ -170,7 +172,7 @@ export default function NotificationsScreen() {
           className="w-10 h-10 rounded-xl bg-surface items-center justify-center active:opacity-70"
           hitSlop={8}
         >
-          <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+          <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
         </Pressable>
         <Text className="flex-1 text-2xl font-extrabold text-foreground">
           {t('notifications.title')}
@@ -220,7 +222,7 @@ export default function NotificationsScreen() {
               <Skeleton isLoading variant="shimmer">
                 <View className="w-10 h-10 rounded-full bg-surface-secondary" />
               </Skeleton>
-              <View className="flex-1 ml-3" style={{ gap: 8 }}>
+              <View className="flex-1 ms-3" style={{ gap: 8 }}>
                 <Skeleton isLoading variant="shimmer">
                   <View className="h-3.5 rounded-full bg-surface-secondary" style={{ width: 180 }} />
                 </Skeleton>
@@ -264,7 +266,7 @@ export default function NotificationsScreen() {
                   />
                 </View>
 
-                <View className="flex-1 ml-3">
+                <View className="flex-1 ms-3">
                   <Text
                     className={[
                       'text-sm text-foreground',
@@ -288,7 +290,7 @@ export default function NotificationsScreen() {
                   </Text>
                 </View>
 
-                {unread && <View className="w-2.5 h-2.5 rounded-full bg-accent mt-1.5 ml-2" />}
+                {unread && <View className="w-2.5 h-2.5 rounded-full bg-accent mt-1.5 ms-2" />}
               </Pressable>
             );
           })

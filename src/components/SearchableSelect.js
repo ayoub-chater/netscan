@@ -161,7 +161,7 @@ export default function SearchableSelect({
           >
             {/* Header */}
             <View className="flex-row items-center justify-between px-5 pt-5 pb-3">
-              <Text className="text-lg font-extrabold text-foreground flex-1 pr-3">
+              <Text className="text-lg font-extrabold text-foreground flex-1 pe-3">
                 {title || label}
               </Text>
               <Pressable

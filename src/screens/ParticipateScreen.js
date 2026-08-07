@@ -27,14 +27,14 @@ import {
   TextField,
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
-import MenuButton from '../components/MenuButton';
-import { roleIcon, roleLabel, sortRoles } from '../constants/roles';
+import { roleIcon, roleLabel, roleKey, sortRoles, addRoleTranslations } from '../constants/roles';
 import {
   getParticipationRoles,
   getParticipation,
   submitParticipation,
   cancelParticipation,
 } from '../services/api';
+import { backIcon, forwardIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 const ACCENT = '#286EAD';
@@ -163,7 +163,18 @@ export default function ParticipateScreen({ navigation }) {
       getParticipation(),
     ]);
     if (rolesRes.status === 'fulfilled') {
-      setRoles(sortRoles(rolesRes.value?.data?.roles || []));
+      const list = rolesRes.value?.data?.roles || [];
+      // The picker's own payload already carries each role's fr/en/ar name:
+      // feed it to the shared registry so `roleLabel()` is right here even
+      // before the app-wide label fetch has landed.
+      addRoleTranslations(
+        Object.fromEntries(
+          list
+            .filter((role) => role?.translations?.name)
+            .map((role) => [roleKey(role.name), role.translations.name])
+        )
+      );
+      setRoles(sortRoles(list));
     }
     if (mineRes.status === 'fulfilled') {
       setParticipation(mineRes.value?.data?.participation || null);
@@ -245,7 +256,9 @@ export default function ParticipateScreen({ navigation }) {
 
   const withdraw = () => {
     RNAlert.alert(t('participate.withdrawTitle'), t('participate.withdrawBody'), [
-      { text: t('common.cancel'), style: 'cancel' },
+      // Not `common.cancel`: next to "cancel the request" a bare "Cancel" reads
+      // as the same action, and in Arabic both rendered the identical word.
+      { text: t('participate.withdrawDismiss'), style: 'cancel' },
       {
         text: t('participate.withdrawConfirm'),
         style: 'destructive',
@@ -277,7 +290,7 @@ export default function ParticipateScreen({ navigation }) {
         className="w-10 h-10 items-center justify-center rounded-xl bg-surface"
         hitSlop={8}
       >
-        <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+        <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
       </Pressable>
       <View className="flex-1">
         <Text className="text-2xl font-extrabold text-foreground">
@@ -285,7 +298,6 @@ export default function ParticipateScreen({ navigation }) {
         </Text>
         <Text className="text-sm text-muted mt-0.5">{t('participate.subtitle')}</Text>
       </View>
-      <MenuButton />
     </View>
   );
 
@@ -610,13 +622,13 @@ export default function ParticipateScreen({ navigation }) {
                 onPress={() => openForm(role)}
                 className="flex-row items-center px-5 py-4 rounded-2xl bg-surface border border-separator active:opacity-70"
               >
-                <View className="w-14 h-14 rounded-full bg-accent-soft items-center justify-center mr-4">
+                <View className="w-14 h-14 rounded-full bg-accent-soft items-center justify-center me-4">
                   <Ionicons name={roleIcon(role.name)} size={26} color={ACCENT} />
                 </View>
                 <Text className="flex-1 text-base font-bold text-foreground">
                   {roleLabel(role.name)}
                 </Text>
-                <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+                <Ionicons name={forwardIcon()} size={18} color="#9CA3AF" />
               </Pressable>
             ))}
           </View>

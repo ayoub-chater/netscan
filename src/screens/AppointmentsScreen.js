@@ -41,6 +41,7 @@ import { MEETING_LOCATION } from '../constants/b2b';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
 import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
+import { forwardIcon, latinLabel } from '../utils/rtl';
 
 const ACCENT = '#286EAD';
 
@@ -141,7 +142,7 @@ function PersonaCard({ item, onBook, onView }) {
                 </Text>
               ) : null}
             </View>
-            <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+            <Ionicons name={forwardIcon()} size={18} color="#9CA3AF" />
           </View>
         </Card.Header>
         {item.bio ? (
@@ -518,7 +519,7 @@ export default function AppointmentsScreen({ navigation }) {
           {b2bPendingCount > 0 && (
             <View
               className="absolute bg-danger rounded-full items-center justify-center"
-              style={{ top: -3, right: -3, minWidth: 18, height: 18, paddingHorizontal: 4 }}
+              style={{ top: -3, insetInlineEnd: -3, minWidth: 18, height: 18, paddingHorizontal: 4 }}
             >
               <Text className="text-[10px] font-extrabold text-danger-foreground">
                 {b2bPendingCount > 9 ? '9+' : b2bPendingCount}
@@ -651,7 +652,7 @@ export default function AppointmentsScreen({ navigation }) {
               <View className="px-4 pt-4" style={{ gap: 14 }}>
                 {profilePersona?.bio ? (
                   <View>
-                    <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-1">{t('appointments.aboutLabel')}</Text>
+                    <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-1`}>{t('appointments.aboutLabel')}</Text>
                     <Text className="text-sm text-foreground leading-6">{profilePersona.bio}</Text>
                   </View>
                 ) : null}
@@ -806,7 +807,7 @@ export default function AppointmentsScreen({ navigation }) {
 
               {/* Date picker */}
               <View className="px-4 pt-5">
-                <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
+                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
                   {t('appointments.chooseDate')}
                 </Text>
                 <View className="flex-row flex-wrap" style={{ gap: 8 }}>
@@ -829,7 +830,7 @@ export default function AppointmentsScreen({ navigation }) {
 
               {/* Slots */}
               <View className="px-4 pt-5">
-                <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
+                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
                   {t('appointments.chooseSlot')}
                 </Text>
                 {loadingSlots ? (
@@ -870,7 +871,7 @@ export default function AppointmentsScreen({ navigation }) {
                             {slot.label || slot.start}
                           </Text>
                           {isBooked ? (
-                            <Text className="text-[9px] text-muted mt-0.5 uppercase tracking-wide">
+                            <Text className={`text-[9px] text-muted mt-0.5 ${latinLabel('tracking-wide')}`}>
                               {t('appointments.booked')}
                             </Text>
                           ) : null}
@@ -883,7 +884,7 @@ export default function AppointmentsScreen({ navigation }) {
 
               {/* Optional note */}
               <View className="px-4 pt-5">
-                <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
+                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
                   {t('appointments.noteLabel')}
                 </Text>
                 <Surface className="rounded-2xl px-5 py-5">

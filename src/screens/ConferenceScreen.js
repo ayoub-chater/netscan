@@ -18,6 +18,8 @@ import { getConference, reservePanelSeat, cancelPanelSeat } from '../services/ap
 import useSheetGuard from '../components/useSheetGuard';
 import { useTabBarScroll } from '../context/TabBarContext';
 import MenuButton from '../components/MenuButton';
+import { backIcon, latinLabel } from '../utils/rtl';
+import { roleLabel } from '../constants/roles';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -78,6 +80,7 @@ function SeatBadge({ panel }) {
 
 // ── Panel row ────────────────────────────────────────────────────────────────
 function PanelCard({ panel, onPress }) {
+  const { t } = useTranslation();
   const speakers = panel.speakers || [];
   return (
     <Card className="mb-3">
@@ -113,9 +116,9 @@ function PanelCard({ panel, onPress }) {
         {speakers.length > 0 && (
           <Card.Footer>
             <View className="flex-row items-center mt-2" style={{ gap: 8 }}>
-              <View className="flex-row" style={{ marginLeft: 8 }}>
+              <View className="flex-row" style={{ marginStart: 8 }}>
                 {speakers.slice(0, 4).map((speaker, idx) => (
-                  <View key={speaker.id} style={{ marginLeft: idx === 0 ? 0 : -8, zIndex: 10 - idx }}>
+                  <View key={speaker.id} style={{ marginStart: idx === 0 ? 0 : -8, zIndex: 10 - idx }}>
                     <Avatar size="sm" color="default" variant="soft">
                       {speaker.photo ? <Avatar.Image source={{ uri: speaker.photo }} /> : null}
                       <Avatar.Fallback>{(speaker.name || '?').slice(0, 2).toUpperCase()}</Avatar.Fallback>
@@ -124,7 +127,7 @@ function PanelCard({ panel, onPress }) {
                 ))}
               </View>
               <Text className="text-[11px] text-muted">
-                {speakers.length} intervenant{speakers.length > 1 ? 's' : ''}
+                {t('conference.speakerCount', { count: speakers.length })}
               </Text>
             </View>
           </Card.Footer>
@@ -153,7 +156,7 @@ function SpeakerRow({ speaker }) {
       </View>
       {speaker.role ? (
         <Chip size="sm" variant="soft" color="accent">
-          <Chip.Label>{speaker.role}</Chip.Label>
+          <Chip.Label>{roleLabel(speaker.role)}</Chip.Label>
         </Chip>
       ) : null}
     </View>
@@ -254,9 +257,9 @@ export default function ConferenceScreen({ navigation }) {
       hitSlop={8}
     >
       {conference?.banner ? (
-        <Ionicons name="chevron-back" size={22} color="#FFFFFF" />
+        <Ionicons name={backIcon()} size={22} color="#FFFFFF" />
       ) : (
-        <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+        <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
       )}
     </Pressable>
   );
@@ -268,10 +271,14 @@ export default function ConferenceScreen({ navigation }) {
         <View style={{ height: 200 + insets.top }}>
           <Image source={{ uri: conference.banner }} style={StyleSheet.absoluteFill} resizeMode="cover" />
           <View style={[StyleSheet.absoluteFill, styles.bannerScrim]} />
-          <View style={{ position: 'absolute', top: insets.top + 8, left: 16 }}>
+          {/* One full-width row instead of two edge-pinned boxes: flex mirrors
+              itself under RTL with no measurement pass — see ScannerScreen. */}
+          <View
+            style={{ position: 'absolute', top: insets.top + 8, left: 16, right: 16 }}
+            className="flex-row items-center justify-between"
+            pointerEvents="box-none"
+          >
             {backButton}
-          </View>
-          <View style={{ position: 'absolute', top: insets.top + 8, right: 16 }}>
             {/* Over the banner artwork the surface chrome disappears — the
                 scrim carries the contrast, so the icon goes white. */}
             <MenuButton
@@ -335,7 +342,7 @@ export default function ConferenceScreen({ navigation }) {
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 120 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
           renderSectionHeader={({ section }) => (
-            <Text className="text-xs font-extrabold text-muted uppercase tracking-wide mt-4 mb-2">
+            <Text className={`text-xs font-extrabold text-muted ${latinLabel('tracking-wide')} mt-4 mb-2`}>
               {formatDateHeading(section.title, i18n.language)}
             </Text>
           )}
@@ -392,7 +399,7 @@ export default function ConferenceScreen({ navigation }) {
 
                   {(selectedPanel.speakers || []).length > 0 && (
                     <View className="mt-5">
-                      <Text className="text-xs font-extrabold text-muted uppercase tracking-wide mb-1">
+                      <Text className={`text-xs font-extrabold text-muted ${latinLabel('tracking-wide')} mb-1`}>
                         {t('conference.speakers')}
                       </Text>
                       {selectedPanel.speakers.map((speaker) => (

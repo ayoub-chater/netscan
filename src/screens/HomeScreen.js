@@ -8,7 +8,6 @@ import {
   RefreshControl,
   Modal,
   StyleSheet,
-  I18nManager,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -33,6 +32,7 @@ import { networkingHistory, getUnreadNotificationCount } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
 import MenuButton from '../components/MenuButton';
 import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
+import { arrowForwardIcon, forwardIcon, latinLabel } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -56,7 +56,7 @@ function CountdownDigit({ value, label }) {
       <View className="w-[62px] h-[62px] rounded-xl bg-surface border border-separator items-center justify-center">
         <Text className="text-2xl font-extrabold" style={{ color: isDark ? '#FFFFFF' : '#286EAD' }}>{value}</Text>
       </View>
-      <Text className="text-[10px] font-semibold text-muted mt-1 uppercase tracking-widest">
+      <Text className={`text-[10px] font-semibold text-muted mt-1 ${latinLabel()}`}>
         {label}
       </Text>
     </View>
@@ -96,7 +96,7 @@ function ContactRow({ item, onPress }) {
           <Avatar.Fallback>{initial}</Avatar.Fallback>
         </Avatar>
       )}
-      <View className="flex-1 ml-3">
+      <View className="flex-1 ms-3">
         <Text className="text-sm font-bold text-foreground">{name}</Text>
         <Text className="text-xs text-muted mt-0.5">{company}</Text>
       </View>
@@ -114,7 +114,7 @@ function ContactRow({ item, onPress }) {
 // stands: an invitation before applying, a status card after.
 function ParticipateBanner({ status, role, onPress }) {
   const { t } = useTranslation();
-  const forward = I18nManager.isRTL ? 'arrow-back' : 'arrow-forward';
+  const forward = arrowForwardIcon();
 
   // ── Invitation ──────────────────────────────────────────────────────────
   // Nothing requested yet: this is the dashboard's primary call to action, so
@@ -198,7 +198,7 @@ function ParticipateBanner({ status, role, onPress }) {
         </View>
         <Text className="text-xs text-muted mt-1 leading-5">{t(variant.bodyKey)}</Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color="#9CA3AF" />
+      <Ionicons name={forwardIcon()} size={18} color="#9CA3AF" />
     </Pressable>
   );
 }
@@ -359,7 +359,7 @@ export default function HomeScreen({ navigation }) {
               {unreadCount > 0 && (
                 <View
                   className="absolute bg-danger rounded-full items-center justify-center"
-                  style={{ top: -4, right: -4, minWidth: 18, height: 18, paddingHorizontal: 4 }}
+                  style={{ top: -4, insetInlineEnd: -4, minWidth: 18, height: 18, paddingHorizontal: 4 }}
                 >
                   <Text className="text-[10px] font-extrabold text-danger-foreground">
                     {unreadCount > 9 ? '9+' : unreadCount}
@@ -369,9 +369,9 @@ export default function HomeScreen({ navigation }) {
             </Pressable>
             <Pressable
               onPress={() => navigation.navigate('MyBadge')}
-              className="flex-row items-center bg-surface rounded-xl py-1.5 pl-3 pr-1.5 active:opacity-70"
+              className="flex-row items-center bg-surface rounded-xl py-1.5 ps-3 pe-1.5 active:opacity-70"
               hitSlop={8}
-              style={{ gap: 8, flexShrink: 0, marginLeft: 8 }}
+              style={{ gap: 8, flexShrink: 0, marginStart: 8 }}
             >
               <Text className="text-xs font-bold text-foreground">{role}</Text>
               <View className="w-7 h-7 rounded-lg bg-accent items-center justify-center">
@@ -440,7 +440,7 @@ export default function HomeScreen({ navigation }) {
           {/* ── Countdown ──────────────────────────────── */}
           <Card className="mx-4 mb-4">
             <Card.Body>
-              <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-3">
+              <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
                 {t('home.eventOpening')}
               </Text>
               <View className="flex-row justify-center items-start" style={{ gap: 8 }}>
@@ -515,7 +515,7 @@ export default function HomeScreen({ navigation }) {
                   <Skeleton isLoading variant="shimmer">
                     <View className="w-10 h-10 rounded-full bg-surface-secondary" />
                   </Skeleton>
-                  <View className="flex-1 ml-3" style={{ gap: 8 }}>
+                  <View className="flex-1 ms-3" style={{ gap: 8 }}>
                     <Skeleton isLoading variant="shimmer">
                       <View className="h-3.5 rounded-full bg-surface-secondary" style={{ width: 128 }} />
                     </Skeleton>

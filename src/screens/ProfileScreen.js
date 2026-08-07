@@ -17,6 +17,7 @@ import {
   Dialog,
   ListGroup,
   Separator,
+  Surface,
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
@@ -24,6 +25,15 @@ import { useLanguage } from '../context/LanguageContext';
 import { useTabBarScroll } from '../context/TabBarContext';
 import MenuButton from '../components/MenuButton';
 import { roleLabel } from '../constants/roles';
+import { forwardIcon, latinLabel, ltrValue } from '../utils/rtl';
+import {
+  EVENT_DAYS,
+  SUPPORT_EMAIL,
+  SUPPORT_PHONES,
+  SUPPORT_WEBSITE,
+  VENUE_ADDRESS,
+  dialable,
+} from '../constants/contact';
 
 const THEME_OPTIONS = [
   { mode: 'system', labelKey: 'profile.system', icon: 'phone-portrait-outline' },
@@ -39,12 +49,22 @@ const LANGUAGE_OPTIONS = [
 
 const APP_VERSION = '1.2.0';
 
-const SUPPORT_EMAIL = 'contact@logiterre-expo.com';
-const SUPPORT_PHONE = '+212 5 22 00 00 00';
-const SUPPORT_WEBSITE = 'https://logiterre-expo.com';
+// Formats an event day as "Tuesday 20 October 2026" in the active language.
+function formatEventDay(isoDate, locale) {
+  try {
+    return new Date(`${isoDate}T00:00:00`).toLocaleDateString(locale, {
+      weekday: 'long',
+      day: '2-digit',
+      month: 'long',
+      year: 'numeric',
+    });
+  } catch {
+    return isoDate;
+  }
+}
 
 export default function ProfileScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { scanner, badgeNumber, signOut, participationStatus, isExhibitorStaff, refreshProfile } =
     useAuth();
 
@@ -143,13 +163,13 @@ export default function ProfileScreen() {
               </ListGroup.ItemDescription>
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>
-              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
             </ListGroup.ItemSuffix>
           </ListGroup.Item>
         </ListGroup>
 
         {/* ── Identity Section ─────────────────────── */}
-        <Text className="text-[10px] font-bold text-muted uppercase tracking-widest px-6 mb-2">
+        <Text className={`text-[10px] font-bold text-muted ${latinLabel()} px-6 mb-2`}>
           {t('profile.identity')}
         </Text>
         <ListGroup className="mx-4 mb-6">
@@ -190,13 +210,13 @@ export default function ProfileScreen() {
               </ListGroup.ItemDescription>
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>
-              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
             </ListGroup.ItemSuffix>
           </ListGroup.Item>
         </ListGroup>
 
         {/* ── Apparence ────────────────────────────── */}
-        <Text className="text-[10px] font-bold text-muted uppercase tracking-widest px-6 mb-2">
+        <Text className={`text-[10px] font-bold text-muted ${latinLabel()} px-6 mb-2`}>
           {t('profile.appearance')}
         </Text>
         <ListGroup className="mx-4 mb-6">
@@ -224,7 +244,7 @@ export default function ProfileScreen() {
         </ListGroup>
 
         {/* ── Langue ───────────────────────────────── */}
-        <Text className="text-[10px] font-bold text-muted uppercase tracking-widest px-6 mb-2">
+        <Text className={`text-[10px] font-bold text-muted ${latinLabel()} px-6 mb-2`}>
           {t('profile.language')}
         </Text>
         <ListGroup className="mx-4 mb-6">
@@ -252,7 +272,7 @@ export default function ProfileScreen() {
         </ListGroup>
 
         {/* ── Support Section ──────────────────────── */}
-        <Text className="text-[10px] font-bold text-muted uppercase tracking-widest px-6 mb-2">
+        <Text className={`text-[10px] font-bold text-muted ${latinLabel()} px-6 mb-2`}>
           {t('profile.about')}
         </Text>
         <ListGroup className="mx-4 mb-8">
@@ -264,7 +284,7 @@ export default function ProfileScreen() {
               <ListGroup.ItemTitle>{t('profile.helpSupport')}</ListGroup.ItemTitle>
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>
-              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
             </ListGroup.ItemSuffix>
           </ListGroup.Item>
           <Separator className="mx-4" />
@@ -276,7 +296,7 @@ export default function ProfileScreen() {
               <ListGroup.ItemTitle>{t('profile.legalMentions')}</ListGroup.ItemTitle>
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>
-              <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
+              <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
             </ListGroup.ItemSuffix>
           </ListGroup.Item>
         </ListGroup>
@@ -339,46 +359,89 @@ export default function ProfileScreen() {
               </Dialog.Description>
             </View>
 
-            <ListGroup className="mb-5">
-              <ListGroup.Item onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
-                <ListGroup.ItemPrefix>
-                  <Ionicons name="mail-outline" size={18} color="#286EAD" />
-                </ListGroup.ItemPrefix>
-                <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>{t('profile.supportEmail')}</ListGroup.ItemTitle>
-                  <ListGroup.ItemDescription>{SUPPORT_EMAIL}</ListGroup.ItemDescription>
-                </ListGroup.ItemContent>
-                <ListGroup.ItemSuffix>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-                </ListGroup.ItemSuffix>
-              </ListGroup.Item>
-              <Separator className="mx-4" />
-              <ListGroup.Item onPress={() => Linking.openURL(`tel:${SUPPORT_PHONE.replace(/\s/g, '')}`)}>
-                <ListGroup.ItemPrefix>
-                  <Ionicons name="call-outline" size={18} color="#286EAD" />
-                </ListGroup.ItemPrefix>
-                <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>{t('profile.supportPhone')}</ListGroup.ItemTitle>
-                  <ListGroup.ItemDescription>{SUPPORT_PHONE}</ListGroup.ItemDescription>
-                </ListGroup.ItemContent>
-                <ListGroup.ItemSuffix>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-                </ListGroup.ItemSuffix>
-              </ListGroup.Item>
-              <Separator className="mx-4" />
-              <ListGroup.Item onPress={() => Linking.openURL(SUPPORT_WEBSITE)}>
-                <ListGroup.ItemPrefix>
-                  <Ionicons name="globe-outline" size={18} color="#286EAD" />
-                </ListGroup.ItemPrefix>
-                <ListGroup.ItemContent>
-                  <ListGroup.ItemTitle>{t('profile.supportWebsite')}</ListGroup.ItemTitle>
-                  <ListGroup.ItemDescription>{SUPPORT_WEBSITE.replace('https://', '')}</ListGroup.ItemDescription>
-                </ListGroup.ItemContent>
-                <ListGroup.ItemSuffix>
-                  <Ionicons name="chevron-forward" size={16} color="#9CA3AF" />
-                </ListGroup.ItemSuffix>
-              </ListGroup.Item>
-            </ListGroup>
+            {/* The organiser's full details are long enough to overflow a
+                phone screen, so the dialog body scrolls. */}
+            <ScrollView
+              className="mb-5"
+              style={{ maxHeight: 380 }}
+              showsVerticalScrollIndicator={false}
+            >
+              <ListGroup>
+                <ListGroup.Item onPress={() => Linking.openURL(`mailto:${SUPPORT_EMAIL}`)}>
+                  <ListGroup.ItemPrefix>
+                    <Ionicons name="mail-outline" size={18} color="#286EAD" />
+                  </ListGroup.ItemPrefix>
+                  <ListGroup.ItemContent>
+                    <ListGroup.ItemTitle>{t('profile.supportEmail')}</ListGroup.ItemTitle>
+                    <ListGroup.ItemDescription>{SUPPORT_EMAIL}</ListGroup.ItemDescription>
+                  </ListGroup.ItemContent>
+                  <ListGroup.ItemSuffix>
+                    <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
+                  </ListGroup.ItemSuffix>
+                </ListGroup.Item>
+                {SUPPORT_PHONES.map((phone) => (
+                  <React.Fragment key={phone}>
+                    <Separator className="mx-4" />
+                    <ListGroup.Item onPress={() => Linking.openURL(`tel:${dialable(phone)}`)}>
+                      <ListGroup.ItemPrefix>
+                        <Ionicons name="call-outline" size={18} color="#286EAD" />
+                      </ListGroup.ItemPrefix>
+                      <ListGroup.ItemContent>
+                        <ListGroup.ItemTitle>{t('profile.supportPhone')}</ListGroup.ItemTitle>
+                        <ListGroup.ItemDescription style={ltrValue()}>{phone}</ListGroup.ItemDescription>
+                      </ListGroup.ItemContent>
+                      <ListGroup.ItemSuffix>
+                        <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
+                      </ListGroup.ItemSuffix>
+                    </ListGroup.Item>
+                  </React.Fragment>
+                ))}
+                <Separator className="mx-4" />
+                <ListGroup.Item onPress={() => Linking.openURL(SUPPORT_WEBSITE)}>
+                  <ListGroup.ItemPrefix>
+                    <Ionicons name="globe-outline" size={18} color="#286EAD" />
+                  </ListGroup.ItemPrefix>
+                  <ListGroup.ItemContent>
+                    <ListGroup.ItemTitle>{t('profile.supportWebsite')}</ListGroup.ItemTitle>
+                    <ListGroup.ItemDescription>{SUPPORT_WEBSITE.replace('https://', '')}</ListGroup.ItemDescription>
+                  </ListGroup.ItemContent>
+                  <ListGroup.ItemSuffix>
+                    <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
+                  </ListGroup.ItemSuffix>
+                </ListGroup.Item>
+              </ListGroup>
+
+              {/* ── Venue ──────────────────────────── */}
+              <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mt-5 mb-2`}>
+                {t('profile.supportAddress')}
+              </Text>
+              <Surface className="rounded-2xl p-4">
+                <View className="flex-row" style={{ gap: 10 }}>
+                  <Ionicons name="location-outline" size={18} color="#286EAD" />
+                  <Text className="flex-1 text-sm text-foreground leading-6" style={ltrValue()}>
+                    {VENUE_ADDRESS}
+                  </Text>
+                </View>
+              </Surface>
+
+              {/* ── Opening hours ──────────────────── */}
+              <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mt-5 mb-2`}>
+                {t('profile.supportHours')}
+              </Text>
+              <Surface className="rounded-2xl p-4" style={{ gap: 10 }}>
+                {EVENT_DAYS.map((day) => (
+                  <View key={day.date} className="flex-row items-center" style={{ gap: 10 }}>
+                    <Ionicons name="calendar-outline" size={16} color="#286EAD" />
+                    <View className="flex-1">
+                      <Text className="text-sm font-bold text-foreground">
+                        {formatEventDay(day.date, i18n.language)}
+                      </Text>
+                      <Text className="text-xs text-muted mt-0.5" style={ltrValue()}>{day.hours}</Text>
+                    </View>
+                  </View>
+                ))}
+              </Surface>
+            </ScrollView>
 
             <View className="flex-row justify-end">
               <Button variant="tertiary" size="sm" onPress={() => setSupportOpen(false)}>

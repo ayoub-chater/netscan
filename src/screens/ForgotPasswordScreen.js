@@ -22,6 +22,7 @@ import {
   TextField,
 } from 'heroui-native';
 import { sendPasswordResetCode, resetPasswordWithCode } from '../services/api';
+import { backIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -109,7 +110,7 @@ export default function ForgotPasswordScreen({ navigation }) {
               className="w-10 h-10 rounded-xl bg-surface items-center justify-center"
               hitSlop={8}
             >
-              <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+              <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
             </Pressable>
           </View>
 
@@ -203,13 +204,13 @@ export default function ForgotPasswordScreen({ navigation }) {
                         <Input
                           value={password}
                           onChangeText={(v) => { setPassword(v); setErrorMsg(null); }}
-                          className="flex-1 pr-11"
+                          className="flex-1 pe-11"
                           placeholder={t('register.passwordPlaceholder')}
                           secureTextEntry={!passwordVisible}
                           editable={!loading}
                         />
                         <Pressable
-                          className="absolute right-3.5 p-1"
+                          className="absolute end-3.5 p-1"
                           onPress={() => setPasswordVisible((v) => !v)}
                           hitSlop={8}
                         >

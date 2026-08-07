@@ -1,21 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useIsFocused } from '@react-navigation/native';
 
 // Long enough for the close animation to finish before the tree goes away.
 const UNMOUNT_DELAY = 300;
 
 // `BottomSheet.Portal` publishes its children from an effect, so the gorhom
-// instance behind `ref` appears a commit or two after we mount the tree. Retry
-// the imperative open across that window; snapping to an index the sheet is
-// already at is a no-op, so extra attempts cost nothing.
-const OPEN_RETRIES = [0, 50, 150, 300];
-
-// Nothing to force on `BottomSheet.Content` any more — kept so call sites can
-// keep spreading it, and so gesture props have one place to live if they are
-// ever needed again. They must never depend on `isOpen`: changing
-// `enableContentPanningGesture` makes gorhom swap the wrapper around the
-// content, which remounts the whole sheet mid-open and strands it closed.
-const SHEET_CONTENT_PROPS = {};
+// instance behind `ref` appears a commit or two after we mount the tree — and
+// `expand()` does nothing until it has measured its container. How long that
+// takes is not bounded: the press handlers that open these sheets also kick off
+// network requests, so the JS thread can be busy right through it. Retry on an
+// interval and stop on the sheet's own `onChange`, rather than guessing a
+// deadline — guessing is what made sheets need two or three taps.
+const OPEN_RETRY_INTERVAL = 80;
+const OPEN_RETRY_TIMEOUT = 4000;
 
 /**
  * Owns the lifecycle of a heroui `BottomSheet`.
@@ -66,9 +63,14 @@ export default function useSheetGuard(open, onClose) {
   // position state may have drifted, which is what left sheets refusing to
   // open a second time.
   const [cycle, setCycle] = useState(0);
+  // Set once the sheet reports a real snap point for this cycle. Retrying stops
+  // there, so a swipe-down straight after opening can't be undone by a pending
+  // retry re-expanding the sheet.
+  const settledRef = useRef(false);
 
   useEffect(() => {
     if (shouldBeOpen) {
+      settledRef.current = false;
       setCycle((c) => c + 1);
       setMounted(true);
       return undefined;
@@ -79,14 +81,35 @@ export default function useSheetGuard(open, onClose) {
   }, [shouldBeOpen]);
 
   useEffect(() => {
-    if (!mounted || !shouldBeOpen) return undefined;
+    if (!mounted || !shouldBeOpen || settledRef.current) return undefined;
     // `expand()` goes to the highest snap point, so a sheet can never settle
-    // half-open the way an index-based snap can.
-    const timers = OPEN_RETRIES.map((delay) =>
-      setTimeout(() => ref.current?.expand(), delay)
-    );
-    return () => timers.forEach(clearTimeout);
+    // half-open the way an index-based snap can. It is a no-op until the sheet
+    // has measured itself, and a no-op once it is already there — so keep
+    // asking until it takes.
+    let interval = null;
+    const attempt = () => {
+      if (settledRef.current) {
+        if (interval !== null) clearInterval(interval);
+        return;
+      }
+      ref.current?.expand();
+    };
+    attempt();
+    interval = setInterval(attempt, OPEN_RETRY_INTERVAL);
+    const giveUp = setTimeout(() => clearInterval(interval), OPEN_RETRY_TIMEOUT);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(giveUp);
+    };
   }, [mounted, shouldBeOpen, cycle]);
+
+  // gorhom reports every settled position here. Index 0 or above means the
+  // sheet is genuinely open and the retry loop above has done its job.
+  const handleChange = useCallback((index) => {
+    if (index >= 0) settledRef.current = true;
+  }, []);
+
+  const contentProps = useMemo(() => ({ onChange: handleChange }), [handleChange]);
 
   // Blur force-closes the sheet above; tell the caller so the state driving
   // `open` matches reality instead of still claiming the sheet is open when the
@@ -106,6 +129,10 @@ export default function useSheetGuard(open, onClose) {
     isOpen: shouldBeOpen,
     close,
     key: cycle,
-    contentProps: SHEET_CONTENT_PROPS,
+    // Carries gorhom's `onChange` so the retry loop knows when to stop. Must be
+    // spread onto `BottomSheet.Content`. Never put anything here that depends on
+    // `isOpen`: changing `enableContentPanningGesture`, for one, makes gorhom
+    // swap the wrapper around the content and remounts the sheet mid-open.
+    contentProps,
   };
 }

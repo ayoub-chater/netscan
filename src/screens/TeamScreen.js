@@ -20,7 +20,6 @@ import {
   Chip,
   Input,
   Label,
-  SearchField,
   Separator,
   Skeleton,
   Surface,
@@ -30,6 +29,8 @@ import {
 import { getTeam, addTeamMember, deleteTeamMember, updateTeamMember } from '../services/api';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
+import SearchBar from '../components/SearchBar';
+import { backIcon, latinLabel } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -309,7 +310,7 @@ export default function TeamScreen({ navigation }) {
             className="w-10 h-10 rounded-xl bg-surface items-center justify-center"
             hitSlop={8}
           >
-            <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+            <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
           </Pressable>
           <View className="flex-1">
             <Text className="text-xl font-extrabold text-foreground">{t('team.title')}</Text>
@@ -330,18 +331,12 @@ export default function TeamScreen({ navigation }) {
         </View>
 
         {/* Search */}
-        <SearchField value={search} onChange={onSearchChange}>
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder={t('team.searchPlaceholder')} />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
+        <SearchBar value={search} onChange={onSearchChange} placeholder={t('team.searchPlaceholder')} />
       </View>
 
       {/* Count */}
       <View className="px-8 pb-2">
-        <Text className="text-[10px] font-bold text-muted uppercase tracking-widest">
+        <Text className={`text-[10px] font-bold text-muted ${latinLabel()}`}>
           {t('team.count', { count: members.length })}
         </Text>
       </View>

@@ -1,3 +1,5 @@
+import i18n from '../i18n';
+
 // Participation types as the back office stores them, and how the app shows
 // and orders them. The stored names never change — only their labels — so
 // badges, B2B matching and the API keep working untouched.
@@ -18,15 +20,44 @@ export function roleKey(name) {
     .trim();
 }
 
-// Display-name overrides, for when the back office stores a name that doesn't
-// read right to a participant. "Partenaire" is a role of its own now (see the
-// `add_partenaire_participation_role` backend migration), so the organising
-// committee keeps its own name and nothing is renamed here today.
-const LABELS = {};
+// Role names are typed by the organiser and stored in French, and every
+// payload carrying a role sends that stored name — the logged-in user's own
+// role, a scanned badge, the networking history, a participation request. The
+// backend serves their fr/en/ar wording once
+// (GET /participation/role-labels, keyed by `roleKey`), and this registry
+// holds it for the whole app so any of those strings can be shown in the
+// reader's language.
+//
+// Kept as a module-level map on purpose: `roleLabel` is called from render
+// bodies all over the app, not through a hook. `AuthContext` loads the map
+// (from its cache first, then the network) and re-renders the tree once it
+// changes, so the callers do not each need to subscribe.
+let TRANSLATIONS = {};
 
-export function roleLabel(name) {
+export function setRoleTranslations(labels) {
+  TRANSLATIONS = labels && typeof labels === 'object' ? labels : {};
+}
+
+export function getRoleTranslations() {
+  return TRANSLATIONS;
+}
+
+// Merge one role's translations in, without dropping the rest — used by the
+// "Participer" picker, whose own payload already carries them.
+export function addRoleTranslations(labels) {
+  if (!labels || typeof labels !== 'object') return;
+  TRANSLATIONS = { ...TRANSLATIONS, ...labels };
+}
+
+export function roleLabel(name, language) {
   if (!name) return name;
-  return LABELS[roleKey(name)] || name;
+  const entry = TRANSLATIONS[roleKey(name)];
+  if (!entry) return name;
+  // `i18n.language` can carry a region ("en-US"); the map is keyed by the
+  // bare language, which is what SUPPORTED_LANGUAGES lists.
+  const lang = (language || i18n.language || '').split('-')[0];
+  const label = entry[lang];
+  return typeof label === 'string' && label.trim() ? label : name;
 }
 
 // Order the organiser asked for. Anything the back office adds later that is

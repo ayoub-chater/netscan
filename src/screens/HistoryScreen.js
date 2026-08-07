@@ -18,7 +18,6 @@ import {
   Avatar,
   Chip,
   ListGroup,
-  SearchField,
   Separator,
   Skeleton,
 } from 'heroui-native';
@@ -27,7 +26,9 @@ import { useTabBar, useTabBarScroll } from '../context/TabBarContext';
 import { networkingHistory, deleteNetworkingRecord } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
 import MenuButton from '../components/MenuButton';
+import SearchBar from '../components/SearchBar';
 import { roleLabel } from '../constants/roles';
+import { backIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -120,7 +121,7 @@ export default function HistoryScreen() {
           className="w-10 h-10 rounded-xl bg-surface items-center justify-center active:opacity-70"
           hitSlop={8}
         >
-          <StyledIonicons name="chevron-back" size={22} className="text-foreground" />
+          <StyledIonicons name={backIcon()} size={22} className="text-foreground" />
         </Pressable>
         <Text className="flex-1 text-2xl font-extrabold text-foreground">{t('history.title')}</Text>
         {history.length > 0 && (
@@ -133,13 +134,7 @@ export default function HistoryScreen() {
 
       {/* ── Search ─────────────────────────────────── */}
       <View className="px-4 mb-4">
-        <SearchField value={query} onChange={setQuery}>
-          <SearchField.Group>
-            <SearchField.SearchIcon />
-            <SearchField.Input placeholder={t('history.searchPlaceholder')} />
-            <SearchField.ClearButton />
-          </SearchField.Group>
-        </SearchField>
+        <SearchBar value={query} onChange={setQuery} placeholder={t('history.searchPlaceholder')} />
       </View>
 
       {/* ── List ───────────────────────────────────── */}
@@ -160,7 +155,7 @@ export default function HistoryScreen() {
               <Skeleton isLoading variant="shimmer">
                 <View className="w-10 h-10 rounded-full bg-surface-secondary" />
               </Skeleton>
-              <View className="flex-1 ml-3" style={{ gap: 8 }}>
+              <View className="flex-1 ms-3" style={{ gap: 8 }}>
                 <Skeleton isLoading variant="shimmer">
                   <View
                     className="h-3.5 rounded-full bg-surface-secondary"

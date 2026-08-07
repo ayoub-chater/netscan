@@ -5,7 +5,6 @@ import {
   Pressable,
   ScrollView,
   Image,
-  I18nManager,
   BackHandler,
   useWindowDimensions,
   StyleSheet,
@@ -30,10 +29,9 @@ import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
 import { navigationRef, navigateFromRoot } from '../navigation/navigationRef';
 import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
 import { EVENT_WEBSITE_URL } from '../constants/api';
+import { forwardIcon, isRTL, latinLabel } from '../utils/rtl';
 
 const ACCENT = '#286EAD';
-// Hoisted out of the worklets below — native modules can't be read on the UI thread.
-const RTL = I18nManager.isRTL;
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 // Each entry reuses the icon the destination already uses elsewhere in the app
@@ -56,8 +54,9 @@ const ITEMS = [
   { key: 'settings', icon: 'person', route: 'Détails' },
 ];
 
-function MenuRow({ item, index, progress, onPress, badge }) {
+function MenuRow({ item, index, progress, onPress, badge, isActive }) {
   const { t } = useTranslation();
+  const rtl = isRTL();
 
   // Rows cascade out of the corner as the panel opens, and fold back on close.
   const style = useAnimatedStyle(() => {
@@ -67,19 +66,22 @@ function MenuRow({ item, index, progress, onPress, badge }) {
     return {
       opacity: p,
       transform: [
-        { translateX: interpolate(p, [0, 1], [RTL ? 22 : -22, 0]) },
+        { translateX: interpolate(p, [0, 1], [rtl ? 22 : -22, 0]) },
         { translateY: interpolate(p, [0, 1], [10, 0]) },
       ],
     };
-  });
+  }, [rtl]);
 
   return (
     <Animated.View style={style}>
       <Pressable
         onPress={onPress}
+        accessibilityRole="button"
+        // Screen readers announce the current page rather than relying on colour.
+        accessibilityState={{ selected: isActive }}
         className={[
           'flex-row items-center rounded-2xl px-3 py-3 active:opacity-60',
-          item.highlight ? 'bg-accent-soft' : '',
+          isActive || item.highlight ? 'bg-accent-soft' : '',
         ].join(' ')}
         style={{ gap: 14 }}
         android_ripple={{ color: 'rgba(40,110,173,0.12)' }}
@@ -87,14 +89,20 @@ function MenuRow({ item, index, progress, onPress, badge }) {
         <View
           className={[
             'w-11 h-11 rounded-2xl items-center justify-center',
-            item.highlight ? 'bg-accent' : 'bg-accent-soft',
+            isActive || item.highlight ? 'bg-accent' : 'bg-accent-soft',
           ].join(' ')}
         >
-          <Ionicons name={item.icon} size={20} color={item.highlight ? '#FFFFFF' : ACCENT} />
+          <Ionicons
+            name={item.icon}
+            size={20}
+            color={isActive || item.highlight ? '#FFFFFF' : ACCENT}
+          />
         </View>
         <View className="flex-1">
           <View className="flex-row items-center" style={{ gap: 6 }}>
-            <Text className="text-[15px] font-bold text-foreground">
+            <Text
+              className={`text-[15px] font-bold ${isActive ? 'text-accent' : 'text-foreground'}`}
+            >
               {t(`menu.${item.key}`)}
             </Text>
             {badge ? (
@@ -107,11 +115,13 @@ function MenuRow({ item, index, progress, onPress, badge }) {
             {t(`menu.${item.key}Desc`)}
           </Text>
         </View>
-        <Ionicons
-          name={I18nManager.isRTL ? 'chevron-back' : 'chevron-forward'}
-          size={16}
-          color="#9CA3AF"
-        />
+        {/* A chevron promises navigation; you are already here, so it becomes a
+            dot instead. */}
+        {isActive ? (
+          <View className="w-2 h-2 rounded-full bg-accent" />
+        ) : (
+          <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
+        )}
       </Pressable>
     </Animated.View>
   );
@@ -138,7 +148,7 @@ function ThemeSwitch({ progress }) {
 
   return (
     <Animated.View style={style} className="px-4 pt-3 pb-4">
-      <Text className="text-[10px] font-bold text-muted uppercase tracking-widest mb-2">
+      <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-2`}>
         {t('profile.appearance')}
       </Text>
       <View className="flex-row bg-surface rounded-2xl p-1 border border-separator" style={{ gap: 4 }}>
@@ -185,6 +195,17 @@ export default function AppMenu({ visible, onClose }) {
   // Keep the panel mounted through the closing animation.
   const [mounted, setMounted] = useState(visible);
   const progress = useSharedValue(0);
+
+  // Which entry is the page behind the panel? This component sits above the
+  // NavigationContainer (so it can draw over the floating tab bar from any
+  // screen), which puts it outside navigation context — hence the ref rather
+  // than `useNavigationState`. Captured when the menu opens: the route can't
+  // change while it is up, and navigating closes it.
+  const [activeRoute, setActiveRoute] = useState(null);
+  useEffect(() => {
+    if (!visible) return;
+    setActiveRoute(navigationRef.isReady() ? navigationRef.getCurrentRoute()?.name ?? null : null);
+  }, [visible]);
 
   // `onClose` is passed as an inline arrow from the host screen, so its
   // identity churns on every parent re-render (e.g. HomeScreen's 1s countdown
@@ -293,10 +314,17 @@ export default function AppMenu({ visible, onClose }) {
       ? { label: t('participate.badgeRejected'), color: 'danger' }
       : null;
 
+  const rtl = isRTL();
   const panelWidth = Math.min(width - 32, 340);
-  const anchorSide = RTL ? { right: 16 } : { left: 16 };
+  // Logical edge, not a branch on `rtl`: the panel hangs off the same corner
+  // as the hamburger, which is the header's start. Picking `right` by hand in
+  // RTL was flipping twice on Android, where the surface swap rewrites a
+  // physical `right` to `end` and landed the panel on the opposite corner
+  // from iOS. `transformOrigin` below still needs the branch — transforms are
+  // never mirrored.
+  const anchorSide = { insetInlineStart: 16 };
   // Centre the halo on the hamburger button itself so the burst starts at the corner.
-  const haloAnchor = RTL ? { right: -44 } : { left: -44 };
+  const haloAnchor = { insetInlineStart: -44 };
 
   const go = (item) => {
     onClose();
@@ -318,7 +346,7 @@ export default function AppMenu({ visible, onClose }) {
     return {
       opacity: interpolate(p, [0, 0.35, 1], [0, 1, 1], Extrapolation.CLAMP),
       transform: [
-        { translateX: interpolate(p, [0, 1], [RTL ? 34 : -34, 0]) },
+        { translateX: interpolate(p, [0, 1], [rtl ? 34 : -34, 0]) },
         { translateY: interpolate(p, [0, 1], [-34, 0]) },
         { scale: interpolate(p, [0, 1], [0.55, 1]) },
       ],
@@ -368,7 +396,7 @@ export default function AppMenu({ visible, onClose }) {
             top: insets.top + 8,
             width: panelWidth,
             maxHeight: height - insets.top - insets.bottom - 48,
-            transformOrigin: RTL ? 'top right' : 'top left',
+            transformOrigin: rtl ? 'top right' : 'top left',
           },
           panelStyle,
         ]}
@@ -423,7 +451,7 @@ export default function AppMenu({ visible, onClose }) {
 
         <View className="mx-4 border-b border-separator" />
 
-        <Text className="text-[10px] font-bold text-muted uppercase tracking-widest px-5 pt-4 pb-1">
+        <Text className={`text-[10px] font-bold text-muted ${latinLabel()} px-5 pt-4 pb-1`}>
           {t('menu.title')}
         </Text>
 
@@ -440,6 +468,8 @@ export default function AppMenu({ visible, onClose }) {
               index={index}
               progress={progress}
               badge={item.key === 'participate' ? participateBadge : null}
+              // `event` opens the browser, so it is never the current page.
+              isActive={!!item.route && item.route === activeRoute}
               onPress={() => go(item)}
             />
           ))}
