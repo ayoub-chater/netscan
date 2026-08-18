@@ -49,12 +49,27 @@
     "resetButton": "Réinitialiser le mot de passe",
     "resetting": "Réinitialisation...",
     "resendCode": "Renvoyer le code",
+    "resendIn": "Renvoyer le code dans {{seconds}} s",
     "backToLogin": "Retour à la connexion",
     "errorEmailRequired": "Veuillez saisir votre email.",
     "errorCodeRequired": "Veuillez saisir le code reçu par email.",
+    "errorCodeLocked": "Trop de tentatives. Ce code a été annulé — demandez-en un nouveau.",
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
     "successTitle": "Mot de passe réinitialisé",
     "successBody": "Votre mot de passe a été mis à jour. Vous pouvez maintenant vous connecter."
+  },
+  "claimAccount": {
+    "title": "Activez votre compte",
+    "introBody": "Vous êtes déjà inscrit(e) avec cette adresse e-mail. Pour accéder à l'application, nous devons vérifier que cette boîte mail est bien la vôtre.",
+    "sendCode": "Recevoir le code de vérification",
+    "codeSentBody": "Un code à 6 chiffres a été envoyé à votre adresse e-mail. Saisissez-le, puis choisissez votre mot de passe.",
+    "codeResent": "Un nouveau code vous a été envoyé.",
+    "password": "Choisissez votre mot de passe",
+    "activate": "Activer mon compte",
+    "activating": "Activation...",
+    "keepsDataHint": "Votre inscription, votre badge et vos informations sont conservés.",
+    "errorGeneric": "Impossible d'activer votre compte. Veuillez réessayer.",
+    "errorAlreadyActivated": "Ce compte a déjà été activé. Connectez-vous avec votre mot de passe."
   },
   "register": {
     "haveAccount": "Déjà un compte ?",
@@ -90,6 +105,8 @@
     "errorPasswordTooShort": "Le mot de passe doit contenir au moins 8 caractères.",
     "close": "Fermer",
     "errorGeneric": "Erreur lors de l'inscription.",
+    "errorAccountExists": "Un compte existe déjà avec cette adresse e-mail. Connectez-vous, ou utilisez « Mot de passe oublié ? ».",
+    "accountExistsNotice": "Cette adresse e-mail est déjà inscrite. Vérifiez votre boîte mail avec le code ci-dessous pour définir votre mot de passe et vous connecter.",
     "speakerInfo": "Informations intervenant",
     "jobTitle": "Fonction",
     "jobTitlePlaceholder": "ex. PDG, Directeur logistique",
@@ -274,7 +291,10 @@
     "removeError": "Impossible de supprimer ce membre.",
     "errorRequired": "Le nom et l'email sont obligatoires.",
     "errorAdd": "Erreur lors de l'ajout.",
-    "errorEdit": "Erreur lors de la modification."
+    "errorEdit": "Erreur lors de la modification.",
+    "errorAlreadyInTeam": "Cette personne fait déjà partie de votre équipe.",
+    "errorEmailTaken": "Cette adresse e-mail appartient déjà à une autre organisation de l'événement. Contactez l'organisateur.",
+    "errorParticipantRole": "Cette personne est déjà inscrite avec son propre rôle. Contactez l'organisateur pour la rattacher à votre stand."
   },
   "plan": {
     "title": "Plan du salon",
@@ -592,5 +612,19 @@
     "staffBody": "Vous faites partie de l'équipe de cette organisation, qui vous a ajouté à son stand. Votre accès suit celui de votre organisation — aucune demande de participation n'est nécessaire.",
     "vipTitle": "Accès complet",
     "vipBody": "Vous êtes enregistré comme participant : toutes les fonctionnalités sont déjà débloquées, aucune demande n’est nécessaire."
+  },
+  "sessions": {
+    "title": "Appareils connectés",
+    "subtitle": "Voir et déconnecter mes appareils",
+    "intro": "Chaque appareil connecté à votre compte apparaît ici. Si vous ne reconnaissez pas un appareil, déconnectez-le : il devra saisir votre mot de passe pour revenir.",
+    "current": "Cet appareil",
+    "unknownDevice": "Appareil inconnu",
+    "lastUsed": "Dernière activité",
+    "expires": "Expire le",
+    "revoke": "Déconnecter cet appareil",
+    "revokeOthers": "Déconnecter tous les autres appareils ({{count}})",
+    "empty": "Aucune session active.",
+    "errorLoad": "Impossible de charger vos appareils.",
+    "errorRevoke": "Impossible de déconnecter cet appareil."
   }
 }

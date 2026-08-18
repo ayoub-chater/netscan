@@ -30,6 +30,7 @@ import { navigationRef } from './src/navigation/navigationRef';
 import LoginScreen from './src/screens/LoginScreen';
 import RegisterScreen from './src/screens/RegisterScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
+import ClaimAccountScreen from './src/screens/ClaimAccountScreen';
 import TeamScreen from './src/screens/TeamScreen';
 import HomeScreen from './src/screens/HomeScreen';
 import ScannerScreen from './src/screens/ScannerScreen';
@@ -42,6 +43,7 @@ import HistoryScreen from './src/screens/HistoryScreen';
 import TermsScreen from './src/screens/TermsScreen';
 import MyBadgeScreen from './src/screens/MyBadgeScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
+import SessionsScreen from './src/screens/SessionsScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ConferenceScreen from './src/screens/ConferenceScreen';
 import ProgrammeScreen from './src/screens/ProgrammeScreen';
@@ -64,6 +66,7 @@ const MyBadge = withPageTransition(MyBadgeScreen);
 const Team = withPageTransition(TeamScreen);
 const Terms = withPageTransition(TermsScreen);
 const EditProfile = withPageTransition(EditProfileScreen);
+const Sessions = withPageTransition(SessionsScreen);
 const NotificationsHistory = withPageTransition(NotificationsScreen);
 const Conference = withPageTransition(ConferenceScreen);
 const Programme = withPageTransition(ProgrammeScreen);
@@ -72,6 +75,7 @@ const B2BAgenda = withPageTransition(B2BAgendaScreen);
 const Login = withPageTransition(LoginScreen);
 const Register = withPageTransition(RegisterScreen);
 const ForgotPassword = withPageTransition(ForgotPasswordScreen);
+const ClaimAccount = withPageTransition(ClaimAccountScreen);
 
 function MainTabs() {
   return (
@@ -167,6 +171,7 @@ function NavigationRoot() {
               <Stack.Screen name="Login" component={Login} />
               <Stack.Screen name="Register" component={Register} />
               <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
+              <Stack.Screen name="ClaimAccount" component={ClaimAccount} />
             </>
           ) : (
             <>
@@ -176,6 +181,7 @@ function NavigationRoot() {
               <Stack.Screen name="Terms" component={Terms} />
               <Stack.Screen name="MyBadge" component={MyBadge} />
               <Stack.Screen name="EditProfile" component={EditProfile} />
+              <Stack.Screen name="Sessions" component={Sessions} />
               <Stack.Screen name="Notifications" component={NotificationsHistory} />
               <Stack.Screen name="Conference" component={Conference} />
               <Stack.Screen name="Programme" component={Programme} />
@@ -192,7 +198,9 @@ function NavigationRoot() {
 
 function ThemedStatusBar() {
   const { isDark } = useTheme();
-  return <StatusBar style={isDark ? 'light' : 'dark'} translucent backgroundColor="transparent" />;
+  // No translucent/backgroundColor: those call APIs Android 15 deprecated under
+  // edge-to-edge, which is already on for the whole app.
+  return <StatusBar style={isDark ? 'light' : 'dark'} />;
 }
 
 export default function App() {

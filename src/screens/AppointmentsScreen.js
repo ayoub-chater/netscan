@@ -40,8 +40,8 @@ import { useTabBarScroll } from '../context/TabBarContext';
 import { MEETING_LOCATION } from '../constants/b2b';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
-import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
 import { forwardIcon, latinLabel } from '../utils/rtl';
+import { apiErrorMessage } from '../utils/apiError';
 
 const ACCENT = '#286EAD';
 
@@ -270,7 +270,7 @@ export default function AppointmentsScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   // B2B is peer-to-peer between approved participants — a plain visitor can
   // neither book nor be booked, and is sent to "Participer" instead.
-  const { isParticipant, participationStatus, participationRole, b2bPendingCount, refreshProfile } =
+  const { isParticipant, b2bPendingCount, refreshProfile } =
     useAuth();
 
   const [tab, setTab] = useState('contacts'); // 'contacts' | 'mine'
@@ -298,11 +298,6 @@ export default function AppointmentsScreen({ navigation }) {
     // Also re-reads `b2b_pending_count`, so the dot on the agenda button and
     // the tab bar reflects requests that arrived since the last visit.
     refreshProfile();
-    if (!isParticipant) {
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
     try {
       const [pRes, aRes] = await Promise.allSettled([getPersonas(), getMyAppointments()]);
       if (pRes.status === 'fulfilled') setPersonas(pRes.value?.data?.data || []);
@@ -316,10 +311,6 @@ export default function AppointmentsScreen({ navigation }) {
     }
   };
 
-  // `isParticipant` is a dependency on purpose: `load` short-circuits for
-  // non-participants, so an account approved while the app was open must
-  // rebuild the callback — otherwise focusing the tab keeps running the stale
-  // "not a participant" version and the directory stays empty.
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
@@ -408,7 +399,7 @@ export default function AppointmentsScreen({ navigation }) {
           ? t('appointments.alreadyBooked')
           : code === 'SPEAKER_UNAVAILABLE'
           ? t('appointments.speakerUnavailableMsg')
-          : e?.response?.data?.message || t('appointments.bookError');
+          : apiErrorMessage(e, t('appointments.bookError'));
       Alert.alert(t('common.error'), msg);
       // Refresh slots if the chosen one was taken.
       if (code === 'SLOT_TAKEN' && activePersona) fetchSlots(activePersona.slug, selectedDate);
@@ -439,59 +430,6 @@ export default function AppointmentsScreen({ navigation }) {
     );
   };
 
-  // Locked for anyone who isn't an approved participant yet: plain visitors,
-  // pending requests, and refused ones all land here with a way forward.
-  if (!isParticipant) {
-    const pending = participationStatus === 'pending';
-    return (
-      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
-        <View className="px-4 pt-5 pb-4 flex-row items-center" style={{ gap: 12 }}>
-          <MenuButton />
-          <View className="flex-1">
-            <Text className="text-2xl font-extrabold text-foreground">{t('b2b.title')}</Text>
-            <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
-          </View>
-        </View>
-        <View className="flex-1 items-center justify-center px-8">
-          <View
-            className={`w-20 h-20 rounded-full items-center justify-center mb-6 ${
-              pending ? 'bg-warning-soft' : 'bg-accent-soft'
-            }`}
-          >
-            <Ionicons
-              name={pending ? 'time-outline' : 'lock-closed-outline'}
-              size={40}
-              color={pending ? '#F59E0B' : ACCENT}
-            />
-          </View>
-          <Text className="text-xl font-extrabold text-foreground text-center mb-3">
-            {pending ? t('b2b.lockedPendingTitle') : t('b2b.lockedTitle')}
-          </Text>
-          <Text className="text-sm text-muted text-center leading-6 mb-8">
-            {pending
-              ? t('b2b.lockedPendingBody', { role: roleLabel(participationRole) || '' })
-              : t('b2b.lockedBody')}
-          </Text>
-          <Button
-            variant={pending ? 'secondary' : 'primary'}
-            size="lg"
-            className="rounded-2xl"
-            onPress={() => navigation.navigate('Participate')}
-          >
-            <Ionicons
-              name={pending ? 'refresh-outline' : PARTICIPATE_ICON}
-              size={18}
-              color={pending ? ACCENT : '#FFFFFF'}
-            />
-            <Button.Label>
-              {pending ? t('b2b.lockedPendingCta') : t('b2b.lockedCta')}
-            </Button.Label>
-          </Button>
-        </View>
-      </View>
-    );
-  }
-
   const mineData = [...upcoming, ...past];
 
   return (
@@ -504,8 +442,10 @@ export default function AppointmentsScreen({ navigation }) {
           <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
         </View>
         {/* The other side of B2B: my own availability + the requests I received.
-            The dot mirrors the one on the tab bar so an unanswered request is
-            visible at both steps of the path to the agenda. */}
+            Participants only — a visitor attends meetings, they don't hold an
+            agenda people can book into. The dot mirrors the one on the tab bar
+            so an unanswered request is visible at both steps of the path. */}
+        {isParticipant && (
         <Pressable
           onPress={() => navigation.navigate('B2BAgenda')}
           hitSlop={8}
@@ -527,6 +467,7 @@ export default function AppointmentsScreen({ navigation }) {
             </View>
           )}
         </Pressable>
+        )}
       </View>
 
       {/* ── Segmented control ──────────────────────── */}

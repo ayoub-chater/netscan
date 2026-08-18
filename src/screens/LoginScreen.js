@@ -26,6 +26,7 @@ import {
   useThemeColor,
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
+import { apiErrorMessage } from '../utils/apiError';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -40,6 +41,8 @@ export default function LoginScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  // Off: the session dies after 8h. On: 30 days. The server owns both
+  // deadlines — the token itself expires, not just the local copy.
   const [rememberMe, setRememberMe] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
 
@@ -60,12 +63,16 @@ export default function LoginScreen({ navigation }) {
     setLoading(true);
     setErrorMsg(null);
     try {
-      await signIn(email.trim(), password);
+      await signIn(email.trim(), password, rememberMe);
     } catch (e) {
-      const msg =
-        e?.response?.data?.message ||
-        t('login.errorInvalidCredentials');
-      setErrorMsg(msg);
+      // Already registered from the event website / by the organiser, but no
+      // password was ever set: "wrong credentials" would be a dead end, so
+      // send them to activate their access instead.
+      if (e?.response?.data?.code === 'ACCOUNT_CLAIMABLE') {
+        navigation.navigate('ClaimAccount', { email: email.trim() });
+        return;
+      }
+      setErrorMsg(apiErrorMessage(e, t('login.errorInvalidCredentials')));
     } finally {
       setLoading(false);
     }

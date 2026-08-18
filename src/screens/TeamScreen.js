@@ -31,6 +31,7 @@ import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
 import SearchBar from '../components/SearchBar';
 import { backIcon, latinLabel } from '../utils/rtl';
+import { apiErrorMessage } from '../utils/apiError';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -258,13 +259,16 @@ export default function TeamScreen({ navigation }) {
       handleAdded(res.data.data);
       closeAdd();
     } catch (e) {
-      const msg =
-        e?.response?.data?.message ||
-        (e?.response?.data?.errors
-          ? Object.values(e.response.data.errors)[0][0]
-          : null) ||
-        t('team.errorAdd');
-      setAddError(msg);
+      // The backend answers with a code when the address is already registered
+      // for the event, so the reason is translatable instead of a bare
+      // "erreur lors de l'ajout".
+      const code = e?.response?.data?.code;
+      const known = {
+        ALREADY_IN_TEAM: 'team.errorAlreadyInTeam',
+        EMAIL_TAKEN: 'team.errorEmailTaken',
+        PARTICIPANT_ROLE: 'team.errorParticipantRole',
+      }[code];
+      setAddError(known ? t(known) : apiErrorMessage(e, t('team.errorAdd')));
     } finally {
       setAddLoading(false);
     }
@@ -287,13 +291,11 @@ export default function TeamScreen({ navigation }) {
       handleUpdated(res.data.data);
       closeEdit();
     } catch (e) {
-      const msg =
-        e?.response?.data?.message ||
-        (e?.response?.data?.errors
-          ? Object.values(e.response.data.errors)[0][0]
-          : null) ||
-        t('team.errorEdit');
-      setEditError(msg);
+      setEditError(
+        e?.response?.data?.code === 'EMAIL_TAKEN'
+          ? t('team.errorEmailTaken')
+          : apiErrorMessage(e, t('team.errorEdit'))
+      );
     } finally {
       setEditLoading(false);
     }

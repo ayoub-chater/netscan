@@ -23,24 +23,33 @@ import {
 } from 'heroui-native';
 import { sendPasswordResetCode, resetPasswordWithCode } from '../services/api';
 import { backIcon } from '../utils/rtl';
+import { apiErrorMessage } from '../utils/apiError';
+import useResendCooldown from '../hooks/useResendCooldown';
 
 const StyledIonicons = withUniwind(Ionicons);
 
-export default function ForgotPasswordScreen({ navigation }) {
+export default function ForgotPasswordScreen({ navigation, route }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const isTablet = width >= 768;
   const scrollRef = useRef(null);
 
+  // Signup sends people here when the address already has an account (409
+  // ACCOUNT_EXISTS): the address is prefilled and `notice` explains why they
+  // landed on a password screen instead of finishing a registration.
+  const notice = route?.params?.notice ?? null;
+
   const [step, setStep] = useState('email'); // 'email' | 'reset'
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(route?.params?.email?.trim() ?? '');
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
+  // Mirrors the server-side delay between two codes for the same address.
+  const { remaining, isCoolingDown, start: startCooldown } = useResendCooldown();
 
   const handleSendCode = async () => {
     if (!email.trim()) {
@@ -51,9 +60,16 @@ export default function ForgotPasswordScreen({ navigation }) {
     setErrorMsg(null);
     try {
       await sendPasswordResetCode(email.trim());
+      startCooldown();
       setStep('reset');
     } catch (e) {
-      setErrorMsg(e?.response?.data?.message || t('forgotPassword.errorGeneric'));
+      // The server holds the same delay and says how much of it is left.
+      if (e?.response?.data?.code === 'RESEND_COOLDOWN') {
+        startCooldown(e.response.data.retry_after);
+        setStep('reset');
+      } else {
+        setErrorMsg(apiErrorMessage(e, t('forgotPassword.errorGeneric')));
+      }
     } finally {
       setLoading(false);
     }
@@ -78,7 +94,13 @@ export default function ForgotPasswordScreen({ navigation }) {
       await resetPasswordWithCode(email.trim(), code.trim(), password, confirmPassword);
       setStep('done');
     } catch (e) {
-      setErrorMsg(e?.response?.data?.message || t('forgotPassword.errorGeneric'));
+      // Too many wrong guesses: the code is gone, a new one is the only way on.
+      if (e?.response?.data?.code === 'CODE_LOCKED') {
+        setCode('');
+        setErrorMsg(t('forgotPassword.errorCodeLocked'));
+      } else {
+        setErrorMsg(apiErrorMessage(e, t('forgotPassword.errorGeneric')));
+      }
     } finally {
       setLoading(false);
     }
@@ -148,6 +170,15 @@ export default function ForgotPasswordScreen({ navigation }) {
                   </Text>
                 </View>
 
+                {notice && step === 'email' ? (
+                  <Alert status="warning" className="rounded-xl items-center">
+                    <Alert.Indicator className="pt-0" />
+                    <Alert.Content>
+                      <Alert.Title>{notice}</Alert.Title>
+                    </Alert.Content>
+                  </Alert>
+                ) : null}
+
                 {errorMsg ? (
                   <Alert status="danger" className="rounded-xl items-center">
                     <Alert.Indicator className="pt-0" />
@@ -177,10 +208,14 @@ export default function ForgotPasswordScreen({ navigation }) {
                       size="lg"
                       className="mt-2 rounded-2xl"
                       onPress={handleSendCode}
-                      isDisabled={loading}
+                      isDisabled={loading || isCoolingDown}
                     >
                       <Button.Label>
-                        {loading ? t('forgotPassword.sending') : t('forgotPassword.sendCode')}
+                        {isCoolingDown
+                          ? t('forgotPassword.resendIn', { seconds: remaining })
+                          : loading
+                          ? t('forgotPassword.sending')
+                          : t('forgotPassword.sendCode')}
                       </Button.Label>
                     </Button>
                   </>
@@ -247,9 +282,17 @@ export default function ForgotPasswordScreen({ navigation }) {
                     </Button>
 
                     <View className="items-center mt-1">
-                      <LinkButton size="sm" onPress={handleSendCode} isDisabled={loading}>
-                        <LinkButton.Label className="text-accent font-semibold">
-                          {t('forgotPassword.resendCode')}
+                      <LinkButton
+                        size="sm"
+                        onPress={handleSendCode}
+                        isDisabled={loading || isCoolingDown}
+                      >
+                        <LinkButton.Label
+                          className={isCoolingDown ? 'text-muted font-semibold' : 'text-accent font-semibold'}
+                        >
+                          {isCoolingDown
+                            ? t('forgotPassword.resendIn', { seconds: remaining })
+                            : t('forgotPassword.resendCode')}
                         </LinkButton.Label>
                       </LinkButton>
                     </View>

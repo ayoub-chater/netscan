@@ -35,6 +35,7 @@ import {
   cancelParticipation,
 } from '../services/api';
 import { backIcon, forwardIcon } from '../utils/rtl';
+import { apiErrorMessage } from '../utils/apiError';
 
 const StyledIonicons = withUniwind(Ionicons);
 const ACCENT = '#286EAD';
@@ -242,13 +243,7 @@ export default function ParticipateScreen({ navigation }) {
       setStep('role');
       setSelectedRole(null);
     } catch (e) {
-      setErrorMsg(
-        e?.response?.data?.message ||
-          (e?.response?.data?.errors
-            ? Object.values(e.response.data.errors)[0][0]
-            : null) ||
-          t('participate.errorGeneric')
-      );
+      setErrorMsg(apiErrorMessage(e, t('participate.errorGeneric')));
     } finally {
       setSubmitting(false);
     }

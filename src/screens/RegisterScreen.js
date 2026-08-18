@@ -38,6 +38,7 @@ import {
 import SearchableSelect from '../components/SearchableSelect';
 import { PARTICIPATE_ICON } from '../constants/roles';
 import { backIcon } from '../utils/rtl';
+import { apiErrorMessage } from '../utils/apiError';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -179,13 +180,30 @@ export default function RegisterScreen({ navigation }) {
       });
       await applySession(res.data);
     } catch (e) {
-      const msg =
-        e?.response?.data?.message ||
-        (e?.response?.data?.errors
-          ? Object.values(e.response.data.errors)[0][0]
-          : null) ||
-        t('register.errorGeneric');
-      setErrorMsg(msg);
+      const code = e?.response?.data?.code;
+
+      // Already registered from the event website / by the organiser: they
+      // have a badge and a profile but no password. Send them to the claim
+      // flow instead of failing — creating a second record here would split
+      // their badge and their history in two.
+      if (code === 'ACCOUNT_CLAIMABLE') {
+        navigation.navigate('ClaimAccount', { email: email.trim() });
+        return;
+      }
+
+      // Already has a real account with a password. Rather than dead-ending on
+      // "this email is taken", send them to the code-verification screen with
+      // the address prefilled: they prove the mailbox, set a password, and sign
+      // in. Same destination as a forgotten password, reached from signup.
+      if (code === 'ACCOUNT_EXISTS') {
+        navigation.navigate('ForgotPassword', {
+          email: email.trim(),
+          notice: t('register.accountExistsNotice'),
+        });
+        return;
+      }
+
+      setErrorMsg(apiErrorMessage(e, t('register.errorGeneric')));
     } finally {
       setLoading(false);
     }

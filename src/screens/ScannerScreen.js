@@ -25,6 +25,7 @@ import { useTranslation } from 'react-i18next';
 import { Button, Surface } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import { networkingScan } from '../services/api';
+import { apiErrorMessage, serverMessage } from '../utils/apiError';
 import NetworkingModal from '../components/NetworkingModal';
 import MenuButton from '../components/MenuButton';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -119,7 +120,7 @@ export default function ScannerScreen({ navigation }) {
         setResult(res.data);
         setScanning(false);
       } else {
-        const errMsg = res?.data?.message || t('scanner.genericError');
+        const errMsg = apiErrorMessage({ response: res }, t('scanner.genericError'));
         const errCode = res?.data?.code;
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
         if (errCode === 'ALREADY_CONNECTED') {
@@ -131,7 +132,7 @@ export default function ScannerScreen({ navigation }) {
     } catch (e) {
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
       const status = e.response?.status;
-      const msg = e.response?.data?.message;
+      const msg = serverMessage(e);
       if (status === 401) {
         Alert.alert(t('auth.sessionExpiredTitle'), t('scanner.reconnect'));
       } else if (status === 404) {

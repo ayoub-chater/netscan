@@ -1,6 +1,7 @@
 import axios from 'axios';
 import { ENDPOINTS, EVENT_SLUG } from '../constants/api';
 import { clearSession } from './auth';
+import { deviceHeaders } from './device';
 
 // Shared Axios instance
 const api = axios.create({
@@ -16,7 +17,10 @@ export const setApiToken = (token) => { _token = token; };
 export const setOnUnauthorized = (cb) => { _onUnauthorized = cb; };
 
 // Request interceptor — attach Bearer token
-api.interceptors.request.use((config) => {
+api.interceptors.request.use(async (config) => {
+    // Identifies the phone. The backend refuses a token presented from a
+    // device other than the one it was issued to.
+    config.headers = { ...config.headers, ...(await deviceHeaders()) };
     if (_token) {
         config.headers = { ...config.headers, Authorization: `Bearer ${_token}` };
     }
@@ -51,12 +55,19 @@ api.interceptors.response.use(
     }
 );
 
-// ─── Auth ────────────────────────────────────────────────────────────────────
-export const login = (email, password) =>
-    axios.post(ENDPOINTS.login, { email, password, event_slug: EVENT_SLUG }, {
+// Unauthenticated calls (login, signup, password reset). They carry the same
+// device headers as the rest, so the session the server mints can be bound to
+// this phone and the sign-in trail records where it came from.
+const publicPost = async (url, data) =>
+    axios.post(url, data, {
         timeout: 12000,
-        headers: { Accept: 'application/json' },
+        headers: { Accept: 'application/json', ...(await deviceHeaders()) },
     });
+
+// ─── Auth ────────────────────────────────────────────────────────────────────
+// `remember` picks the session length server-side: 30 days instead of 8 hours.
+export const login = (email, password, remember = false) =>
+    publicPost(ENDPOINTS.login, { email, password, event_slug: EVENT_SLUG, remember });
 
 // ─── Event info (public) ─────────────────────────────────────────────────────
 export const getEventInfo = () =>
@@ -208,30 +219,42 @@ export const unregisterDevice = (expoPushToken) =>
 
 // ─── Register ─────────────────────────────────────────────────────────────────
 export const register = (data) =>
-    axios.post(ENDPOINTS.register, { ...data, event_slug: EVENT_SLUG }, {
-        timeout: 12000,
-        headers: { Accept: 'application/json' },
-    });
+    publicPost(ENDPOINTS.register, { ...data, event_slug: EVENT_SLUG });
 
 // ─── Forgot / reset password ────────────────────────────────────────────────
 export const sendPasswordResetCode = (email) =>
-    axios.post(ENDPOINTS.forgotPassword, { email }, {
-        timeout: 12000,
-        headers: { Accept: 'application/json' },
-    });
+    publicPost(ENDPOINTS.forgotPassword, { email });
 
 export const resetPasswordWithCode = (email, code, password, passwordConfirmation) =>
-    axios.post(ENDPOINTS.resetPassword, {
+    publicPost(ENDPOINTS.resetPassword, {
         email,
         code,
         password,
         password_confirmation: passwordConfirmation,
-    }, {
-        timeout: 12000,
-        headers: { Accept: 'application/json' },
     });
 
+// ─── Account claim ───────────────────────────────────────────────────────────
+// Someone already registered on the event website / by the organiser has a
+// record but no password. Signup answers 409 ACCOUNT_CLAIMABLE and the app
+// sends them here: a code proves they own the mailbox, then they set their
+// password. `confirm` answers with a normal session (token + user + event).
+export const requestAccountClaimCode = (email) =>
+    publicPost(ENDPOINTS.accountClaimRequest, { email, event_slug: EVENT_SLUG });
 
+export const confirmAccountClaim = (email, code, password, passwordConfirmation, remember = false) =>
+    publicPost(ENDPOINTS.accountClaimConfirm, {
+        email,
+        code,
+        password,
+        password_confirmation: passwordConfirmation,
+        event_slug: EVENT_SLUG,
+        remember,
+    });
+
+// ─── Sessions (this account's signed-in devices) ─────────────────────────────
+export const getSessions = () => api.get(ENDPOINTS.sessions);
+export const revokeSession = (id) => api.delete(ENDPOINTS.sessionRevoke(id));
+export const revokeOtherSessions = () => api.delete(ENDPOINTS.sessions);
 
 // ─── Team ─────────────────────────────────────────────────────────────────────
 export const getTeam = (search = '') =>

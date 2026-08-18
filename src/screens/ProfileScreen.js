@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
+import Constants from 'expo-constants';
 import {
   Avatar,
   Button,
@@ -47,7 +48,9 @@ const LANGUAGE_OPTIONS = [
   { code: 'ar', label: 'العربية' },
 ];
 
-const APP_VERSION = '1.2.0';
+// Read straight from app.json so the About row never drifts from the build.
+const APP_VERSION =
+  Constants.expoConfig?.version ?? Constants.manifest2?.extra?.expoClient?.version ?? '';
 
 // Formats an event day as "Tuesday 20 October 2026" in the active language.
 function formatEventDay(isoDate, locale) {
@@ -160,6 +163,23 @@ export default function ProfileScreen() {
               <ListGroup.ItemTitle>{t('editProfile.title')}</ListGroup.ItemTitle>
               <ListGroup.ItemDescription>
                 {t('editProfile.subtitle')}
+              </ListGroup.ItemDescription>
+            </ListGroup.ItemContent>
+            <ListGroup.ItemSuffix>
+              <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
+            </ListGroup.ItemSuffix>
+          </ListGroup.Item>
+
+          {/* Signed-in devices. The owner spotting a device they don't
+              recognise is the only reliable way a stolen session is caught. */}
+          <ListGroup.Item onPress={() => navigation.navigate('Sessions')}>
+            <ListGroup.ItemPrefix>
+              <Ionicons name="shield-checkmark-outline" size={18} color="#286EAD" />
+            </ListGroup.ItemPrefix>
+            <ListGroup.ItemContent>
+              <ListGroup.ItemTitle>{t('sessions.title')}</ListGroup.ItemTitle>
+              <ListGroup.ItemDescription>
+                {t('sessions.subtitle')}
               </ListGroup.ItemDescription>
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>

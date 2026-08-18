@@ -355,11 +355,8 @@ export default function ExposantsScreen({ navigation }) {
           ListEmptyComponent={
             <View className="items-center py-16">
               <Ionicons name="business-outline" size={48} color="#2db067" />
-              <Text className="text-base font-bold text-foreground mt-4 mb-2">
+              <Text className="text-base font-bold text-foreground mt-4">
                 {t('exposants.emptyTitle')}
-              </Text>
-              <Text className="text-sm text-muted text-center leading-5 px-8">
-                {t('exposants.emptyBody')}
               </Text>
             </View>
           }

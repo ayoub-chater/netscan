@@ -49,12 +49,27 @@
     "resetButton": "Reset password",
     "resetting": "Resetting...",
     "resendCode": "Resend code",
+    "resendIn": "Resend the code in {{seconds}}s",
     "backToLogin": "Back to login",
     "errorEmailRequired": "Please enter your email.",
     "errorCodeRequired": "Please enter the code you received by email.",
+    "errorCodeLocked": "Too many attempts. This code has been cancelled — request a new one.",
     "errorGeneric": "Something went wrong. Please try again.",
     "successTitle": "Password reset",
     "successBody": "Your password has been updated. You can now sign in."
+  },
+  "claimAccount": {
+    "title": "Activate your account",
+    "introBody": "You are already registered with this email address. To access the app, we need to verify that this mailbox is yours.",
+    "sendCode": "Send me the verification code",
+    "codeSentBody": "A 6-digit code has been sent to your email address. Enter it, then choose your password.",
+    "codeResent": "A new code has been sent to you.",
+    "password": "Choose your password",
+    "activate": "Activate my account",
+    "activating": "Activating...",
+    "keepsDataHint": "Your registration, badge and details are kept.",
+    "errorGeneric": "Could not activate your account. Please try again.",
+    "errorAlreadyActivated": "This account has already been activated. Sign in with your password."
   },
   "register": {
     "haveAccount": "Already have an account?",
@@ -90,6 +105,8 @@
     "errorPasswordTooShort": "The password must be at least 8 characters.",
     "close": "Close",
     "errorGeneric": "An error occurred during sign up.",
+    "errorAccountExists": "An account already exists with this email address. Sign in, or use \"Forgot password?\".",
+    "accountExistsNotice": "This email address is already registered. Verify your mailbox with the code below to set your password and sign in.",
     "speakerInfo": "Speaker information",
     "jobTitle": "Job title",
     "jobTitlePlaceholder": "e.g. CEO, Head of Logistics",
@@ -274,7 +291,10 @@
     "removeError": "Unable to delete this member.",
     "errorRequired": "Name and email are required.",
     "errorAdd": "An error occurred while adding.",
-    "errorEdit": "An error occurred while editing."
+    "errorEdit": "An error occurred while editing.",
+    "errorAlreadyInTeam": "This person is already part of your team.",
+    "errorEmailTaken": "This email already belongs to another organisation at the event. Please contact the organiser.",
+    "errorParticipantRole": "This person is already registered with their own role. Contact the organiser to attach them to your booth."
   },
   "plan": {
     "title": "Floor plan",
@@ -592,5 +612,19 @@
     "staffBody": "You're on this organisation's team — they added you to their stand. Your access follows theirs, so there's no participation request to send.",
     "vipTitle": "Full access",
     "vipBody": "You are registered as a participant: every feature is already unlocked, no request needed."
+  },
+  "sessions": {
+    "title": "Signed-in devices",
+    "subtitle": "See and sign out your devices",
+    "intro": "Every device signed in to your account appears here. If you don't recognise one, sign it out: it will need your password to come back.",
+    "current": "This device",
+    "unknownDevice": "Unknown device",
+    "lastUsed": "Last activity",
+    "expires": "Expires on",
+    "revoke": "Sign out this device",
+    "revokeOthers": "Sign out all other devices ({{count}})",
+    "empty": "No active session.",
+    "errorLoad": "Could not load your devices.",
+    "errorRevoke": "Could not sign this device out."
   }
 }

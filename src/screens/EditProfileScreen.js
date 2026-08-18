@@ -37,6 +37,7 @@ import {
 import SearchableSelect from '../components/SearchableSelect';
 import MenuButton from '../components/MenuButton';
 import { backIcon } from '../utils/rtl';
+import { apiErrorMessage } from '../utils/apiError';
 
 const StyledIonicons = withUniwind(Ionicons);
 
@@ -230,13 +231,7 @@ export default function EditProfileScreen() {
       if (user) await updateScanner(user);
       navigation.goBack();
     } catch (e) {
-      const msg =
-        e?.response?.data?.message ||
-        (e?.response?.data?.errors
-          ? Object.values(e.response.data.errors)[0][0]
-          : null) ||
-        t('editProfile.errorGeneric');
-      setErrorMsg(msg);
+      setErrorMsg(apiErrorMessage(e, t('editProfile.errorGeneric')));
     } finally {
       setLoading(false);
     }

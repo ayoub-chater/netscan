@@ -17,6 +17,9 @@ export const ENDPOINTS = {
     logout: `${BASE_URL}/logout`,
     forgotPassword: `${BASE_URL}/forgot-password`,
     resetPassword: `${BASE_URL}/reset-password`,
+    // Activating app access for someone already registered elsewhere
+    accountClaimRequest: `${BASE_URL}/account/claim/request`,
+    accountClaimConfirm: `${BASE_URL}/account/claim/confirm`,
     me: `${BASE_URL}/me?event_slug=${EVENT_SLUG}`,
     event: `${BASE_URL}/event?slug=${EVENT_SLUG}`,
     badgeLookup: (badge) => `${BASE_URL}/badge/${encodeURIComponent(badge)}`,
@@ -52,10 +55,16 @@ export const ENDPOINTS = {
     devicesRegister: `${BASE_URL}/devices/register`,
     devicesUnregister: `${BASE_URL}/devices/unregister`,
     register: `${BASE_URL}/register`,
+    // Devices this account is signed in on, with revoke.
+    sessions: `${BASE_URL}/sessions`,
+    sessionRevoke: (id) => `${BASE_URL}/sessions/${encodeURIComponent(id)}`,
     team: `${BASE_URL}/team`,
     teamDelete: (id) => `${BASE_URL}/team/${id}`,
     teamUpdate: (id) => `${BASE_URL}/team/${id}`,
 };
 
+// Fallback only. The real deadline comes from the server as `token_expires_at`
+// (8h, or 30 days when "se souvenir de moi" is on) and is what the app trusts;
+// this covers a session stored by an older build that has no deadline.
 export const SESSION_MAX_AGE_MS = 8 * 60 * 60 * 1000; // 8h
 export const SCAN_THROTTLE_MS = 2000;

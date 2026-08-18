@@ -79,9 +79,13 @@ function MenuRow({ item, index, progress, onPress, badge, isActive }) {
         accessibilityRole="button"
         // Screen readers announce the current page rather than relying on colour.
         accessibilityState={{ selected: isActive }}
+        // Accent tint means "you are here". A promoted row is lifted with a
+        // neutral surface instead, so a call-to-action never reads as the
+        // current page.
         className={[
           'flex-row items-center rounded-2xl px-3 py-3 active:opacity-60',
-          isActive || item.highlight ? 'bg-accent-soft' : '',
+          isActive ? 'bg-accent-soft' : '',
+          !isActive && item.highlight ? 'bg-surface-secondary' : '',
         ].join(' ')}
         style={{ gap: 14 }}
         android_ripple={{ color: 'rgba(40,110,173,0.12)' }}
@@ -120,7 +124,7 @@ function MenuRow({ item, index, progress, onPress, badge, isActive }) {
         {isActive ? (
           <View className="w-2 h-2 rounded-full bg-accent" />
         ) : (
-          <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
+          <Ionicons name={forwardIcon()} size={16} color={item.highlight ? ACCENT : '#9CA3AF'} />
         )}
       </Pressable>
     </Animated.View>

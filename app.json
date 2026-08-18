@@ -20,9 +20,7 @@
     "android": {
       "googleServicesFile": "./fireBase_files/google-services.json",
       "statusBar": {
-        "barStyle": "light-content",
-        "backgroundColor": "#00000000",
-        "translucent": true
+        "barStyle": "light-content"
       },
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
@@ -53,14 +51,12 @@
           "color": "#2e368e"
         }
       ],
-
       [
         "expo-image-picker",
         {
           "photosPermission": "L'application a besoin d'accéder à vos photos pour définir votre photo de profil ou le logo de votre entreprise."
         }
       ],
-
       "expo-localization",
       [
         "expo-splash-screen",
@@ -74,7 +70,21 @@
             "backgroundColor": "#1A2030"
           }
         }
-      ]
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "buildToolsVersion": "36.0.0",
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true,
+            "extraProguardRules": "-keep class com.logiterre.** { *; }\n-keep class com.google.mlkit.** { *; }\n-keep class com.google.android.gms.internal.mlkit_** { *; }\n-keep class com.google.firebase.** { *; }\n-keepclassmembers class * { @com.facebook.proguard.annotations.DoNotStrip *; @com.facebook.common.internal.DoNotStrip *; }\n-keepclassmembers class * { native <methods>; }\n-dontwarn com.facebook.react.**\n-dontwarn okhttp3.**\n-dontwarn okio.**"
+          }
+        }
+      ],
+      "expo-secure-store"
     ],
     "web": {
       "favicon": "./assets/favicon.png"

@@ -45,6 +45,7 @@ import { MEETING_LOCATION } from '../constants/b2b';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
 import { backIcon, latinLabel } from '../utils/rtl';
+import { apiErrorMessage } from '../utils/apiError';
 
 const ACCENT = '#286EAD';
 
@@ -450,7 +451,7 @@ export default function B2BAgendaScreen({ navigation }) {
       setPersona(res?.data?.persona || persona);
       closeEdit();
     } catch (e) {
-      Alert.alert(t('common.error'), e?.response?.data?.message || t('speaker.saveError'));
+      Alert.alert(t('common.error'), apiErrorMessage(e, t('speaker.saveError')));
     } finally {
       setSavingProfile(false);
     }
@@ -476,7 +477,7 @@ export default function B2BAgendaScreen({ navigation }) {
       closeAvail();
       await load();
     } catch (e) {
-      Alert.alert(t('common.error'), e?.response?.data?.message || t('speaker.saveError'));
+      Alert.alert(t('common.error'), apiErrorMessage(e, t('speaker.saveError')));
     } finally {
       setSavingAvail(false);
     }

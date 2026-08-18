@@ -23,6 +23,9 @@ export function AuthProvider({ children }) {
     // the screens using them to paint again once they arrive.
     const [roleLabelsVersion, setRoleLabelsVersion] = useState(0);
     const timerRef = useRef(null);
+    // Server-issued deadline (ISO) for the current token. Kept so every
+    // re-save of the session preserves it instead of silently resetting it.
+    const expiresAtRef = useRef(null);
 
     // Cached first (instant, possibly stale), then refreshed from the server.
     const syncRoleLabels = async () => {
@@ -39,9 +42,12 @@ export function AuthProvider({ children }) {
         setApiToken(null);
     };
 
-    const scheduleAutoLogout = (issuedAt) => {
+    // `deadline` is an absolute timestamp: the moment the server stops
+    // accepting the token. Signing out at exactly that point means the user
+    // never meets a mysterious 401 mid-action.
+    const scheduleAutoLogout = (deadline) => {
         if (timerRef.current) clearTimeout(timerRef.current);
-        const remaining = SESSION_MAX_AGE_MS - (Date.now() - issuedAt);
+        const remaining = deadline - Date.now();
         if (remaining <= 0) { signOut(); return; }
         timerRef.current = setTimeout(() => {
             signOut();
@@ -59,12 +65,17 @@ export function AuthProvider({ children }) {
             try {
                 const session = await loadSession();
                 if (session?.token) {
-                    const age = Date.now() - session.issuedAt;
-                    if (age <= SESSION_MAX_AGE_MS) {
+                    // Sessions stored by an older build carry no deadline:
+                    // fall back to the 8h rule they were written under.
+                    const deadline = session.expiresAt || (session.issuedAt + SESSION_MAX_AGE_MS);
+                    expiresAtRef.current = session.expiresAt
+                        ? new Date(session.expiresAt).toISOString()
+                        : null;
+                    if (Date.now() < deadline) {
                         setToken(session.token);
                         setScanner(session.scanner);
                         setApiToken(session.token);
-                        scheduleAutoLogout(session.issuedAt);
+                        scheduleAutoLogout(deadline);
                         registerForPushNotificationsAsync().catch(() => { });
                         syncRoleLabels().catch(() => { });
                         setExhibitorId(session.scanner?.exhibitor_id ?? null);
@@ -75,7 +86,7 @@ export function AuthProvider({ children }) {
                                 const evRes = await getEventInfo();
                                 storedEventInfo = evRes?.data?.event || null;
                                 if (storedEventInfo) {
-                                    await saveSession(session.token, session.scanner, storedEventInfo);
+                                    await saveSession(session.token, session.scanner, storedEventInfo, expiresAtRef.current);
                                 }
                             } catch { }
                         }
@@ -96,7 +107,7 @@ export function AuthProvider({ children }) {
                                 const merged = { ...session.scanner, ...freshUser };
                                 setScanner(merged);
                                 setExhibitorId(merged.exhibitor_id ?? null);
-                                await saveSession(session.token, merged, storedEventInfo);
+                                await saveSession(session.token, merged, storedEventInfo, expiresAtRef.current);
                             }
                         } catch { }
                         setBadgeNumber(badge);
@@ -118,7 +129,9 @@ export function AuthProvider({ children }) {
         const ev = data?.event || data?.data?.event || null;
         let badge = sc?.badge_number || sc?.badge || sc?.person?.badge_number ||
                     sc?.barcode || sc?.qr_code || data?.badge_number || null;
-        await saveSession(t, sc, ev);
+        const expiresAt = data?.token_expires_at || data?.data?.token_expires_at || null;
+        expiresAtRef.current = expiresAt;
+        await saveSession(t, sc, ev, expiresAt);
         if (badge) await saveBadgeNumber(badge);
         setToken(t);
         setScanner(sc);
@@ -126,13 +139,15 @@ export function AuthProvider({ children }) {
         setEventInfo(ev);
         setExhibitorId(sc?.exhibitor_id ?? null);
         setApiToken(t);
+        scheduleAutoLogout(expiresAt ? new Date(expiresAt).getTime() : Date.now() + SESSION_MAX_AGE_MS);
         registerForPushNotificationsAsync().catch(() => { });
         syncRoleLabels().catch(() => { });
         return { token: t, scanner: sc, eventInfo: ev };
     };
 
-    const signIn = async (email, password) => {
-        const res = await apiLogin(email, password);
+    // `remember` asks the server for a 30-day session instead of 8 hours.
+    const signIn = async (email, password, remember = false) => {
+        const res = await apiLogin(email, password, remember);
         return applyAuthResponse(res.data);
     };
 
@@ -157,7 +172,7 @@ export function AuthProvider({ children }) {
     const updateScanner = async (partial) => {
         setScanner((prev) => {
             const merged = { ...prev, ...partial };
-            saveSession(token, merged, eventInfo).catch(() => { });
+            saveSession(token, merged, eventInfo, expiresAtRef.current).catch(() => { });
             if (merged.exhibitor_id !== undefined) setExhibitorId(merged.exhibitor_id ?? null);
             return merged;
         });
