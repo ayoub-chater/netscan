@@ -2,7 +2,7 @@
   "expo": {
     "name": "LOGITERRE",
     "slug": "logittere",
-    "version": "1.8.0",
+    "version": "1.9.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.logiterre",
-      "buildNumber": "7",
+      "buildNumber": "9",
       "infoPlist": {
         "NSCameraUsageDescription": "L'application a besoin d'accéder à la caméra pour scanner les QR codes des badges.",
         "NSPhotoLibraryUsageDescription": "L'application a besoin d'accéder à vos photos pour définir votre photo de profil ou le logo de votre entreprise.",
@@ -27,7 +27,7 @@
         "backgroundColor": "#DCE9F5"
       },
       "package": "com.logiterre",
-      "versionCode": 16,
+      "versionCode": 18,
       "permissions": [
         "CAMERA",
         "android.permission.CAMERA",
