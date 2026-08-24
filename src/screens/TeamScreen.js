@@ -26,7 +26,15 @@ import {
   TextField,
   useBottomSheetAwareHandlers,
 } from 'heroui-native';
-import { getTeam, addTeamMember, deleteTeamMember, updateTeamMember } from '../services/api';
+import {
+  getTeam,
+  addTeamMember,
+  deleteTeamMember,
+  updateTeamMember,
+  getTeamRequests,
+  approveTeamRequest,
+  rejectTeamRequest,
+} from '../services/api';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
 import SearchBar from '../components/SearchBar';
@@ -162,10 +170,71 @@ function MemberCard({ item, onEdit, onDelete }) {
 
 // ── Main screen ───────────────────────────────────────────────────────────────
 
+// ── Join requests waiting on the owner ────────────────────────────────────────
+//
+// Someone registered under this organisation's name and the organiser
+// validated them. Being validated is not being on the stand: the owner decides
+// who joins. Refusing costs the applicant nothing — they keep their visitor
+// badge and their access to the event.
+function PendingRequests({ requests, decidingId, onDecide }) {
+  const { t } = useTranslation();
+
+  if (!requests?.length) return null;
+
+  return (
+    <View className="px-4 pb-2" style={{ gap: 10 }}>
+      <View className="flex-row items-center" style={{ gap: 8 }}>
+        <StyledIonicons name="person-add-outline" size={16} className="text-accent" />
+        <Text className="text-sm font-bold text-foreground">
+          {t('team.requestsTitle', { count: requests.length })}
+        </Text>
+      </View>
+
+      {requests.map((item) => (
+        <Surface key={item.id} className="rounded-2xl px-4 py-4" style={{ gap: 10 }}>
+          <View>
+            <Text className="text-base font-semibold text-foreground">{item.name}</Text>
+            <Text className={`text-xs text-muted ${latinLabel()}`}>{item.email}</Text>
+            {item.phone ? (
+              <Text className={`text-xs text-muted ${latinLabel()}`}>{item.phone}</Text>
+            ) : null}
+          </View>
+
+          <View className="flex-row" style={{ gap: 8 }}>
+            <Button
+              variant="primary"
+              size="sm"
+              className="flex-1 rounded-xl"
+              onPress={() => onDecide(item, true)}
+              isDisabled={decidingId === item.id}
+            >
+              <Button.Label>{t('team.requestAccept')}</Button.Label>
+            </Button>
+            <Button
+              variant="danger-soft"
+              size="sm"
+              className="flex-1 rounded-xl"
+              onPress={() => onDecide(item, false)}
+              isDisabled={decidingId === item.id}
+            >
+              <Button.Label>{t('team.requestReject')}</Button.Label>
+            </Button>
+          </View>
+        </Surface>
+      ))}
+
+      <Separator className="my-1" />
+    </View>
+  );
+}
+
 export default function TeamScreen({ navigation }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [members, setMembers] = useState([]);
+  // Join requests waiting on this owner's decision.
+  const [requests, setRequests] = useState([]);
+  const [decidingId, setDecidingId] = useState(null);
   const [companyName, setCompanyName] = useState('');
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -204,10 +273,39 @@ export default function TeamScreen({ navigation }) {
     }
   }, []);
 
+  // People the organiser validated who named this organisation as theirs.
+  // They stay plain visitors until the owner accepts them.
+  const loadRequests = useCallback(async () => {
+    try {
+      const res = await getTeamRequests();
+      setRequests(res?.data?.data || []);
+    } catch {
+      setRequests([]);
+    }
+  }, []);
+
+  const decideRequest = async (item, accept) => {
+    setDecidingId(item.id);
+    try {
+      if (accept) {
+        await approveTeamRequest(item.id);
+        await load(search);
+      } else {
+        await rejectTeamRequest(item.id);
+      }
+      setRequests((prev) => prev.filter((r) => r.id !== item.id));
+    } catch (e) {
+      Alert.alert(t('team.requestErrorTitle'), apiErrorMessage(e, t('team.requestError')));
+    } finally {
+      setDecidingId(null);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       setLoading(true);
       load();
+      loadRequests();
     }, [])
   );
 
@@ -366,7 +464,14 @@ export default function TeamScreen({ navigation }) {
             </Card>
           ))}
         </View>
-      ) : members.length === 0 ? (
+      ) : (
+        <>
+          <PendingRequests
+            requests={requests}
+            decidingId={decidingId}
+            onDecide={decideRequest}
+          />
+          {members.length === 0 ? (
         <View className="flex-1 items-center justify-center px-8">
           <Ionicons name="people-outline" size={48} color="#2db067" />
           <Text className="text-base font-bold text-foreground mt-4 mb-2">
@@ -387,16 +492,18 @@ export default function TeamScreen({ navigation }) {
             <Button.Label>{t('team.addMember')}</Button.Label>
           </Button>
         </View>
-      ) : (
-        <FlatList
-          data={members}
-          keyExtractor={item => String(item.id)}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => (
-            <MemberCard item={item} onEdit={m => { setEditError(null); setEditMember(m); }} onDelete={handleDelete} />
+          ) : (
+            <FlatList
+              data={members}
+              keyExtractor={item => String(item.id)}
+              contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: 120 }}
+              showsVerticalScrollIndicator={false}
+              renderItem={({ item }) => (
+                <MemberCard item={item} onEdit={m => { setEditError(null); setEditMember(m); }} onDelete={handleDelete} />
+              )}
+            />
           )}
-        />
+        </>
       )}
 
       {/* ── Add Member BottomSheet ─────────────────── */}

@@ -44,6 +44,7 @@ import TermsScreen from './src/screens/TermsScreen';
 import MyBadgeScreen from './src/screens/MyBadgeScreen';
 import EditProfileScreen from './src/screens/EditProfileScreen';
 import SessionsScreen from './src/screens/SessionsScreen';
+import InstitutionalB2BScreen from './src/screens/InstitutionalB2BScreen';
 import NotificationsScreen from './src/screens/NotificationsScreen';
 import ConferenceScreen from './src/screens/ConferenceScreen';
 import ProgrammeScreen from './src/screens/ProgrammeScreen';
@@ -67,6 +68,7 @@ const Team = withPageTransition(TeamScreen);
 const Terms = withPageTransition(TermsScreen);
 const EditProfile = withPageTransition(EditProfileScreen);
 const Sessions = withPageTransition(SessionsScreen);
+const InstitutionalB2B = withPageTransition(InstitutionalB2BScreen);
 const NotificationsHistory = withPageTransition(NotificationsScreen);
 const Conference = withPageTransition(ConferenceScreen);
 const Programme = withPageTransition(ProgrammeScreen);
@@ -182,6 +184,7 @@ function NavigationRoot() {
               <Stack.Screen name="MyBadge" component={MyBadge} />
               <Stack.Screen name="EditProfile" component={EditProfile} />
               <Stack.Screen name="Sessions" component={Sessions} />
+              <Stack.Screen name="InstitutionalB2B" component={InstitutionalB2B} />
               <Stack.Screen name="Notifications" component={NotificationsHistory} />
               <Stack.Screen name="Conference" component={Conference} />
               <Stack.Screen name="Programme" component={Programme} />

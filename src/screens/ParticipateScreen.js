@@ -145,7 +145,7 @@ export default function ParticipateScreen({ navigation }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language || 'fr';
   const insets = useSafeAreaInsets();
-  const { refreshProfile, isExhibitorStaff, isVip, scanner } = useAuth();
+  const { refreshProfile, isExhibitorStaff, isVip, scanner, membershipStatus, pendingExhibitor } = useAuth();
   const scannerCompany = scanner?.company || null;
 
   const [loading, setLoading] = useState(true);
@@ -350,6 +350,59 @@ export default function ParticipateScreen({ navigation }) {
             <Text className="text-sm text-muted text-center leading-6">
               {t('participate.vipBody')}
             </Text>
+          </Surface>
+        </ScrollView>
+      </View>
+    );
+  }
+
+  // ── Waiting on the stand owner ───────────────────────────────────────────
+  // Their company already exhibits, so the request went straight to the
+  // organisation rather than to the organiser: nobody at the event decides
+  // who is on someone else's stand. Meanwhile they attend as a visitor.
+  if (membershipStatus === 'pending') {
+    return (
+      <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
+        {header}
+        <ScrollView
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            paddingHorizontal: 20,
+            paddingBottom: 120,
+          }}
+        >
+          <Surface className="rounded-3xl px-6 py-10 items-center">
+            <View className="w-20 h-20 rounded-full bg-warning-soft items-center justify-center mb-5">
+              <StyledIonicons name="hourglass-outline" size={38} className="text-warning" />
+            </View>
+            <Text className="text-xl font-extrabold text-foreground text-center mb-2">
+              {t('participate.membershipPendingTitle')}
+            </Text>
+            {pendingExhibitor ? (
+              <Chip
+                size="sm"
+                variant="soft"
+                color="warning"
+                className="mb-4"
+                style={{ alignSelf: 'center' }}
+              >
+                <Chip.Label>{pendingExhibitor}</Chip.Label>
+              </Chip>
+            ) : null}
+            <Text className="text-sm text-muted text-center leading-6">
+              {t('participate.membershipPendingBody')}
+            </Text>
+            <Button
+              variant="secondary"
+              className="mt-6 w-full"
+              onPress={async () => {
+                await refreshProfile();
+                await load();
+              }}
+            >
+              <Button.Label>{t('participate.recheck')}</Button.Label>
+            </Button>
           </Surface>
         </ScrollView>
       </View>

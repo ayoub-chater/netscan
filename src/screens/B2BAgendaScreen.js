@@ -10,6 +10,7 @@ import {
   Alert,
   ActivityIndicator,
   Linking,
+  TextInput,
 } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useFocusEffect } from '@react-navigation/native';
@@ -34,8 +35,6 @@ import {
 import {
   getSpeakerPersona,
   updateSpeakerPersona,
-  addSpeakerAvailability,
-  deleteSpeakerAvailability,
   getSpeakerAppointments,
   updateSpeakerAppointment,
 } from '../services/api';
@@ -48,6 +47,11 @@ import { backIcon, latinLabel } from '../utils/rtl';
 import { apiErrorMessage } from '../utils/apiError';
 
 const ACCENT = '#286EAD';
+
+// Meeting length and the gap after it. Kept short: these are one-tap
+// decisions, not a form.
+const DURATION_CHOICES = [15, 20, 30, 45, 60];
+const BUFFER_CHOICES = [0, 5, 10, 15];
 
 const STATUS_COLOR = {
   confirmed: 'success',
@@ -288,22 +292,8 @@ export default function B2BAgendaScreen({ navigation }) {
   const [busyId, setBusyId] = useState(null);
 
   // Profile edit sheet
-  const [editOpen, setEditOpen] = useState(false);
-  const [form, setForm] = useState(null);
-  const [savingProfile, setSavingProfile] = useState(false);
-
-  // Availability add sheet
-  const [availOpen, setAvailOpen] = useState(false);
-  const [avDate, setAvDate] = useState(null);
-  const [avStart, setAvStart] = useState(null);
-  const [avEnd, setAvEnd] = useState(null);
-  const [savingAvail, setSavingAvail] = useState(false);
 
   // Keeps each sheet's native state in sync with ours — see useSheetGuard.
-  const editSheet = useSheetGuard(editOpen, () => setEditOpen(false));
-  const availSheet = useSheetGuard(availOpen, () => setAvailOpen(false));
-  const closeEdit = editSheet.close;
-  const closeAvail = availSheet.close;
 
   const load = async () => {
     try {
@@ -372,25 +362,6 @@ export default function B2BAgendaScreen({ navigation }) {
   };
 
   // ── Profile edit ────────────────────────────────────────────────────────
-  const openEdit = () => {
-    if (!persona) return;
-    setForm({
-      name: persona.name || '',
-      title: persona.title || '',
-      company: persona.company || '',
-      bio: persona.bio || '',
-      // Fixed for everyone — shown read-only, never taken from the form.
-      location: MEETING_LOCATION,
-      appointment_duration: String(persona.appointment_duration || 30),
-      buffer_time: String(persona.buffer_time ?? 0),
-      status: persona.status || 'active',
-      photo: null,
-      photoPreview: persona.photo || null,
-    });
-    setEditOpen(true);
-  };
-
-  // Quick status change from the profile header (no full edit needed).
   const applyStatus = async (status) => {
     const prev = persona;
     setPersona({ ...persona, status }); // optimistic
@@ -400,6 +371,43 @@ export default function B2BAgendaScreen({ navigation }) {
       if (res?.data?.persona) setPersona(res.data.persona);
     } catch {
       setPersona(prev); // rollback
+      Alert.alert(t('common.error'), t('speaker.saveError'));
+    } finally {
+      setStatusSaving(false);
+    }
+  };
+
+  // Free-entry values for anyone whose meetings don't fit the presets.
+  const [customDuration, setCustomDuration] = useState('');
+  const [customBuffer, setCustomBuffer] = useState('');
+  // Where you receive people. The only free-text B2B setting left here —
+  // name, company and photo belong to the profile, not to this screen.
+  const [locationDraft, setLocationDraft] = useState(null);
+
+  const applyCustom = (field, value, { min, max }) => {
+    const minutes = parseInt(String(value).trim(), 10);
+
+    if (!Number.isFinite(minutes) || minutes < min || minutes > max) {
+      Alert.alert(t('common.error'), t('speaker.customRangeError', { min, max }));
+      return;
+    }
+
+    applyTiming({ [field]: minutes });
+    if (field === 'appointment_duration') setCustomDuration('');
+    else setCustomBuffer('');
+  };
+
+  // Duration and buffer, saved on tap. Everyone is reachable during event
+  // hours, so these two are what actually shape someone's day.
+  const applyTiming = async (patch) => {
+    const prev = persona;
+    setPersona({ ...persona, ...patch }); // optimistic
+    setStatusSaving(true);
+    try {
+      const res = await updateSpeakerPersona(patch);
+      if (res?.data?.persona) setPersona(res.data.persona);
+    } catch {
+      setPersona(prev);
       Alert.alert(t('common.error'), t('speaker.saveError'));
     } finally {
       setStatusSaving(false);
@@ -416,89 +424,6 @@ export default function B2BAgendaScreen({ navigation }) {
         { text: t('common.confirm'), onPress: () => applyStatus(status) },
       ]
     );
-  };
-
-  const pickPhoto = async () => {
-    const res = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [1, 1],
-      quality: 0.7,
-    });
-    if (!res.canceled && res.assets?.[0]) {
-      const a = res.assets[0];
-      const uri = a.uri;
-      const name = uri.split('/').pop() || 'photo.jpg';
-      const type = a.mimeType || 'image/jpeg';
-      setForm((f) => ({ ...f, photo: { uri, name, type }, photoPreview: uri }));
-    }
-  };
-
-  const saveProfile = async () => {
-    if (!form) return;
-    setSavingProfile(true);
-    try {
-      const res = await updateSpeakerPersona({
-        name: form.name.trim(),
-        title: form.title.trim(),
-        bio: form.bio.trim(),
-        location: MEETING_LOCATION,
-        appointment_duration: parseInt(form.appointment_duration, 10) || 30,
-        buffer_time: parseInt(form.buffer_time, 10) || 0,
-        status: form.status,
-        photo: form.photo || undefined,
-      });
-      setPersona(res?.data?.persona || persona);
-      closeEdit();
-    } catch (e) {
-      Alert.alert(t('common.error'), apiErrorMessage(e, t('speaker.saveError')));
-    } finally {
-      setSavingProfile(false);
-    }
-  };
-
-  // ── Availability ────────────────────────────────────────────────────────
-  const openAvail = () => {
-    setAvDate(null);
-    setAvStart(null);
-    setAvEnd(null);
-    setAvailOpen(true);
-  };
-
-  const saveAvail = async () => {
-    if (!avDate || !avStart || !avEnd) return;
-    if (avEnd <= avStart) {
-      Alert.alert(t('common.error'), t('speaker.timeOrderError'));
-      return;
-    }
-    setSavingAvail(true);
-    try {
-      await addSpeakerAvailability({ date: avDate, start_time: avStart, end_time: avEnd });
-      closeAvail();
-      await load();
-    } catch (e) {
-      Alert.alert(t('common.error'), apiErrorMessage(e, t('speaker.saveError')));
-    } finally {
-      setSavingAvail(false);
-    }
-  };
-
-  const removeAvail = (id) => {
-    Alert.alert(t('speaker.removeSlotTitle'), t('speaker.removeSlotMsg'), [
-      { text: t('common.cancel'), style: 'cancel' },
-      {
-        text: t('common.confirm'),
-        style: 'destructive',
-        onPress: async () => {
-          try {
-            await deleteSpeakerAvailability(id);
-            await load();
-          } catch {
-            Alert.alert(t('common.error'), t('speaker.actionError'));
-          }
-        },
-      },
-    ]);
   };
 
   const meetingsData = [...upcoming, ...past];
@@ -656,6 +581,16 @@ export default function B2BAgendaScreen({ navigation }) {
                     {t('appointments.duration', { min: persona?.appointment_duration || 30 })}
                   </Text>
                 </View>
+                {/* The buffer reads next to the duration: together they are
+                    what someone actually blocks out for you. */}
+                {(persona?.buffer_time ?? 0) > 0 ? (
+                  <View className="flex-row items-center" style={{ gap: 6 }}>
+                    <Ionicons name="pause-circle-outline" size={14} color={ACCENT} />
+                    <Text className="text-xs text-foreground font-semibold">
+                      {t('speaker.bufferSummary', { min: persona.buffer_time })}
+                    </Text>
+                  </View>
+                ) : null}
                 <View className="flex-row items-center" style={{ gap: 6 }}>
                   <Ionicons name="location-outline" size={14} color={ACCENT} />
                   <Text className="text-xs text-foreground font-semibold">
@@ -663,290 +598,145 @@ export default function B2BAgendaScreen({ navigation }) {
                   </Text>
                 </View>
               </View>
-              <Button variant="secondary" size="sm" className="rounded-xl mt-4" onPress={openEdit}>
-                <Ionicons name="create-outline" size={16} color={ACCENT} />
-                <Button.Label>{t('speaker.editProfile')}</Button.Label>
-              </Button>
+              {/* Duration and buffer, editable here rather than three taps deep
+                  in the profile sheet: they are what decide how quickly people
+                  can get a slot with you. */}
+              <View className="flex-row mt-4" style={{ gap: 10 }}>
+                <View className="flex-1">
+                  <Text className="text-[11px] font-bold text-muted uppercase mb-1">
+                    {t('speaker.durationLabel')}
+                  </Text>
+                  <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                    {DURATION_CHOICES.map((min) => (
+                      <Pressable
+                        key={min}
+                        onPress={() => applyTiming({ appointment_duration: min })}
+                        disabled={statusSaving}
+                        className={`px-3 py-1.5 rounded-xl ${
+                          (persona?.appointment_duration || 30) === min ? 'bg-accent' : 'bg-surface-secondary'
+                        }`}
+                      >
+                        <Text
+                          className={`text-xs font-bold ${
+                            (persona?.appointment_duration || 30) === min ? 'text-accent-foreground' : 'text-foreground'
+                          }`}
+                        >
+                          {min} min
+                        </Text>
+                      </Pressable>
+                    ))}
+
+                    <View className="flex-row items-center rounded-xl bg-surface-secondary px-2" style={{ gap: 4 }}>
+                      <TextInput
+                        value={customDuration}
+                        onChangeText={setCustomDuration}
+                        onSubmitEditing={() => applyCustom('appointment_duration', customDuration, { min: 5, max: 240 })}
+                        placeholder={t('speaker.customShort')}
+                        placeholderTextColor="#9CA3AF"
+                        keyboardType="number-pad"
+                        maxLength={3}
+                        returnKeyType="done"
+                        editable={!statusSaving}
+                        className="text-xs font-bold text-foreground"
+                        style={{ minWidth: 44, paddingVertical: 6, textAlign: 'center' }}
+                      />
+                      {customDuration ? (
+                        <Pressable
+                          onPress={() => applyCustom('appointment_duration', customDuration, { min: 5, max: 240 })}
+                          hitSlop={8}
+                        >
+                          <Ionicons name="checkmark-circle" size={18} color={ACCENT} />
+                        </Pressable>
+                      ) : null}
+                    </View>
+                  </View>
+                </View>
+              </View>
+
+              <View className="mt-3">
+                <Text className="text-[11px] font-bold text-muted uppercase mb-1">
+                  {t('speaker.bufferLabel')}
+                </Text>
+                <View className="flex-row flex-wrap" style={{ gap: 6 }}>
+                  {BUFFER_CHOICES.map((min) => (
+                    <Pressable
+                      key={min}
+                      onPress={() => applyTiming({ buffer_time: min })}
+                      disabled={statusSaving}
+                      className={`px-3 py-1.5 rounded-xl ${
+                        (persona?.buffer_time ?? 0) === min ? 'bg-accent' : 'bg-surface-secondary'
+                      }`}
+                    >
+                      <Text
+                        className={`text-xs font-bold ${
+                          (persona?.buffer_time ?? 0) === min ? 'text-accent-foreground' : 'text-foreground'
+                        }`}
+                      >
+                        {min === 0 ? t('speaker.bufferNone') : `${min} min`}
+                      </Text>
+                    </Pressable>
+                  ))}
+
+                  <View className="flex-row items-center rounded-xl bg-surface-secondary px-2" style={{ gap: 4 }}>
+                    <TextInput
+                      value={customBuffer}
+                      onChangeText={setCustomBuffer}
+                      onSubmitEditing={() => applyCustom('buffer_time', customBuffer, { min: 0, max: 240 })}
+                      placeholder={t('speaker.customShort')}
+                      placeholderTextColor="#9CA3AF"
+                      keyboardType="number-pad"
+                      maxLength={3}
+                      returnKeyType="done"
+                      editable={!statusSaving}
+                      className="text-xs font-bold text-foreground"
+                      style={{ minWidth: 44, paddingVertical: 6, textAlign: 'center' }}
+                    />
+                    {customBuffer ? (
+                      <Pressable
+                        onPress={() => applyCustom('buffer_time', customBuffer, { min: 0, max: 240 })}
+                        hitSlop={8}
+                      >
+                        <Ionicons name="checkmark-circle" size={18} color={ACCENT} />
+                      </Pressable>
+                    ) : null}
+                  </View>
+                </View>
+                <Text className="text-xs text-muted mt-2 leading-4">{t('speaker.bufferHint')}</Text>
+              </View>
+
+              <View className="mt-3">
+                <Text className="text-[11px] font-bold text-muted uppercase mb-1">
+                  {t('speaker.location')}
+                </Text>
+                <View className="flex-row items-center rounded-xl bg-surface-secondary px-3" style={{ gap: 8 }}>
+                  <Ionicons name="location-outline" size={15} color={ACCENT} />
+                  <TextInput
+                    value={locationDraft ?? (persona?.location || '')}
+                    onChangeText={setLocationDraft}
+                    onSubmitEditing={() => {
+                      const value = (locationDraft ?? '').trim();
+                      if (value && value !== persona?.location) applyTiming({ location: value });
+                      setLocationDraft(null);
+                    }}
+                    onBlur={() => setLocationDraft(null)}
+                    placeholder={MEETING_LOCATION}
+                    placeholderTextColor="#9CA3AF"
+                    returnKeyType="done"
+                    editable={!statusSaving}
+                    className="flex-1 text-sm text-foreground"
+                    style={{ paddingVertical: 10 }}
+                  />
+                </View>
+              </View>
             </Card.Body>
           </Card>
 
-          {/* Availability */}
-          <View className="flex-row items-center justify-between mb-2 px-1">
-            <Text className="text-sm font-bold text-foreground">{t('speaker.availability')}</Text>
-            <Pressable onPress={openAvail} className="flex-row items-center" style={{ gap: 4 }} hitSlop={8}>
-              <Ionicons name="add-circle" size={20} color={ACCENT} />
-              <Text className="text-sm font-semibold text-accent">{t('speaker.addSlot')}</Text>
-            </Pressable>
-          </View>
-
-          {(persona?.availabilities?.length || 0) === 0 ? (
-            <Surface className="rounded-xl p-4">
-              <Text className="text-sm text-muted text-center">{t('speaker.noAvailability')}</Text>
-            </Surface>
-          ) : (
-            persona.availabilities.map((a) => (
-              <Surface key={a.id} className="rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
-                <View className="flex-row items-center" style={{ gap: 10 }}>
-                  <Ionicons name="calendar-outline" size={16} color={ACCENT} />
-                  <View>
-                    <Text className="text-sm font-bold text-foreground">{formatDateLabel(a.date, locale)}</Text>
-                    <Text className="text-xs text-muted">{a.start_time} – {a.end_time}</Text>
-                  </View>
-                </View>
-                <Pressable onPress={() => removeAvail(a.id)} hitSlop={8} className="p-1">
-                  <Ionicons name="trash-outline" size={18} color="#EF4444" />
-                </Pressable>
-              </Surface>
-            ))
-          )}
         </ScrollView>
       )}
 
       {/* ── Edit profile sheet ─────────────────────────── */}
-      {editSheet.mounted ? (
-      <BottomSheet key={editSheet.key} isOpen={editSheet.isOpen} onOpenChange={(o) => !o && closeEdit()}>
-        <BottomSheet.Portal>
-          <BottomSheet.Overlay />
-          <BottomSheet.Content
-            ref={editSheet.ref}
-            {...editSheet.contentProps}
-            snapPoints={['90%']}
-            enableOverDrag={false}
-            enableDynamicSizing={false}
-            keyboardBehavior="interactive"
-            keyboardBlurBehavior="restore"
-            android_keyboardInputMode="adjustResize"
-            contentContainerClassName="h-full"
-          >
-            <BottomSheetScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 14 }}>
-              <Text className="text-lg font-extrabold text-foreground">{t('speaker.editProfile')}</Text>
-
-              <Pressable onPress={pickPhoto} className="items-center">
-                {form?.photoPreview ? (
-                  <Image source={{ uri: form.photoPreview }} style={{ width: 88, height: 88, borderRadius: 44 }} />
-                ) : (
-                  <Avatar size="lg" color="default" variant="soft">
-                    <Avatar.Fallback>{(form?.name || '?').slice(0, 2).toUpperCase()}</Avatar.Fallback>
-                  </Avatar>
-                )}
-                <Text className="text-xs text-accent font-semibold mt-2">{t('speaker.changePhoto')}</Text>
-              </Pressable>
-
-              <Surface className="rounded-2xl px-5 py-5 gap-4">
-                <SheetField label={t('register.fullName')} placeholder={t('register.fullNamePlaceholder')} value={form?.name} onChangeText={(v) => setForm((f) => ({ ...f, name: v }))} />
-                <SheetField label={t('register.jobTitle')} placeholder={t('register.jobTitlePlaceholder')} value={form?.title} onChangeText={(v) => setForm((f) => ({ ...f, title: v }))} />
-                {/* Company is set at registration — read-only here. */}
-                <View>
-                  <Label>{t('register.company')}</Label>
-                  <View className="bg-surface-secondary rounded-xl px-4 py-3 mt-1.5 flex-row items-center justify-between">
-                    <Text className="text-sm text-muted flex-1" numberOfLines={1}>
-                      {form?.company || '—'}
-                    </Text>
-                    <Ionicons name="lock-closed-outline" size={15} color="#9CA3AF" />
-                  </View>
-                </View>
-                <SheetField
-                  label={t('register.bio')}
-                  placeholder={t('register.bioPlaceholder')}
-                  value={form?.bio}
-                  onChangeText={(v) => setForm((f) => ({ ...f, bio: v }))}
-                  multiline
-                  numberOfLines={3}
-                  style={{ minHeight: 72, textAlignVertical: 'top' }}
-                />
-                {/* All B2B meetings happen in the networking room — read-only. */}
-                <View>
-                  <Label>{t('speaker.location')}</Label>
-                  <View className="bg-surface-secondary rounded-xl px-4 py-3 mt-1.5 flex-row items-center justify-between">
-                    <Text className="text-sm text-muted flex-1" numberOfLines={1}>
-                      {MEETING_LOCATION}
-                    </Text>
-                    <Ionicons name="lock-closed-outline" size={15} color="#9CA3AF" />
-                  </View>
-                  <Text className="text-xs text-muted mt-1.5">{t('speaker.locationLocked')}</Text>
-                </View>
-              </Surface>
-
-              {/* Duration (presets + custom) */}
-              <Surface className="rounded-2xl px-5 py-5 gap-3">
-                <Label>{t('speaker.duration')}</Label>
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {[15, 20, 30, 45, 60].map((d) => {
-                    const active = String(d) === String(form?.appointment_duration);
-                    return (
-                      <Pressable
-                        key={d}
-                        onPress={() => setForm((f) => ({ ...f, appointment_duration: String(d) }))}
-                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface-secondary border-separator'}`}
-                      >
-                        <Text className={`text-sm font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>{d}m</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-                <SheetField
-                  label={t('speaker.customDuration')}
-                  placeholder={t('speaker.minutesPlaceholder')}
-                  value={form?.appointment_duration}
-                  keyboardType="number-pad"
-                  onChangeText={(v) => setForm((f) => ({ ...f, appointment_duration: v.replace(/[^0-9]/g, '') }))}
-                />
-              </Surface>
-
-              {/* Buffer between meetings (presets + custom) */}
-              <Surface className="rounded-2xl px-5 py-5 gap-3">
-                <Label>{t('speaker.buffer')}</Label>
-                <Text className="text-xs text-muted -mt-1">{t('speaker.bufferHint')}</Text>
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {[0, 5, 10, 15, 30].map((b) => {
-                    const active = String(b) === String(form?.buffer_time);
-                    return (
-                      <Pressable
-                        key={b}
-                        onPress={() => setForm((f) => ({ ...f, buffer_time: String(b) }))}
-                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface-secondary border-separator'}`}
-                      >
-                        <Text className={`text-sm font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>
-                          {b === 0 ? t('speaker.noBuffer') : `${b}m`}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-                <SheetField
-                  label={t('speaker.customBuffer')}
-                  placeholder={t('speaker.minutesPlaceholder')}
-                  value={form?.buffer_time}
-                  keyboardType="number-pad"
-                  onChangeText={(v) => setForm((f) => ({ ...f, buffer_time: v.replace(/[^0-9]/g, '') }))}
-                />
-              </Surface>
-
-              {/* Status */}
-              <Surface className="rounded-2xl px-5 py-5 gap-2">
-                <Label>{t('speaker.statusLabel')}</Label>
-                <View className="flex-row flex-wrap mt-1" style={{ gap: 8 }}>
-                  {['active', 'on_break', 'inactive'].map((s) => {
-                    const active = s === form?.status;
-                    return (
-                      <Pressable
-                        key={s}
-                        onPress={() => setForm((f) => ({ ...f, status: s }))}
-                        className={`px-4 py-2 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface-secondary border-separator'}`}
-                      >
-                        <Text className={`text-sm font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>
-                          {t(`speaker.statusValue.${s}`)}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </Surface>
-
-              <Button variant="primary" size="lg" className="rounded-2xl mt-2" onPress={saveProfile} disabled={savingProfile}>
-                <Button.Label>{savingProfile ? t('speaker.saving') : t('speaker.save')}</Button.Label>
-              </Button>
-              <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={closeEdit}>
-                <Button.Label>{t('common.cancel')}</Button.Label>
-              </Button>
-            </BottomSheetScrollView>
-          </BottomSheet.Content>
-        </BottomSheet.Portal>
-      </BottomSheet>
-      ) : null}
 
       {/* ── Add availability sheet ─────────────────────── */}
-      {availSheet.mounted ? (
-      <BottomSheet key={availSheet.key} isOpen={availSheet.isOpen} onOpenChange={(o) => !o && closeAvail()}>
-        <BottomSheet.Portal>
-          <BottomSheet.Overlay />
-          <BottomSheet.Content
-            ref={availSheet.ref}
-            {...availSheet.contentProps}
-            snapPoints={['80%']}
-            enableOverDrag={false}
-            enableDynamicSizing={false}
-            keyboardBehavior="interactive"
-            keyboardBlurBehavior="restore"
-            android_keyboardInputMode="adjustResize"
-            contentContainerClassName="h-full"
-          >
-            <BottomSheetScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40, gap: 16 }}>
-              <Text className="text-lg font-extrabold text-foreground">{t('speaker.addSlot')}</Text>
-
-              <View>
-                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>{t('appointments.chooseDate')}</Text>
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {eventDays(eventBounds).map((d) => {
-                    const active = d === avDate;
-                    return (
-                      <Pressable
-                        key={d}
-                        onPress={() => setAvDate(d)}
-                        className={`px-4 py-2.5 rounded-xl border ${active ? 'bg-accent border-accent' : 'bg-surface border-separator'}`}
-                      >
-                        <Text className={`text-xs font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>
-                          {formatDateLabel(d, locale)}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View>
-                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>{t('speaker.startTime')}</Text>
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {TIME_OPTIONS.map((tm) => {
-                    const active = tm === avStart;
-                    return (
-                      <Pressable
-                        key={tm}
-                        onPress={() => setAvStart(tm)}
-                        className={`px-3 py-2 rounded-lg border ${active ? 'bg-accent border-accent' : 'bg-surface border-separator'}`}
-                      >
-                        <Text className={`text-xs font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>{tm}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <View>
-                <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>{t('speaker.endTime')}</Text>
-                <View className="flex-row flex-wrap" style={{ gap: 8 }}>
-                  {TIME_OPTIONS.filter((tm) => !avStart || tm > avStart).map((tm) => {
-                    const active = tm === avEnd;
-                    return (
-                      <Pressable
-                        key={tm}
-                        onPress={() => setAvEnd(tm)}
-                        className={`px-3 py-2 rounded-lg border ${active ? 'bg-accent border-accent' : 'bg-surface border-separator'}`}
-                      >
-                        <Text className={`text-xs font-bold ${active ? 'text-accent-foreground' : 'text-foreground'}`}>{tm}</Text>
-                      </Pressable>
-                    );
-                  })}
-                </View>
-              </View>
-
-              <Button
-                variant="primary"
-                size="lg"
-                className="rounded-2xl mt-2"
-                onPress={saveAvail}
-                disabled={!avDate || !avStart || !avEnd || savingAvail}
-              >
-                <Button.Label>{savingAvail ? t('speaker.saving') : t('speaker.addSlot')}</Button.Label>
-              </Button>
-              <Button variant="tertiary" size="lg" className="rounded-2xl" onPress={closeAvail}>
-                <Button.Label>{t('common.cancel')}</Button.Label>
-              </Button>
-            </BottomSheetScrollView>
-          </BottomSheet.Content>
-        </BottomSheet.Portal>
-      </BottomSheet>
-      ) : null}
     </View>
   );
 }

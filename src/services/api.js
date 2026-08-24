@@ -251,10 +251,21 @@ export const confirmAccountClaim = (email, code, password, passwordConfirmation,
         remember,
     });
 
+// ─── Institutional B2B ───────────────────────────────────────────────────────
+// Read-only: these meetings are arranged and scheduled by the organiser.
+export const getInstitutionalAppointments = () => api.get(ENDPOINTS.institutionalB2B);
+
 // ─── Sessions (this account's signed-in devices) ─────────────────────────────
 export const getSessions = () => api.get(ENDPOINTS.sessions);
 export const revokeSession = (id) => api.delete(ENDPOINTS.sessionRevoke(id));
 export const revokeOtherSessions = () => api.delete(ENDPOINTS.sessions);
+
+// ─── Team join requests (stand owner) ────────────────────────────────────────
+// Someone registered under this organisation's name and the organiser
+// validated them; the owner decides whether they join the stand.
+export const getTeamRequests = () => api.get(ENDPOINTS.teamRequests);
+export const approveTeamRequest = (id) => api.post(ENDPOINTS.teamRequestApprove(id), {});
+export const rejectTeamRequest = (id) => api.post(ENDPOINTS.teamRequestReject(id), {});
 
 // ─── Team ─────────────────────────────────────────────────────────────────────
 export const getTeam = (search = '') =>

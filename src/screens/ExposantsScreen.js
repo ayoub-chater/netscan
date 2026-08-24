@@ -111,7 +111,7 @@ export default function ExposantsScreen({ navigation }) {
   const { t } = useTranslation();
   const tabScroll = useTabBarScroll();
   const insets = useSafeAreaInsets();
-  const { exhibitorId, badgeNumber } = useAuth();
+  const { exhibitorId, badgeNumber, isExhibitorOwner } = useAuth();
   const [connectedMap, setConnectedMap] = useState(new Map()); // email → scan_id
   const [deletingConnection, setDeletingConnection] = useState(false);
   const [exposants, setExposants] = useState([]);
@@ -400,15 +400,22 @@ export default function ExposantsScreen({ navigation }) {
                 <Text className="text-xl font-extrabold text-foreground mt-4 mb-2 text-center">
                   {displayName}
                 </Text>
-                <View className="flex-row items-center" style={{ gap: 8 }}>
+                {/* Sector labels run long ("Développement d'Applications Web
+                    et Mobiles"), so the row wraps instead of pushing the
+                    "your organization" chip off the screen. The sector itself
+                    shrinks and truncates; the ownership chip never does. */}
+                <View
+                  className="flex-row flex-wrap items-center justify-center"
+                  style={{ gap: 8 }}
+                >
                   {sheetExposant?.secteur ? (
-                    <Chip size="sm" variant="soft" color="default">
-                      <Chip.Label>{sheetExposant.secteur}</Chip.Label>
+                    <Chip size="sm" variant="soft" color="default" style={{ flexShrink: 1 }}>
+                      <Chip.Label numberOfLines={1}>{sheetExposant.secteur}</Chip.Label>
                     </Chip>
                   ) : null}
                   {isMine ? (
-                    <Chip size="sm" variant="soft" color="success">
-                      <Chip.Label>{t('exposants.yourOrganization')}</Chip.Label>
+                    <Chip size="sm" variant="soft" color="success" style={{ flexShrink: 0 }}>
+                      <Chip.Label numberOfLines={1}>{t('exposants.yourOrganization')}</Chip.Label>
                     </Chip>
                   ) : null}
                 </View>
@@ -466,7 +473,9 @@ export default function ExposantsScreen({ navigation }) {
 
               {/* Action buttons */}
               <View className="px-4 pt-6" style={{ gap: 12 }}>
-                {isMine ? (
+                {/* Managing the roster belongs to whoever runs the stand.
+                    A member sees their organisation like anyone else. */}
+                {isMine && isExhibitorOwner ? (
                   <Button
                     variant="primary"
                     size="lg"

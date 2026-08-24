@@ -1,5 +1,5 @@
 // For local development, set this to your computer's current IPv4 address
-const API_IP = '192.168.11.116';
+const API_IP = '192.168.11.123';
 
 // export const BASE_URL = `http://${API_IP}:8000/api/v1`;
 
@@ -55,10 +55,15 @@ export const ENDPOINTS = {
     devicesRegister: `${BASE_URL}/devices/register`,
     devicesUnregister: `${BASE_URL}/devices/unregister`,
     register: `${BASE_URL}/register`,
+    // Private meetings the organiser arranged between institutions.
+    institutionalB2B: `${BASE_URL}/b2b/institutional?event_slug=${EVENT_SLUG}`,
     // Devices this account is signed in on, with revoke.
     sessions: `${BASE_URL}/sessions`,
     sessionRevoke: (id) => `${BASE_URL}/sessions/${encodeURIComponent(id)}`,
     team: `${BASE_URL}/team`,
+    teamRequests: `${BASE_URL}/team/requests`,
+    teamRequestApprove: (id) => `${BASE_URL}/team/requests/${encodeURIComponent(id)}/approve`,
+    teamRequestReject: (id) => `${BASE_URL}/team/requests/${encodeURIComponent(id)}/reject`,
     teamDelete: (id) => `${BASE_URL}/team/${id}`,
     teamUpdate: (id) => `${BASE_URL}/team/${id}`,
 };

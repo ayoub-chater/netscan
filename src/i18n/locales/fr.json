@@ -294,7 +294,13 @@
     "errorEdit": "Erreur lors de la modification.",
     "errorAlreadyInTeam": "Cette personne fait déjà partie de votre équipe.",
     "errorEmailTaken": "Cette adresse e-mail appartient déjà à une autre organisation de l'événement. Contactez l'organisateur.",
-    "errorParticipantRole": "Cette personne est déjà inscrite avec son propre rôle. Contactez l'organisateur pour la rattacher à votre stand."
+    "errorParticipantRole": "Cette personne est déjà inscrite avec son propre rôle. Contactez l'organisateur pour la rattacher à votre stand.",
+    "requestsTitle": "Demandes d'adhésion ({{count}})",
+    "requestAccept": "Accepter",
+    "requestReject": "Refuser",
+    "requestError": "Impossible de traiter cette demande.",
+    "requestErrorTitle": "Demande",
+    "memberBadgeRole": "Membre d'équipe"
   },
   "plan": {
     "title": "Plan du salon",
@@ -346,7 +352,7 @@
     "slotTaken": "Ce créneau vient d'être pris. Veuillez en choisir un autre.",
     "alreadyBooked": "Vous avez déjà un rendez-vous avec ce contact à cette date.",
     "joinVideo": "Rejoindre l'appel vidéo",
-    "cancel": "Annuler le rendez-vous",
+    "cancel": "Annuler",
     "cancelTitle": "Annuler ce rendez-vous ?",
     "cancelBody": "Annuler votre rendez-vous avec {{name}} ?",
     "cancelConfirm": "Annuler le rendez-vous",
@@ -484,7 +490,7 @@
     "save": "Enregistrer",
     "saveError": "Enregistrement impossible. Réessayez.",
     "changePhoto": "Changer la photo",
-    "location": "Lieu",
+    "location": "Lieu de rencontre",
     "locationLocked": "Tous les rendez-vous B2B ont lieu dans la salle de networking.",
     "videoLink": "Lien de visioconférence",
     "duration": "Durée du rendez-vous",
@@ -503,11 +509,21 @@
     "customDuration": "Durée personnalisée (min)",
     "minutesPlaceholder": "Minutes",
     "buffer": "Pause entre les rendez-vous",
-    "bufferHint": "Une pause ajoutée après chaque rendez-vous.",
+    "bufferHint": "Le temps réservé après chaque rendez-vous : personne ne peut réserver ce créneau.",
     "noBuffer": "Aucune",
     "customBuffer": "Pause personnalisée (min)",
     "statusChangeTitle": "Changer le statut",
-    "statusChangeMsg": "Passer votre disponibilité à « {{status}} » ? Les participants le verront immédiatement."
+    "statusChangeMsg": "Passer votre disponibilité à « {{status}} » ? Les participants le verront immédiatement.",
+    "acceptRequests": "Recevoir des demandes",
+    "acceptRequestsOn": "Vous êtes joignable pendant les heures de l'événement, même sans créneaux publiés.",
+    "acceptRequestsOff": "Vous n'apparaissez pas dans l'annuaire B2B et personne ne peut vous solliciter.",
+    "noAvailabilityOpen": "Aucun créneau publié : vous restez joignable pendant les heures de l'événement. Ajoutez des créneaux pour restreindre vos disponibilités.",
+    "durationLabel": "Durée d'un rendez-vous",
+    "bufferLabel": "Pause entre deux rendez-vous",
+    "bufferNone": "Aucune",
+    "customShort": "Autre",
+    "customRangeError": "Saisissez une durée entre {{min}} et {{max}} minutes.",
+    "bufferSummary": "{{min}} min de pause"
   },
   "notifications": {
     "title": "Notifications",
@@ -526,6 +542,16 @@
         "approved": "Votre participation en tant que {{role}} a été validée. Vos accès sont désormais actifs.",
         "pending": "Votre participation en tant que {{role}} est de nouveau en cours d'examen. Les fonctionnalités liées à votre rôle sont suspendues en attendant.",
         "rejected": "Votre demande de participation en tant que {{role}} n'a pas été retenue."
+      },
+      "teamJoinRequest": "{{name}} demande à rejoindre l'équipe de {{company}}.",
+      "teamJoinAccepted": "Vous faites désormais partie de l'équipe de {{company}}.",
+      "teamJoinRefused": "Votre demande pour rejoindre {{company}} n'a pas été retenue.",
+      "institutional": {
+        "created": "Une rencontre avec {{company}} a été programmée — {{date}} {{time}}, {{location}}.",
+        "scheduled": "Votre rencontre avec {{company}} est fixée au {{date}} {{time}} ({{location}}).",
+        "confirmed": "Votre rencontre avec {{company}} est confirmée — {{date}} {{time}}, {{location}}.",
+        "cancelled": "Votre rencontre avec {{company}} a été annulée par l'organisateur.",
+        "updated": "Votre rencontre avec {{company}} a été mise à jour — {{date}} {{time}}, {{location}}."
       }
     },
     "type": {
@@ -608,10 +634,14 @@
     "bannerApprovedBody": "Vos fonctionnalités B2B sont actives.",
     "bannerRejectedTitle": "Demande non retenue",
     "bannerRejectedBody": "Touchez pour soumettre une nouvelle demande.",
+    "membershipPendingTitle": "Demande envoyée à votre organisation",
+    "membershipPendingBody": "Votre entreprise est déjà exposante. Le responsable du stand doit accepter votre demande — c'est lui qui décide de son équipe. En attendant, votre badge visiteur reste valable : vous pouvez scanner, réseauter et prendre des rendez-vous.",
     "staffTitle": "Vous participez déjà",
     "staffBody": "Vous faites partie de l'équipe de cette organisation, qui vous a ajouté à son stand. Votre accès suit celui de votre organisation — aucune demande de participation n'est nécessaire.",
     "vipTitle": "Accès complet",
-    "vipBody": "Vous êtes enregistré comme participant : toutes les fonctionnalités sont déjà débloquées, aucune demande n’est nécessaire."
+    "vipBody": "Vous êtes enregistré comme participant : toutes les fonctionnalités sont déjà débloquées, aucune demande n’est nécessaire.",
+    "bannerTeamPendingTitle": "En attente de l'organisation",
+    "bannerTeamPendingBody": "Votre demande pour rejoindre {{company}} attend la validation du responsable. Votre badge visiteur est déjà actif."
   },
   "sessions": {
     "title": "Appareils connectés",
@@ -626,5 +656,32 @@
     "empty": "Aucune session active.",
     "errorLoad": "Impossible de charger vos appareils.",
     "errorRevoke": "Impossible de déconnecter cet appareil."
+  },
+  "institutional": {
+    "title": "B2B institutionnel",
+    "short": "Institutionnel",
+    "subtitle": "Vos rendez-vous privés",
+    "intro": "Ces rendez-vous sont organisés par l'événement entre partenaires institutionnels. Ils ne sont visibles que par vous et votre interlocuteur.",
+    "upcoming": "À venir",
+    "past": "Historique",
+    "empty": "Aucun rendez-vous institutionnel pour le moment. L'organisateur vous préviendra dès qu'une rencontre sera programmée.",
+    "unknownCounterpart": "Institution",
+    "errorLoad": "Impossible de charger vos rendez-vous institutionnels.",
+    "status": {
+      "scheduled": "Programmé",
+      "confirmed": "Confirmé",
+      "completed": "Terminé",
+      "cancelled": "Annulé",
+      "to_schedule": "À planifier"
+    },
+    "toBeDefined": "Date à définir",
+    "programme": "Programme institutionnel",
+    "programmeHint": "Les rendez-vous confirmés entre les autres partenaires institutionnels.",
+    "with": "avec",
+    "countMine": "{{count}} rendez-vous vous concernant",
+    "withLabel": "Rendez-vous avec",
+    "organiserNote": "Note de l'organisateur",
+    "statMine": "Mes rendez-vous à venir",
+    "statProgramme": "Autres rendez-vous confirmés"
   }
 }

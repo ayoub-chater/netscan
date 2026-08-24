@@ -46,9 +46,12 @@ export default function EditProfileScreen() {
   const language = i18n.language;
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { scanner, updateScanner } = useAuth();
+  const { scanner, updateScanner, isExhibitorMember } = useAuth();
 
-  const isExposant = (scanner?.role || '').toLowerCase() === 'exposant';
+  // Editing the organisation — its name, sector and logo — belongs to whoever
+  // runs the stand. A team member edits their own profile: their photo, their
+  // phone, their details. Same screen, personal half only.
+  const isExposant = (scanner?.role || '').toLowerCase() === 'exposant' && !isExhibitorMember;
 
   const [name, setName] = useState(scanner?.name || '');
   const [phone, setPhone] = useState(scanner?.phone || '');

@@ -294,7 +294,13 @@
     "errorEdit": "حدث خطأ أثناء التعديل.",
     "errorAlreadyInTeam": "هذا الشخص عضو في فريقك بالفعل.",
     "errorEmailTaken": "هذا البريد الإلكتروني مسجّل لدى منظمة أخرى في الحدث. يرجى التواصل مع المنظّم.",
-    "errorParticipantRole": "هذا الشخص مسجّل بالفعل بدوره الخاص. تواصل مع المنظّم لربطه بجناحك."
+    "errorParticipantRole": "هذا الشخص مسجّل بالفعل بدوره الخاص. تواصل مع المنظّم لربطه بجناحك.",
+    "requestsTitle": "طلبات الانضمام ({{count}})",
+    "requestAccept": "قبول",
+    "requestReject": "رفض",
+    "requestError": "تعذّرت معالجة هذا الطلب.",
+    "requestErrorTitle": "طلب",
+    "memberBadgeRole": "عضو في الفريق"
   },
   "plan": {
     "title": "مخطط المعرض",
@@ -346,7 +352,7 @@
     "slotTaken": "تم حجز هذا الموعد للتو. يرجى اختيار موعد آخر.",
     "alreadyBooked": "لديك بالفعل موعد مع جهة الاتصال هذه في هذا التاريخ.",
     "joinVideo": "انضم إلى مكالمة الفيديو",
-    "cancel": "إلغاء الموعد",
+    "cancel": "إلغاء",
     "cancelTitle": "إلغاء هذا الموعد؟",
     "cancelBody": "إلغاء موعدك مع {{name}}؟",
     "cancelConfirm": "إلغاء الموعد",
@@ -484,7 +490,7 @@
     "save": "حفظ",
     "saveError": "تعذر الحفظ. حاول مجددًا.",
     "changePhoto": "تغيير الصورة",
-    "location": "المكان",
+    "location": "مكان اللقاء",
     "locationLocked": "تُعقد جميع مواعيد B2B في قاعة التواصل.",
     "videoLink": "رابط مكالمة الفيديو",
     "duration": "مدة الموعد",
@@ -503,11 +509,21 @@
     "customDuration": "مدة مخصصة (دقيقة)",
     "minutesPlaceholder": "دقائق",
     "buffer": "فاصل بين المواعيد",
-    "bufferHint": "استراحة تُضاف بعد كل موعد.",
+    "bufferHint": "وقت محجوز بعد كل موعد: لا يمكن لأحد حجزه.",
     "noBuffer": "بدون",
     "customBuffer": "فاصل مخصص (دقيقة)",
     "statusChangeTitle": "تغيير الحالة",
-    "statusChangeMsg": "تعيين حالتك إلى «{{status}}»؟ سيراها المشاركون فورًا."
+    "statusChangeMsg": "تعيين حالتك إلى «{{status}}»؟ سيراها المشاركون فورًا.",
+    "acceptRequests": "استقبال الطلبات",
+    "acceptRequestsOn": "يمكن الوصول إليك خلال ساعات الحدث، حتى بدون فترات منشورة.",
+    "acceptRequestsOff": "لن تظهر في دليل B2B ولا يمكن لأحد طلب موعد معك.",
+    "noAvailabilityOpen": "لا توجد فترات منشورة: تبقى متاحًا خلال ساعات الحدث. أضف فترات لتحديد أوقاتك.",
+    "durationLabel": "مدة الموعد",
+    "bufferLabel": "فاصل بين المواعيد",
+    "bufferNone": "بدون",
+    "customShort": "آخر",
+    "customRangeError": "أدخل مدة بين {{min}} و {{max}} دقيقة.",
+    "bufferSummary": "فاصل {{min}} دقيقة"
   },
   "notifications": {
     "title": "الإشعارات",
@@ -526,6 +542,16 @@
         "approved": "تمت الموافقة على مشاركتك بصفة {{role}}. أصبحت صلاحياتك مفعّلة الآن.",
         "pending": "مشاركتك بصفة {{role}} قيد المراجعة من جديد. الميزات المرتبطة بدورك موقوفة مؤقتًا.",
         "rejected": "لم يتم قبول طلب مشاركتك بصفة {{role}}."
+      },
+      "teamJoinRequest": "{{name}} يطلب الانضمام إلى فريق {{company}}.",
+      "teamJoinAccepted": "أصبحت الآن ضمن فريق {{company}}.",
+      "teamJoinRefused": "لم يُقبل طلب انضمامك إلى {{company}}.",
+      "institutional": {
+        "created": "تمت برمجة لقاء مع {{company}} — {{date}} {{time}}، {{location}}.",
+        "scheduled": "حُدِّد لقاؤك مع {{company}} في {{date}} {{time}} ({{location}}).",
+        "confirmed": "تأكّد لقاؤك مع {{company}} — {{date}} {{time}}، {{location}}.",
+        "cancelled": "أُلغي لقاؤك مع {{company}} من طرف المنظّم.",
+        "updated": "حُدِّث لقاؤك مع {{company}} — {{date}} {{time}}، {{location}}."
       }
     },
     "type": {
@@ -612,10 +638,14 @@
     "bannerApprovedBody": "ميزات B2B مُفعّلة.",
     "bannerRejectedTitle": "لم يُقبل الطلب",
     "bannerRejectedBody": "اضغط لإرسال طلب جديد.",
+    "membershipPendingTitle": "تم إرسال طلبك إلى مؤسستك",
+    "membershipPendingBody": "مؤسستك عارضة بالفعل. على مسؤول الجناح قبول طلبك، فهو من يحدد فريقه. في هذه الأثناء تبقى بطاقة الزائر صالحة: يمكنك المسح والتواصل وحجز المواعيد.",
     "staffTitle": "أنت مشارك بالفعل",
     "staffBody": "أنت ضمن فريق هذه المؤسسة التي أضافتك إلى جناحها. صلاحياتك تتبع صلاحياتها، فلا حاجة لإرسال طلب مشاركة.",
     "vipTitle": "وصول كامل",
-    "vipBody": "أنت مسجّل كمشارك: جميع الميزات مفتوحة بالفعل، ولا حاجة لأي طلب."
+    "vipBody": "أنت مسجّل كمشارك: جميع الميزات مفتوحة بالفعل، ولا حاجة لأي طلب.",
+    "bannerTeamPendingTitle": "في انتظار المؤسسة",
+    "bannerTeamPendingBody": "طلب انضمامك إلى {{company}} في انتظار موافقة المسؤول. شارة الزائر الخاصة بك مفعّلة بالفعل."
   },
   "sessions": {
     "title": "الأجهزة المتصلة",
@@ -630,5 +660,32 @@
     "empty": "لا توجد جلسة نشطة.",
     "errorLoad": "تعذّر تحميل أجهزتك.",
     "errorRevoke": "تعذّر تسجيل الخروج من هذا الجهاز."
+  },
+  "institutional": {
+    "title": "اللقاءات المؤسساتية",
+    "short": "مؤسساتي",
+    "subtitle": "مواعيدك الخاصة",
+    "intro": "ينظّم الحدث هذه المواعيد بين الشركاء المؤسساتيين. لا يراها سواك أنت والطرف الآخر.",
+    "upcoming": "القادمة",
+    "past": "السجل",
+    "empty": "لا توجد مواعيد مؤسساتية حتى الآن. سيخبرك المنظّم فور برمجة لقاء.",
+    "unknownCounterpart": "مؤسسة",
+    "errorLoad": "تعذّر تحميل مواعيدك المؤسساتية.",
+    "status": {
+      "scheduled": "مبرمج",
+      "confirmed": "مؤكَّد",
+      "completed": "منتهٍ",
+      "cancelled": "ملغى",
+      "to_schedule": "قيد البرمجة"
+    },
+    "toBeDefined": "التاريخ لم يُحدَّد بعد",
+    "programme": "البرنامج المؤسساتي",
+    "programmeHint": "المواعيد المؤكَّدة بين الشركاء المؤسساتيين الآخرين.",
+    "with": "مع",
+    "countMine": "{{count}} موعد يخصّك",
+    "withLabel": "موعد مع",
+    "organiserNote": "ملاحظة المنظّم",
+    "statMine": "مواعيدي القادمة",
+    "statProgramme": "مواعيد مؤكَّدة أخرى"
   }
 }

@@ -68,7 +68,7 @@ function formatEventDay(isoDate, locale) {
 
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
-  const { scanner, badgeNumber, signOut, participationStatus, isExhibitorStaff, refreshProfile } =
+  const { scanner, badgeNumber, signOut, participationStatus, isExhibitorStaff, isExhibitorMember, refreshProfile } =
     useAuth();
 
   // Refresh profile whenever the screen regains focus (approval status, edits).
@@ -88,6 +88,8 @@ export default function ProfileScreen() {
   const scannerName = scanner?.name || t('profile.defaultName');
   const scannerEmail = scanner?.email || '';
   const scannerRole = scanner?.role || t('profile.defaultRole');
+  // A team member is labelled as one everywhere the role appears.
+  const displayRole = isExhibitorMember ? t('team.memberBadgeRole') : roleLabel(scannerRole);
   const isExposant = scannerRole.toLowerCase() === 'exposant';
   const initial = scannerName[0]?.toUpperCase() || '?';
   const profileImage = isExposant
@@ -142,7 +144,7 @@ export default function ProfileScreen() {
             ) : null}
             <View className="flex-row items-center" style={{ gap: 6 }}>
               <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-                <Chip.Label>{roleLabel(scannerRole)}</Chip.Label>
+                <Chip.Label>{displayRole}</Chip.Label>
               </Chip>
               {isPending ? (
                 <Chip size="sm" variant="soft" color="warning">
@@ -202,7 +204,7 @@ export default function ProfileScreen() {
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>
               <Chip size="sm" variant="soft" color={isExposant ? 'success' : 'default'}>
-                <Chip.Label>{roleLabel(scannerRole)}</Chip.Label>
+                <Chip.Label>{displayRole}</Chip.Label>
               </Chip>
             </ListGroup.ItemSuffix>
           </ListGroup.Item>

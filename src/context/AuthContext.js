@@ -215,6 +215,21 @@ export function AuthProvider({ children }) {
             // Added to an exhibitor's team by that exhibitor: they already
             // take part through their organisation, so no "Participer" CTA.
             isExhibitorStaff: scanner?.is_exhibitor_staff === true,
+            // Runs the stand: the only one who manages the roster, holds the
+            // B2B agenda and edits the organisation profile.
+            isExhibitorOwner: scanner?.is_exhibitor_owner === true,
+            // On the stand without running it. Attends as part of the
+            // organisation; does not act for it.
+            isExhibitorMember: scanner?.is_exhibitor_member === true,
+            // Waiting on the stand owner to accept them. Plain visitor until
+            // then, badge included.
+            membershipStatus: scanner?.membership_status ?? null,
+            pendingExhibitor: scanner?.pending_exhibitor ?? null,
+            // Unlocks the institutional B2B page: private meetings the
+            // organiser arranged between institutions.
+            isInstitutional: scanner?.is_institutional === true,
+            // What the badge prints — "Membre d'équipe" for a team member.
+            badgeRoleLabel: scanner?.badge_role_label ?? scanner?.role ?? null,
             // Registered straight into a participant role (private form or
             // back office) instead of applying for one: no "Participer" CTA
             // either, and role features are unlocked from the start.

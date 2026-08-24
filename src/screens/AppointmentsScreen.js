@@ -29,6 +29,7 @@ import {
   useBottomSheetAwareHandlers,
 } from 'heroui-native';
 import {
+  getInstitutionalAppointments,
   getPersonas,
   getPersonaSlots,
   bookAppointment,
@@ -178,6 +179,65 @@ function PersonaCard({ item, onBook, onView }) {
 }
 
 // ── Appointment card (my bookings) ──────────────────────────────────────────
+// ── A meeting the organiser arranged between two institutions ────────────────
+//
+// Green throughout, so it reads as a different programme from the blue
+// peer-to-peer meetings around it. Nothing is actionable here: the event owns
+// the schedule and the status, and tapping opens the institutional screen.
+function InstitutionalAppointmentCard({ item, locale, onPress }) {
+  const { t } = useTranslation();
+  const other = item.counterpart || {};
+
+  return (
+    <Pressable
+      onPress={onPress}
+      className="rounded-2xl bg-surface border border-success/30 px-4 py-4 mb-3 active:opacity-80"
+      style={{ gap: 12 }}
+    >
+      <View className="flex-row items-start justify-between" style={{ gap: 8 }}>
+        <View className="flex-1" style={{ gap: 2 }}>
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <Ionicons name="business" size={13} color="#16A34A" />
+            <Text className="text-[10px] font-extrabold text-success uppercase tracking-wide">
+              {t('institutional.short')}
+            </Text>
+          </View>
+          <Text className="text-base font-bold text-foreground leading-6">
+            {other.company || other.name || t('institutional.unknownCounterpart')}
+          </Text>
+          {other.company && other.name ? (
+            <Text className="text-xs text-muted">{other.name}</Text>
+          ) : null}
+        </View>
+        <Chip size="sm" variant="soft" color={item.status === 'cancelled' ? 'danger' : item.status === 'confirmed' ? 'success' : 'warning'}>
+          <Chip.Label>{t(`institutional.status.${item.status}`)}</Chip.Label>
+        </Chip>
+      </View>
+
+      <View className="flex-row flex-wrap" style={{ gap: 14 }}>
+        <View className="flex-row items-center" style={{ gap: 6 }}>
+          <Ionicons name="calendar-outline" size={14} color="#16A34A" />
+          <Text className="text-xs font-semibold text-foreground">
+            {item.date ? formatDateLabel(item.date, locale) : t('institutional.toBeDefined')}
+          </Text>
+        </View>
+        {item.start_time && item.end_time ? (
+          <View className="flex-row items-center" style={{ gap: 6 }}>
+            <Ionicons name="time-outline" size={14} color="#16A34A" />
+            <Text className="text-xs font-semibold text-foreground">
+              {item.start_time} – {item.end_time}
+            </Text>
+          </View>
+        ) : null}
+        <View className="flex-row items-center" style={{ gap: 6 }}>
+          <Ionicons name="location-outline" size={14} color="#16A34A" />
+          <Text className="text-xs font-semibold text-foreground">{item.location}</Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
 function AppointmentCard({ item, onCancel, locale }) {
   const { t } = useTranslation();
   const persona = item.persona || {};
@@ -270,13 +330,16 @@ export default function AppointmentsScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   // B2B is peer-to-peer between approved participants — a plain visitor can
   // neither book nor be booked, and is sent to "Participer" instead.
-  const { isParticipant, b2bPendingCount, refreshProfile } =
+  const { isParticipant, isExhibitorMember, isInstitutional, b2bPendingCount, refreshProfile } =
     useAuth();
 
   const [tab, setTab] = useState('contacts'); // 'contacts' | 'mine'
   const [personas, setPersonas] = useState([]);
   const [upcoming, setUpcoming] = useState([]);
   const [past, setPast] = useState([]);
+  // Meetings the organiser arranged between institutions. They belong in this
+  // list too — for an institution they are the appointments that matter most.
+  const [institutional, setInstitutional] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -299,11 +362,19 @@ export default function AppointmentsScreen({ navigation }) {
     // the tab bar reflects requests that arrived since the last visit.
     refreshProfile();
     try {
-      const [pRes, aRes] = await Promise.allSettled([getPersonas(), getMyAppointments()]);
+      const [pRes, aRes, iRes] = await Promise.allSettled([
+        getPersonas(),
+        getMyAppointments(),
+        isInstitutional ? getInstitutionalAppointments() : Promise.resolve(null),
+      ]);
       if (pRes.status === 'fulfilled') setPersonas(pRes.value?.data?.data || []);
       if (aRes.status === 'fulfilled') {
         setUpcoming(aRes.value?.data?.upcoming || []);
         setPast(aRes.value?.data?.past || []);
+      }
+      if (iRes.status === 'fulfilled' && iRes.value) {
+        // Only my own: the rest of the programme lives on its own screen.
+        setInstitutional((iRes.value?.data?.data || []).filter((a) => a.is_mine !== false));
       }
     } finally {
       setLoading(false);
@@ -430,52 +501,83 @@ export default function AppointmentsScreen({ navigation }) {
     );
   };
 
-  const mineData = [...upcoming, ...past];
+  // Institutional meetings first: they are scheduled by the event, not
+  // requested, so they are commitments rather than pending asks.
+  const mineData = [
+    ...institutional.map((a) => ({ ...a, __institutional: true })),
+    ...upcoming,
+    ...past,
+  ];
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       {/* ── Header ─────────────────────────────────── */}
+      {/* The agenda button keeps the top-right corner — it is this screen's
+          own counterpart, and the red dot has to be visible at a glance. */}
       <View className="px-4 pt-5 pb-3 flex-row items-start" style={{ gap: 12 }}>
         <MenuButton />
         <View className="flex-1">
           <Text className="text-2xl font-extrabold text-foreground">{t('b2b.title')}</Text>
           <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
         </View>
-        {/* The other side of B2B: my own availability + the requests I received.
-            Participants only — a visitor attends meetings, they don't hold an
-            agenda people can book into. The dot mirrors the one on the tab bar
-            so an unanswered request is visible at both steps of the path. */}
-        {isParticipant && (
-        <Pressable
-          onPress={() => navigation.navigate('B2BAgenda')}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t('b2b.myAgenda')}
-          className="h-11 px-3 rounded-2xl bg-accent flex-row items-center justify-center active:opacity-70"
-          style={{ gap: 6 }}
-        >
-          <Ionicons name="briefcase-outline" size={18} color="#FFFFFF" />
-          <Text className="text-sm font-bold text-accent-foreground">{t('b2b.myAgendaShort')}</Text>
-          {b2bPendingCount > 0 && (
-            <View
-              className="absolute bg-danger rounded-full items-center justify-center"
-              style={{ top: -3, insetInlineEnd: -3, minWidth: 18, height: 18, paddingHorizontal: 4 }}
-            >
-              <Text className="text-[10px] font-extrabold text-danger-foreground">
-                {b2bPendingCount > 9 ? '9+' : b2bPendingCount}
-              </Text>
-            </View>
-          )}
-        </Pressable>
+
+        {isParticipant && !isExhibitorMember && (
+          <Pressable
+            onPress={() => navigation.navigate('B2BAgenda')}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t('b2b.myAgenda')}
+            className="h-11 px-3 rounded-2xl bg-accent flex-row items-center justify-center active:opacity-70"
+            style={{ gap: 6 }}
+          >
+            <Ionicons name="briefcase-outline" size={18} color="#FFFFFF" />
+            <Text className="text-sm font-bold text-accent-foreground" numberOfLines={1}>
+              {t('b2b.myAgendaShort')}
+            </Text>
+            {b2bPendingCount > 0 && (
+              <View
+                className="absolute bg-danger rounded-full items-center justify-center"
+                style={{ top: -3, insetInlineEnd: -3, minWidth: 18, height: 18, paddingHorizontal: 4 }}
+              >
+                <Text className="text-[10px] font-extrabold text-danger-foreground">
+                  {b2bPendingCount > 9 ? '9+' : b2bPendingCount}
+                </Text>
+              </View>
+            )}
+          </Pressable>
         )}
       </View>
+
+      {/* Institutional access. A separate programme deserves a separate door,
+          in its own colour: cramming it next to the agenda made both buttons
+          shrink and told the reader nothing about how they differ. */}
+      {isInstitutional && (
+        <Pressable
+          onPress={() => navigation.navigate('InstitutionalB2B')}
+          className="mx-4 mb-3 rounded-2xl bg-success-soft border border-success/30 px-4 py-3 flex-row items-center active:opacity-80"
+          style={{ gap: 12 }}
+        >
+          <View className="w-10 h-10 rounded-xl bg-success items-center justify-center">
+            <Ionicons name="business" size={20} color="#FFFFFF" />
+          </View>
+          <View className="flex-1">
+            <Text className="text-sm font-extrabold text-foreground">{t('institutional.title')}</Text>
+            <Text className="text-xs text-muted mt-0.5" numberOfLines={1}>
+              {institutional.length > 0
+                ? t('institutional.countMine', { count: institutional.length })
+                : t('institutional.subtitle')}
+            </Text>
+          </View>
+          <Ionicons name={forwardIcon()} size={18} color="#16A34A" />
+        </Pressable>
+      )}
 
       {/* ── Segmented control ──────────────────────── */}
       <View className="px-4 mb-4">
         <View className="flex-row bg-surface rounded-2xl p-1">
           {[
             { key: 'contacts', label: t('appointments.tabContacts') },
-            { key: 'mine', label: t('appointments.tabMine', { count: upcoming.length }) },
+            { key: 'mine', label: t('appointments.tabMine', { count: upcoming.length + institutional.length }) },
           ].map((s) => {
             const active = tab === s.key;
             return (
@@ -540,13 +642,21 @@ export default function AppointmentsScreen({ navigation }) {
         <FlatList
           {...tabScroll}
           data={mineData}
-          keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />}
-          renderItem={({ item }) => (
-            <AppointmentCard item={item} onCancel={handleCancel} locale={locale} />
-          )}
+          keyExtractor={(item) => (item.__institutional ? `inst-${item.id}` : `apt-${item.id}`)}
+          renderItem={({ item }) =>
+            item.__institutional ? (
+              <InstitutionalAppointmentCard
+                item={item}
+                locale={locale}
+                onPress={() => navigation.navigate('InstitutionalB2B')}
+              />
+            ) : (
+              <AppointmentCard item={item} onCancel={handleCancel} locale={locale} />
+            )
+          }
           ListEmptyComponent={
             <View className="items-center py-16">
               <Ionicons name="calendar-outline" size={48} color={ACCENT} />

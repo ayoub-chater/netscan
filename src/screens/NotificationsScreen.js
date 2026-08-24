@@ -30,6 +30,12 @@ const TYPE_ICONS = {
   appointment_request: { icon: 'calendar', color: '#286EAD' },
   appointment_status: { icon: 'calendar', color: '#286EAD' },
   participation: { icon: 'ribbon', color: '#286EAD' },
+  // Someone asked to join my stand, or a stand owner answered my request.
+  team_join_request: { icon: 'person-add', color: '#286EAD' },
+  team_join_reviewed: { icon: 'people-circle', color: '#2db067' },
+  // Meetings the organiser arranged between institutions — green, like the
+  // institutional programme itself.
+  institutional_meeting: { icon: 'business', color: '#16A34A' },
   general: { icon: 'notifications', color: '#286EAD' },
 };
 
@@ -69,6 +75,27 @@ function localizedMessage(item, t) {
         status: t(`appointments.status.${params.status}`, {
           defaultValue: params.status,
         }),
+      });
+
+    case 'team_join_request':
+      return t('notifications.body.teamJoinRequest', {
+        name: params.name,
+        company: params.company,
+      });
+
+    case 'team_join_reviewed':
+      return t(
+        params.accepted ? 'notifications.body.teamJoinAccepted' : 'notifications.body.teamJoinRefused',
+        { company: params.company }
+      );
+
+    case 'institutional_meeting':
+      return t(`notifications.body.institutional.${params.change}`, {
+        company: params.company,
+        date: params.date || t('institutional.toBeDefined'),
+        time: params.time || '',
+        location: params.location,
+        defaultValue: item.message,
       });
 
     case 'participation':
@@ -149,6 +176,10 @@ export default function NotificationsScreen() {
       navigation.navigate('Main', { screen: 'RDV' });
     } else if (item.type === 'participation') {
       navigation.navigate('Participate');
+    } else if (item.type === 'team_join_request') {
+      navigation.navigate('Team');
+    } else if (item.type === 'institutional_meeting') {
+      navigation.navigate('InstitutionalB2B');
     }
   };
 

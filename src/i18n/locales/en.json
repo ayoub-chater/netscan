@@ -294,7 +294,13 @@
     "errorEdit": "An error occurred while editing.",
     "errorAlreadyInTeam": "This person is already part of your team.",
     "errorEmailTaken": "This email already belongs to another organisation at the event. Please contact the organiser.",
-    "errorParticipantRole": "This person is already registered with their own role. Contact the organiser to attach them to your booth."
+    "errorParticipantRole": "This person is already registered with their own role. Contact the organiser to attach them to your booth.",
+    "requestsTitle": "Join requests ({{count}})",
+    "requestAccept": "Accept",
+    "requestReject": "Decline",
+    "requestError": "Could not process this request.",
+    "requestErrorTitle": "Request",
+    "memberBadgeRole": "Team member"
   },
   "plan": {
     "title": "Floor plan",
@@ -346,7 +352,7 @@
     "slotTaken": "This slot was just taken. Please choose another.",
     "alreadyBooked": "You already have a meeting with this contact on this date.",
     "joinVideo": "Join video call",
-    "cancel": "Cancel meeting",
+    "cancel": "Cancel",
     "cancelTitle": "Cancel this meeting?",
     "cancelBody": "Cancel your meeting with {{name}}?",
     "cancelConfirm": "Cancel meeting",
@@ -484,7 +490,7 @@
     "save": "Save",
     "saveError": "Unable to save. Please try again.",
     "changePhoto": "Change photo",
-    "location": "Location",
+    "location": "Meeting place",
     "locationLocked": "All B2B meetings take place in the networking room.",
     "videoLink": "Video call link",
     "duration": "Meeting duration",
@@ -503,11 +509,21 @@
     "customDuration": "Custom duration (min)",
     "minutesPlaceholder": "Minutes",
     "buffer": "Buffer between meetings",
-    "bufferHint": "A pause added after each meeting.",
+    "bufferHint": "Time held after each meeting: nobody can book that slot.",
     "noBuffer": "None",
     "customBuffer": "Custom buffer (min)",
     "statusChangeTitle": "Change status",
-    "statusChangeMsg": "Set your availability to \"{{status}}\"? Attendees will see this immediately."
+    "statusChangeMsg": "Set your availability to \"{{status}}\"? Attendees will see this immediately.",
+    "acceptRequests": "Accept meeting requests",
+    "acceptRequestsOn": "You are reachable during event hours, even with no published slots.",
+    "acceptRequestsOff": "You are hidden from the B2B directory and nobody can request a meeting.",
+    "noAvailabilityOpen": "No published slots: you stay reachable during event hours. Add slots to narrow your availability.",
+    "durationLabel": "Meeting length",
+    "bufferLabel": "Break between meetings",
+    "bufferNone": "None",
+    "customShort": "Other",
+    "customRangeError": "Enter a value between {{min}} and {{max}} minutes.",
+    "bufferSummary": "{{min}} min break"
   },
   "notifications": {
     "title": "Notifications",
@@ -526,6 +542,16 @@
         "approved": "Your participation as {{role}} has been approved. Your access is now active.",
         "pending": "Your participation as {{role}} is under review again. The features tied to your role are paused meanwhile.",
         "rejected": "Your participation request as {{role}} was not accepted."
+      },
+      "teamJoinRequest": "{{name}} asks to join the {{company}} team.",
+      "teamJoinAccepted": "You are now part of the {{company}} team.",
+      "teamJoinRefused": "Your request to join {{company}} was not accepted.",
+      "institutional": {
+        "created": "A meeting with {{company}} has been arranged — {{date}} {{time}}, {{location}}.",
+        "scheduled": "Your meeting with {{company}} is set for {{date}} {{time}} ({{location}}).",
+        "confirmed": "Your meeting with {{company}} is confirmed — {{date}} {{time}}, {{location}}.",
+        "cancelled": "Your meeting with {{company}} was cancelled by the organiser.",
+        "updated": "Your meeting with {{company}} was updated — {{date}} {{time}}, {{location}}."
       }
     },
     "type": {
@@ -608,10 +634,14 @@
     "bannerApprovedBody": "Your B2B features are active.",
     "bannerRejectedTitle": "Request declined",
     "bannerRejectedBody": "Tap to submit a new request.",
+    "membershipPendingTitle": "Request sent to your organisation",
+    "membershipPendingBody": "Your company already exhibits. The stand owner has to accept you — their team is theirs to decide. Meanwhile your visitor badge stays valid: you can scan, network and book meetings.",
     "staffTitle": "You already take part",
     "staffBody": "You're on this organisation's team — they added you to their stand. Your access follows theirs, so there's no participation request to send.",
     "vipTitle": "Full access",
-    "vipBody": "You are registered as a participant: every feature is already unlocked, no request needed."
+    "vipBody": "You are registered as a participant: every feature is already unlocked, no request needed.",
+    "bannerTeamPendingTitle": "Waiting for the organisation",
+    "bannerTeamPendingBody": "Your request to join {{company}} is awaiting the owner’s approval. Your visitor badge is already active."
   },
   "sessions": {
     "title": "Signed-in devices",
@@ -626,5 +656,32 @@
     "empty": "No active session.",
     "errorLoad": "Could not load your devices.",
     "errorRevoke": "Could not sign this device out."
+  },
+  "institutional": {
+    "title": "Institutional B2B",
+    "short": "Institutional",
+    "subtitle": "Your private meetings",
+    "intro": "These meetings are arranged by the event between institutional partners. Only you and your counterpart can see them.",
+    "upcoming": "Upcoming",
+    "past": "History",
+    "empty": "No institutional meeting yet. The organiser will let you know as soon as one is scheduled.",
+    "unknownCounterpart": "Institution",
+    "errorLoad": "Could not load your institutional meetings.",
+    "status": {
+      "scheduled": "Scheduled",
+      "confirmed": "Confirmed",
+      "completed": "Completed",
+      "cancelled": "Cancelled",
+      "to_schedule": "To be scheduled"
+    },
+    "toBeDefined": "Date to be confirmed",
+    "programme": "Institutional programme",
+    "programmeHint": "Confirmed meetings between the other institutional partners.",
+    "with": "with",
+    "countMine": "{{count}} meeting(s) involving you",
+    "withLabel": "Meeting with",
+    "organiserNote": "Organiser's note",
+    "statMine": "My upcoming meetings",
+    "statProgramme": "Other confirmed meetings"
   }
 }

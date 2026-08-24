@@ -112,9 +112,15 @@ function ContactRow({ item, onPress }) {
 
 // Big entry point into the "Participer" flow. Its look follows where the user
 // stands: an invitation before applying, a status card after.
-function ParticipateBanner({ status, role, onPress }) {
+function ParticipateBanner({ status, role, membershipStatus, pendingExhibitor, onPress }) {
   const { t } = useTranslation();
   const forward = arrowForwardIcon();
+
+  // ── Waiting on the stand owner ──────────────────────────────────────────
+  // The organiser validated them, but the organisation they named already
+  // exhibits and its owner decides who joins. Their participation reads
+  // "approved" — saying so here would be a lie, they are not on the stand.
+  const awaitingOwner = membershipStatus === 'pending';
 
   // ── Invitation ──────────────────────────────────────────────────────────
   // Nothing requested yet: this is the dashboard's primary call to action, so
@@ -169,8 +175,9 @@ function ParticipateBanner({ status, role, onPress }) {
   // surface styling shared with the rest of the dashboard.
   // Class names are written out in full — Uniwind resolves them statically,
   // so an interpolated `bg-${tint}-soft` would never be generated.
-  const variant =
-    status === 'approved'
+  const variant = awaitingOwner
+    ? { icon: 'hourglass-outline', bubble: 'bg-warning-soft', iconColor: 'text-warning', titleKey: 'participate.bannerTeamPendingTitle', bodyKey: 'participate.bannerTeamPendingBody' }
+    : status === 'approved'
       ? { icon: 'checkmark-circle', bubble: 'bg-success-soft', iconColor: 'text-success', titleKey: 'participate.bannerApprovedTitle', bodyKey: 'participate.bannerApprovedBody' }
       : status === 'pending'
       ? { icon: 'time-outline', bubble: 'bg-warning-soft', iconColor: 'text-warning', titleKey: 'participate.bannerPendingTitle', bodyKey: 'participate.bannerPendingBody' }
@@ -196,7 +203,9 @@ function ParticipateBanner({ status, role, onPress }) {
             </Chip>
           ) : null}
         </View>
-        <Text className="text-xs text-muted mt-1 leading-5">{t(variant.bodyKey)}</Text>
+        <Text className="text-xs text-muted mt-1 leading-5">
+          {t(variant.bodyKey, { company: pendingExhibitor || '' })}
+        </Text>
       </View>
       <Ionicons name={forwardIcon()} size={18} color="#9CA3AF" />
     </Pressable>
@@ -213,6 +222,8 @@ export default function HomeScreen({ navigation }) {
     participationRole,
     isExhibitorStaff,
     isVip,
+    membershipStatus,
+    pendingExhibitor,
     refreshProfile,
   } = useAuth();
   const { translateY } = useTabBar();
@@ -421,6 +432,8 @@ export default function HomeScreen({ navigation }) {
             <ParticipateBanner
               status={participationStatus}
               role={participationRole}
+              membershipStatus={membershipStatus}
+              pendingExhibitor={pendingExhibitor}
               onPress={() => navigation.navigate('Participate')}
             />
           )}
