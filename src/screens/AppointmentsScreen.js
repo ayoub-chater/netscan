@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -96,6 +96,21 @@ function statusDot(status) {
   return status === 'active' ? '#22C55E' : status === 'on_break' ? '#F59E0B' : '#EF4444';
 }
 
+// A stand is listed under its organisation, so the backend sends the company
+// as the display name too. Repeating it in the subtitle and again in the
+// details list says the same word three times — show it only when it adds
+// something the heading doesn't already say.
+function secondaryCompany(persona) {
+  const company = persona?.company;
+  return company && company !== persona?.name ? company : null;
+}
+
+// Subtitle under a contact's name: job title, then the company when it isn't
+// already the heading.
+function personaSubtitle(persona) {
+  return [persona?.title, secondaryCompany(persona)].filter(Boolean).join(' · ');
+}
+
 // ── Persona card (bookable contact) ─────────────────────────────────────────
 function PersonaCard({ item, onBook, onView }) {
   const { t } = useTranslation();
@@ -137,9 +152,9 @@ function PersonaCard({ item, onBook, onView }) {
                   </View>
                 ) : null}
               </View>
-              {item.title || item.company ? (
+              {personaSubtitle(item) ? (
                 <Text className="text-xs text-muted" numberOfLines={1}>
-                  {[item.title, item.company].filter(Boolean).join(' · ')}
+                  {personaSubtitle(item)}
                 </Text>
               ) : null}
             </View>
@@ -323,7 +338,7 @@ function AppointmentCard({ item, onCancel, locale }) {
   );
 }
 
-export default function AppointmentsScreen({ navigation }) {
+export default function AppointmentsScreen({ navigation, route }) {
   const { t, i18n } = useTranslation();
   const locale = i18n.language || 'fr';
   const tabScroll = useTabBarScroll();
@@ -420,6 +435,32 @@ export default function AppointmentsScreen({ navigation }) {
     setSheetOpen(true);
     if (firstDate) fetchSlots(persona.slug, firstDate);
   };
+
+  // Booking asked for from another screen (the exhibitor directory sends the
+  // stand's contact slug). The contacts list is the only place that knows the
+  // persona's dates and duration, so the request waits for it to load here
+  // rather than the caller re-fetching them.
+  const requestedSlug = route?.params?.bookPersonaSlug;
+  useEffect(() => {
+    if (!requestedSlug || loading) return;
+    navigation.setParams({ bookPersonaSlug: undefined });
+    setTab('contacts');
+    const persona = personas.find((p) => p.slug === requestedSlug);
+    if (!persona) return;
+    const bookable = (persona.bookable ?? true) && (persona.available_dates?.length || 0) > 0;
+    if (!bookable) {
+      Alert.alert(
+        persona.name,
+        persona.already_booked
+          ? t('appointments.alreadyBookedMsg')
+          : persona.status && persona.status !== 'active'
+          ? t('appointments.speakerUnavailableMsg')
+          : t('appointments.noSlots')
+      );
+      return;
+    }
+    openBooking(persona);
+  }, [requestedSlug, personas, loading]);
 
   const fetchSlots = async (slug, date) => {
     setLoadingSlots(true);
@@ -687,9 +728,9 @@ export default function AppointmentsScreen({ navigation }) {
                   </Avatar>
                 )}
                 <Text className="text-xl font-extrabold text-foreground mt-3 text-center">{profilePersona?.name}</Text>
-                {profilePersona?.title || profilePersona?.company ? (
+                {personaSubtitle(profilePersona) ? (
                   <Text className="text-sm text-muted mt-1 text-center">
-                    {[profilePersona?.title, profilePersona?.company].filter(Boolean).join(' · ')}
+                    {personaSubtitle(profilePersona)}
                   </Text>
                 ) : null}
                 <View className="flex-row items-center mt-2" style={{ gap: 6 }}>
@@ -698,6 +739,14 @@ export default function AppointmentsScreen({ navigation }) {
                     {t(`speaker.statusValue.${profilePersona?.status || 'active'}`)}
                   </Text>
                 </View>
+                {/* What the organisation does — the first thing someone
+                    weighing a meeting wants, so it sits with the identity
+                    rather than below the logistics. */}
+                {profilePersona?.company_description ? (
+                  <Text className="text-sm text-muted leading-6 mt-3 text-center">
+                    {profilePersona.company_description}
+                  </Text>
+                ) : null}
               </View>
 
               <View className="px-4 pt-4" style={{ gap: 14 }}>
@@ -708,10 +757,10 @@ export default function AppointmentsScreen({ navigation }) {
                   </View>
                 ) : null}
                 <View style={{ gap: 10 }}>
-                  {profilePersona?.company ? (
+                  {secondaryCompany(profilePersona) ? (
                     <View className="flex-row items-center" style={{ gap: 8 }}>
                       <Ionicons name="business-outline" size={15} color={ACCENT} />
-                      <Text className="text-sm text-foreground">{profilePersona.company}</Text>
+                      <Text className="text-sm text-foreground">{secondaryCompany(profilePersona)}</Text>
                     </View>
                   ) : null}
                   {profilePersona?.title ? (
@@ -842,9 +891,9 @@ export default function AppointmentsScreen({ navigation }) {
                 <Text className="text-xl font-extrabold text-foreground mt-3 text-center">
                   {activePersona?.name}
                 </Text>
-                {activePersona?.title || activePersona?.company ? (
+                {personaSubtitle(activePersona) ? (
                   <Text className="text-sm text-muted mt-1 text-center">
-                    {[activePersona?.title, activePersona?.company].filter(Boolean).join(' · ')}
+                    {personaSubtitle(activePersona)}
                   </Text>
                 ) : null}
                 {activePersona?.appointment_duration ? (

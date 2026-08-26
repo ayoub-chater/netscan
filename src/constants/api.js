@@ -1,5 +1,5 @@
 // For local development, set this to your computer's current IPv4 address
-const API_IP = '192.168.11.123';
+const API_IP = '192.168.11.204';
 
 // export const BASE_URL = `http://${API_IP}:8000/api/v1`;
 

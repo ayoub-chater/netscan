@@ -473,6 +473,25 @@ export default function ExposantsScreen({ navigation }) {
 
               {/* Action buttons */}
               <View className="px-4 pt-6" style={{ gap: 12 }}>
+                {/* A stand is met through the person running it. The B2B tab
+                    owns the dates and slots, so the request is handed to it
+                    rather than rebuilt here. `persona_slug` is null whenever
+                    the stand has no bookable contact — including your own. */}
+                {sheetExposant?.persona_slug && !isMine ? (
+                  <Button
+                    variant="primary"
+                    size="lg"
+                    className="rounded-2xl"
+                    onPress={() => {
+                      const slug = sheetExposant.persona_slug;
+                      closeSheet();
+                      navigation.navigate('RDV', { bookPersonaSlug: slug });
+                    }}
+                  >
+                    <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
+                    <Button.Label>{t('appointments.book')}</Button.Label>
+                  </Button>
+                ) : null}
                 {/* Managing the roster belongs to whoever runs the stand.
                     A member sees their organisation like anyone else. */}
                 {isMine && isExhibitorOwner ? (
