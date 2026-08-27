@@ -10,7 +10,7 @@
     "ios": {
       "supportsTablet": false,
       "bundleIdentifier": "com.logiterre",
-      "buildNumber": "10",
+      "buildNumber": "11",
       "infoPlist": {
         "NSCameraUsageDescription": "L'application a besoin d'accéder à la caméra pour scanner les QR codes des badges.",
         "NSPhotoLibraryUsageDescription": "L'application a besoin d'accéder à vos photos pour définir votre photo de profil ou le logo de votre entreprise.",
@@ -27,7 +27,7 @@
         "backgroundColor": "#DCE9F5"
       },
       "package": "com.logiterre",
-      "versionCode": 19,
+      "versionCode": 20,
       "permissions": [
         "CAMERA",
         "android.permission.CAMERA",
