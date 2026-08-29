@@ -27,6 +27,9 @@ export const ENDPOINTS = {
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,
     networkingDelete: (id, badge) => `${BASE_URL}/networking/history/${id}?badge_number=${encodeURIComponent(badge)}`,
     exposants: `${BASE_URL}/exposants`,
+    // Participants who are not a stand: intervenants, sponsors, partenaires,
+    // institutions, presse, organisation.
+    partenaires: `${BASE_URL}/partenaires?event_slug=${EVENT_SLUG}`,
     personas: `${BASE_URL}/personas?event_slug=${EVENT_SLUG}`,
     personaSlots: (slug, date) =>
         `${BASE_URL}/personas/${encodeURIComponent(slug)}/slots?event_slug=${EVENT_SLUG}&date=${encodeURIComponent(date)}`,

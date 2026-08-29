@@ -146,6 +146,8 @@
   "menu": {
     "open": "فتح القائمة",
     "title": "التنقل",
+    "partners": "دليل الشركاء",
+    "partnersDesc": "متحدثون، رعاة، مؤسسات",
     "exhibitors": "دليل العارضين",
     "exhibitorsDesc": "الشركات المشاركة في المعرض",
     "scan": "مسح شارة",
@@ -258,14 +260,23 @@
     "close": "إغلاق",
     "removeConnectionTitle": "إزالة من السجل؟",
     "removeConnectionBody": "حذف الاتصال مع {{name}}؟",
-    "removeConnectionError": "تعذّر حذف هذا الاتصال.",
-    "filterAll": "الكل",
-    "filterTech": "تقنية",
-    "filterStartups": "شركات ناشئة",
-    "filterAi": "الذكاء الاصطناعي",
-    "filterFinance": "المالية",
-    "filterHealth": "الصحة",
-    "filterLogistics": "اللوجستيك"
+    "removeConnectionError": "تعذّر حذف هذا الاتصال."
+  },
+  "partenaires": {
+    "title": "الشركاء",
+    "searchPlaceholder": "ابحث عن شريك...",
+    "organisation": "الجهة",
+    "emptyTitle": "لا يوجد شركاء",
+    "emptyBody": "سيظهر هنا المتحدثون والرعاة والشركاء."
+  },
+  "availability": {
+    "available": "متاح",
+    "on_break": "في استراحة",
+    "unavailable": "غير متاح",
+    "institutional": "بدعوة",
+    "on_breakMessage": "أوقف هذا المشارك جدوله مؤقتًا. ستُفتح المواعيد لاحقًا.",
+    "unavailableMessage": "لا يقبل هذا المشارك طلبات المواعيد حاليًا.",
+    "institutionalMessage": "تنظّم إدارة الحدث اللقاءات المؤسساتية."
   },
   "team": {
     "title": "فريقي",

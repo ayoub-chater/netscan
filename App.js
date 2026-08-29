@@ -38,6 +38,7 @@ import PlanScreen from './src/screens/PlanScreen';
 import ProfileScreen from './src/screens/ProfileScreen';
 import WebsiteScreen from './src/screens/WebsiteScreen';
 import ExposantsScreen from './src/screens/ExposantsScreen';
+import PartenairesScreen from './src/screens/PartenairesScreen';
 import AppointmentsScreen from './src/screens/AppointmentsScreen';
 import HistoryScreen from './src/screens/HistoryScreen';
 import TermsScreen from './src/screens/TermsScreen';
@@ -60,6 +61,7 @@ const Home = withPageTransition(HomeScreen);
 const Plan = withPageTransition(PlanScreen);
 const Website = withPageTransition(WebsiteScreen);
 const Exposants = withPageTransition(ExposantsScreen);
+const Partenaires = withPageTransition(PartenairesScreen);
 const Appointments = withPageTransition(AppointmentsScreen);
 const Profile = withPageTransition(ProfileScreen);
 const History = withPageTransition(HistoryScreen);
@@ -97,6 +99,7 @@ function MainTabs() {
       <Tab.Screen name="Plan" component={Plan} />
       <Tab.Screen name="Expos" component={Website} />
       <Tab.Screen name="Exposants" component={Exposants} />
+      <Tab.Screen name="Partenaires" component={Partenaires} />
       <Tab.Screen name="RDV" component={Appointments} />
       <Tab.Screen name="Détails" component={Profile} />
       {/* Sub-page kept inside the tabs so the floating navbar stays visible.

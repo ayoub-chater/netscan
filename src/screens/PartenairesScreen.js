@@ -6,13 +6,11 @@ import {
   FlatList,
   RefreshControl,
   Linking,
-  Alert,
 } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
-import { withUniwind } from 'uniwind';
 import { useTranslation } from 'react-i18next';
 import {
   Avatar,
@@ -25,20 +23,30 @@ import {
   Skeleton,
   Surface,
 } from 'heroui-native';
-import { getExposants, networkingHistory, deleteNetworkingRecord } from '../services/api';
-import { useAuth } from '../context/AuthContext';
+import { getPartenaires } from '../services/api';
 import { useTabBarScroll } from '../context/TabBarContext';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
 import SearchBar from '../components/SearchBar';
 import AvailabilityBadge, { AvailabilityNote } from '../components/AvailabilityBadge';
+import { roleLabel } from '../constants/roles';
 import { latinLabel, forwardIcon } from '../utils/rtl';
 
-const StyledIonicons = withUniwind(Ionicons);
+/**
+ * The other half of the directory.
+ *
+ * Exhibitors are organisations and get their own page; a partner is a person —
+ * a speaker, a sponsor's representative, an institution's delegate — so this
+ * lists people. Same card, same detail sheet, same booking rule as the
+ * exhibitor directory: the "book" button appears exactly when the backend says
+ * a meeting would be accepted (`bookable`), and the badge says why when it
+ * would not. Institutions are listed but never bookable — the event arranges
+ * their meetings.
+ */
 
-function ExposantCard({ item, isMine, onPress }) {
+function PartenaireCard({ item, onPress, onBook }) {
   const { t } = useTranslation();
-  const displayName = item.company || item.name;
+  const displayName = item.name || item.company;
   const initials = displayName ? displayName.slice(0, 2).toUpperCase() : '??';
 
   return (
@@ -52,7 +60,7 @@ function ExposantCard({ item, isMine, onPress }) {
               resizeMode="cover"
             />
           ) : (
-            <Avatar size="md" color={isMine ? 'success' : 'default'} variant="soft">
+            <Avatar size="md" color={item.is_mine ? 'success' : 'default'} variant="soft">
               <Avatar.Fallback>{initials}</Avatar.Fallback>
             </Avatar>
           )}
@@ -60,80 +68,75 @@ function ExposantCard({ item, isMine, onPress }) {
             <Text className="text-base font-bold text-foreground" numberOfLines={1}>
               {displayName}
             </Text>
-            {item.secteur ? (
+            {item.role ? (
               <Chip size="sm" variant="soft" color="default">
-                <Chip.Label>{item.secteur}</Chip.Label>
+                <Chip.Label>{roleLabel(item.role)}</Chip.Label>
               </Chip>
             ) : null}
-            {/* Whether this stand can be met, said on the card itself — a
-                missing button alone never explained why. */}
-            {isMine ? null : <AvailabilityBadge availability={item.availability} size="sm" />}
+            {item.is_mine ? null : (
+              <AvailabilityBadge availability={item.availability} size="sm" />
+            )}
           </View>
-          {isMine ? (
+          {item.is_mine ? (
             <Chip size="sm" variant="soft" color="success">
               <Chip.Label>{t('exposants.me')}</Chip.Label>
             </Chip>
           ) : null}
         </View>
       </Card.Header>
-      {item.description || item.email ? (
+      {item.company || item.description ? (
         <Card.Body className="pt-2 pb-1">
           <Text className="text-sm text-muted leading-5" numberOfLines={2}>
-            {item.description || item.email}
+            {item.description || item.company}
           </Text>
         </Card.Body>
       ) : null}
-      <Card.Footer className="pt-3">
+      {/* Booking sits on the card itself, not only in the sheet: a partner is
+          a person, and the whole reason to open this list is to ask for a
+          meeting. Absent whenever the backend says the request would be
+          refused — institutions, paused agendas, yourself. */}
+      <Card.Footer className="pt-3 flex-row" style={{ gap: 8 }}>
         <Button
-          variant={isMine ? 'primary' : 'secondary'}
+          variant="secondary"
           size="sm"
           className="rounded-xl flex-1"
           onPress={() => onPress(item)}
         >
-          <Button.Label>{isMine ? t('exposants.myProfile') : t('exposants.viewDetails')}</Button.Label>
+          <Button.Label>{t('exposants.viewDetails')}</Button.Label>
         </Button>
+        {item.bookable && item.persona_slug ? (
+          <Button
+            variant="primary"
+            size="sm"
+            className="rounded-xl flex-1"
+            onPress={() => onBook(item)}
+          >
+            <Ionicons name="calendar-outline" size={16} color="#FFFFFF" />
+            <Button.Label>{t('appointments.book')}</Button.Label>
+          </Button>
+        ) : null}
       </Card.Footer>
     </Card>
   );
 }
 
-export default function ExposantsScreen({ navigation }) {
+export default function PartenairesScreen({ navigation }) {
   const { t } = useTranslation();
   const tabScroll = useTabBarScroll();
   const insets = useSafeAreaInsets();
-  const { exhibitorId, badgeNumber, isExhibitorOwner } = useAuth();
-  const [connectedMap, setConnectedMap] = useState(new Map()); // email → scan_id
-  const [deletingConnection, setDeletingConnection] = useState(false);
-  const [exposants, setExposants] = useState([]);
+  const [partenaires, setPartenaires] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [sheetExposant, setSheetExposant] = useState(null);
+  const [sheetPartner, setSheetPartner] = useState(null);
   const [search, setSearch] = useState('');
 
   const load = async () => {
     try {
-      const [exposantsRes, historyRes] = await Promise.allSettled([
-        getExposants(),
-        badgeNumber ? networkingHistory(badgeNumber) : Promise.resolve(null),
-      ]);
-
-      if (exposantsRes.status === 'fulfilled') {
-        setExposants(exposantsRes.value?.data?.data || []);
-      } else {
-        setExposants([]);
-      }
-
-      if (historyRes.status === 'fulfilled' && historyRes.value?.data?.history) {
-        const map = new Map();
-        historyRes.value.data.history.forEach(h => {
-          const email = h?.person?.email?.toLowerCase();
-          if (email && !map.has(email)) {
-            map.set(email, h.id);
-          }
-        });
-        setConnectedMap(map);
-      }
+      const res = await getPartenaires();
+      setPartenaires(res?.data?.data || []);
+    } catch {
+      setPartenaires([]);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -155,11 +158,16 @@ export default function ExposantsScreen({ navigation }) {
     load();
   };
 
-  const isMineCheck = (item) => !!exhibitorId && item.exhibitor_id === exhibitorId;
-
   const openDetail = (item) => {
-    setSheetExposant(item);
+    setSheetPartner(item);
     setSheetOpen(true);
+  };
+
+  // The B2B tab owns the dates, slots and the request itself — going through
+  // it keeps one booking flow instead of two that can drift apart.
+  const openBooking = (item) => {
+    if (!item?.persona_slug) return;
+    navigation.navigate('RDV', { bookPersonaSlug: item.persona_slug });
   };
 
   const openLink = (url) => {
@@ -168,90 +176,52 @@ export default function ExposantsScreen({ navigation }) {
     Linking.openURL(prefixed).catch(() => {});
   };
 
-  const handleDeleteConnection = () => {
-    const email = sheetExposant?.email?.toLowerCase();
-    const scanId = email ? connectedMap.get(email) : null;
-    if (!scanId) return;
-
-    Alert.alert(
-      t('exposants.removeConnectionTitle'),
-      t('exposants.removeConnectionBody', { name: sheetExposant.company || sheetExposant.name }),
-      [
-        { text: t('common.cancel'), style: 'cancel' },
-        {
-          text: t('common.delete'),
-          style: 'destructive',
-          onPress: async () => {
-            setDeletingConnection(true);
-            try {
-              await deleteNetworkingRecord(scanId, badgeNumber);
-              setConnectedMap(prev => {
-                const next = new Map(prev);
-                next.delete(email);
-                return next;
-              });
-              closeSheet();
-            } catch {
-              Alert.alert(t('common.error'), t('exposants.removeConnectionError'));
-            } finally {
-              setDeletingConnection(false);
-            }
-          },
-        },
-      ]
-    );
-  };
-
   const filtered = (() => {
-    let list = exposants;
-    if (search.trim()) {
-      list = list.filter(e =>
-        e.company?.toLowerCase().includes(search.toLowerCase()) ||
-        e.name?.toLowerCase().includes(search.toLowerCase()) ||
-        e.secteur?.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    const rank = (item) => {
-      if (isMineCheck(item)) return 2;
-      if (item.email && connectedMap.has(item.email.toLowerCase())) return 1;
-      return 0;
-    };
-    return [...list].sort((a, b) => rank(b) - rank(a));
+    if (!search.trim()) return partenaires;
+    const needle = search.toLowerCase();
+    return partenaires.filter(p =>
+      p.name?.toLowerCase().includes(needle) ||
+      p.company?.toLowerCase().includes(needle) ||
+      p.secteur?.toLowerCase().includes(needle) ||
+      roleLabel(p.role)?.toLowerCase().includes(needle)
+    );
   })();
 
   // Persistent data for close animation
-  const displayName = sheetExposant ? (sheetExposant.company || sheetExposant.name) : '';
+  const displayName = sheetPartner ? (sheetPartner.name || sheetPartner.company) : '';
   const sheetInitials = displayName ? displayName.slice(0, 2).toUpperCase() : '??';
-  const isMine = sheetExposant ? isMineCheck(sheetExposant) : false;
-  const isConnected = sheetExposant?.email
-    ? connectedMap.has(sheetExposant.email.toLowerCase())
-    : false;
 
-  const contactItems = sheetExposant
+  const contactItems = sheetPartner
     ? [
-        sheetExposant.email && {
-          icon: 'mail-outline',
-          label: t('exposants.email'),
-          value: sheetExposant.email,
-          onPress: () => Linking.openURL(`mailto:${sheetExposant.email}`),
-        },
-        sheetExposant.phone && {
-          icon: 'call-outline',
-          label: t('exposants.phone'),
-          value: sheetExposant.phone,
-          onPress: () => Linking.openURL(`tel:${sheetExposant.phone}`),
-        },
-        sheetExposant.address && {
-          icon: 'location-outline',
-          label: t('exposants.address'),
-          value: sheetExposant.address,
+        sheetPartner.company && {
+          icon: 'business-outline',
+          label: t('partenaires.organisation'),
+          value: sheetPartner.company,
           onPress: null,
         },
-        sheetExposant.website && {
+        sheetPartner.email && {
+          icon: 'mail-outline',
+          label: t('exposants.email'),
+          value: sheetPartner.email,
+          onPress: () => Linking.openURL(`mailto:${sheetPartner.email}`),
+        },
+        sheetPartner.phone && {
+          icon: 'call-outline',
+          label: t('exposants.phone'),
+          value: sheetPartner.phone,
+          onPress: () => Linking.openURL(`tel:${sheetPartner.phone}`),
+        },
+        sheetPartner.address && {
+          icon: 'location-outline',
+          label: t('exposants.address'),
+          value: sheetPartner.address,
+          onPress: null,
+        },
+        sheetPartner.website && {
           icon: 'globe-outline',
           label: t('exposants.website'),
-          value: sheetExposant.website,
-          onPress: () => openLink(sheetExposant.website),
+          value: sheetPartner.website,
+          onPress: () => openLink(sheetPartner.website),
         },
       ].filter(Boolean)
     : [];
@@ -262,20 +232,26 @@ export default function ExposantsScreen({ navigation }) {
       {/* ── Header ─────────────────────────────────── */}
       <View className="px-4 pt-5 pb-4 flex-row items-center" style={{ gap: 12 }}>
         <MenuButton />
-        <Text className="flex-1 text-2xl font-extrabold text-foreground">{t('exposants.title')}</Text>
-        {exposants.length > 0 && (
+        <Text className="flex-1 text-2xl font-extrabold text-foreground">
+          {t('partenaires.title')}
+        </Text>
+        {partenaires.length > 0 && (
           <Chip size="sm" variant="soft" color="default">
-            <Chip.Label>{exposants.length}</Chip.Label>
+            <Chip.Label>{partenaires.length}</Chip.Label>
           </Chip>
         )}
       </View>
 
       {/* ── Search ─────────────────────────────────── */}
       <View className="px-4 mb-4">
-        <SearchBar value={search} onChange={setSearch} placeholder={t('exposants.searchPlaceholder')} />
+        <SearchBar
+          value={search}
+          onChange={setSearch}
+          placeholder={t('partenaires.searchPlaceholder')}
+        />
       </View>
 
-      {/* ── Exposant List ──────────────────────────── */}
+      {/* ── Partner list ───────────────────────────── */}
       {loading ? (
         <View className="px-4" style={{ gap: 12 }}>
           {[0, 1, 2].map(i => (
@@ -287,16 +263,10 @@ export default function ExposantsScreen({ navigation }) {
                   </Skeleton>
                   <View className="flex-1" style={{ gap: 8 }}>
                     <Skeleton isLoading variant="shimmer">
-                      <View
-                        className="h-4 rounded-full bg-surface-secondary"
-                        style={{ width: 160 }}
-                      />
+                      <View className="h-4 rounded-full bg-surface-secondary" style={{ width: 160 }} />
                     </Skeleton>
                     <Skeleton isLoading variant="shimmer">
-                      <View
-                        className="h-3 rounded-full bg-surface-secondary"
-                        style={{ width: 100 }}
-                      />
+                      <View className="h-3 rounded-full bg-surface-secondary" style={{ width: 100 }} />
                     </Skeleton>
                   </View>
                 </View>
@@ -315,21 +285,23 @@ export default function ExposantsScreen({ navigation }) {
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#286EAD" />
           }
           renderItem={({ item }) => (
-            <ExposantCard item={item} isMine={isMineCheck(item)} onPress={openDetail} />
+            <PartenaireCard item={item} onPress={openDetail} onBook={openBooking} />
           )}
           ListEmptyComponent={
             <View className="items-center py-16">
-              <Ionicons name="business-outline" size={48} color="#2db067" />
+              <Ionicons name="ribbon-outline" size={48} color="#2db067" />
               <Text className="text-base font-bold text-foreground mt-4">
-                {t('exposants.emptyTitle')}
+                {t('partenaires.emptyTitle')}
+              </Text>
+              <Text className="text-sm text-muted text-center leading-5 px-8 mt-2">
+                {t('partenaires.emptyBody')}
               </Text>
             </View>
           }
         />
       )}
 
-      {/* ── Detail BottomSheet ─────────────────────────
-          Closed automatically when the screen loses focus — see useSheetGuard. */}
+      {/* ── Detail BottomSheet ─────────────────────── */}
       {sheet.mounted ? (
       <BottomSheet
         key={sheet.key}
@@ -351,47 +323,41 @@ export default function ExposantsScreen({ navigation }) {
             <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 40 }}>
               {/* Hero */}
               <View className="items-center pt-3 pb-6 px-4 border-b border-separator">
-                {sheetExposant?.logo ? (
+                {sheetPartner?.logo ? (
                   <Image
-                    source={{ uri: sheetExposant.logo }}
+                    source={{ uri: sheetPartner.logo }}
                     style={{ width: 64, height: 64, borderRadius: 32 }}
                     resizeMode="cover"
                   />
                 ) : (
-                  <Avatar size="lg" color={isMine ? 'success' : 'default'} variant="soft">
+                  <Avatar size="lg" color={sheetPartner?.is_mine ? 'success' : 'default'} variant="soft">
                     <Avatar.Fallback>{sheetInitials}</Avatar.Fallback>
                   </Avatar>
                 )}
                 <Text className="text-xl font-extrabold text-foreground mt-4 mb-2 text-center">
                   {displayName}
                 </Text>
-                {/* Sector labels run long ("Développement d'Applications Web
-                    et Mobiles"), so the row wraps instead of pushing the
-                    "your organization" chip off the screen. The sector itself
-                    shrinks and truncates; the ownership chip never does. */}
                 <View
                   className="flex-row flex-wrap items-center justify-center"
                   style={{ gap: 8 }}
                 >
-                  {sheetExposant?.secteur ? (
+                  {sheetPartner?.role ? (
                     <Chip size="sm" variant="soft" color="default" style={{ flexShrink: 1 }}>
-                      <Chip.Label numberOfLines={1}>{sheetExposant.secteur}</Chip.Label>
+                      <Chip.Label numberOfLines={1}>{roleLabel(sheetPartner.role)}</Chip.Label>
                     </Chip>
                   ) : null}
-                  {isMine ? (
-                    <Chip size="sm" variant="soft" color="success" style={{ flexShrink: 0 }}>
-                      <Chip.Label numberOfLines={1}>{t('exposants.yourOrganization')}</Chip.Label>
+                  {sheetPartner?.secteur ? (
+                    <Chip size="sm" variant="soft" color="default" style={{ flexShrink: 1 }}>
+                      <Chip.Label numberOfLines={1}>{sheetPartner.secteur}</Chip.Label>
                     </Chip>
                   ) : null}
-                  {isMine ? null : (
-                    <AvailabilityBadge availability={sheetExposant?.availability} />
+                  {sheetPartner?.is_mine ? null : (
+                    <AvailabilityBadge availability={sheetPartner?.availability} />
                   )}
                 </View>
-                {/* The reason, spelled out where there is room for it. Silent
-                    when the stand is bookable — the button says that. */}
-                {isMine ? null : (
+                {sheetPartner?.is_mine ? null : (
                   <View className="px-6 mt-3">
-                    <AvailabilityNote availability={sheetExposant?.availability} />
+                    <AvailabilityNote availability={sheetPartner?.availability} />
                   </View>
                 )}
               </View>
@@ -408,18 +374,12 @@ export default function ExposantsScreen({ navigation }) {
                         {index > 0 && <Separator className="mx-4" />}
                         <ListGroup.Item onPress={ci.onPress} disabled={!ci.onPress}>
                           <ListGroup.ItemPrefix>
-                            <Ionicons
-                              name={ci.icon}
-                              size={18}
-                              color="#2db067"
-                            />
+                            <Ionicons name={ci.icon} size={18} color="#2db067" />
                           </ListGroup.ItemPrefix>
                           <ListGroup.ItemContent>
                             <ListGroup.ItemDescription>{ci.label}</ListGroup.ItemDescription>
                             <ListGroup.ItemTitle numberOfLines={1}>{ci.value}</ListGroup.ItemTitle>
                           </ListGroup.ItemContent>
-                          {/* heroui's default suffix is a hardcoded right
-                              chevron, so supply the glyph ourselves. */}
                           {ci.onPress ? (
                             <ListGroup.ItemSuffix>
                               <Ionicons name={forwardIcon()} size={18} color="#9CA3AF" />
@@ -432,72 +392,39 @@ export default function ExposantsScreen({ navigation }) {
                 </View>
               ) : null}
 
-              {/* Description */}
-              {sheetExposant?.description ? (
+              {/* About */}
+              {sheetPartner?.description ? (
                 <View className="px-4 pt-5">
                   <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
                     {t('exposants.about')}
                   </Text>
                   <Surface className="rounded-xl p-4">
                     <Text className="text-sm text-muted leading-5">
-                      {sheetExposant.description}
+                      {sheetPartner.description}
                     </Text>
                   </Surface>
                 </View>
               ) : null}
 
-              {/* Action buttons */}
+              {/* Actions */}
               <View className="px-4 pt-6" style={{ gap: 12 }}>
-                {/* A stand is met through the person running it. The B2B tab
-                    owns the dates and slots, so the request is handed to it
-                    rather than rebuilt here. `persona_slug` is null whenever
-                    the stand has no bookable contact — including your own. */}
-                {sheetExposant?.bookable && sheetExposant?.persona_slug && !isMine ? (
+                {/* The B2B tab owns dates and slots, so the request is handed
+                    to it rather than rebuilt here — same as the exhibitor
+                    directory. `bookable` is false for institutions, for anyone
+                    paused, and for yourself. */}
+                {sheetPartner?.bookable && sheetPartner?.persona_slug ? (
                   <Button
                     variant="primary"
                     size="lg"
                     className="rounded-2xl"
                     onPress={() => {
-                      const slug = sheetExposant.persona_slug;
+                      const slug = sheetPartner.persona_slug;
                       closeSheet();
                       navigation.navigate('RDV', { bookPersonaSlug: slug });
                     }}
                   >
                     <Ionicons name="calendar-outline" size={18} color="#FFFFFF" />
                     <Button.Label>{t('appointments.book')}</Button.Label>
-                  </Button>
-                ) : null}
-                {/* Managing the roster belongs to whoever runs the stand.
-                    A member sees their organisation like anyone else. */}
-                {isMine && isExhibitorOwner ? (
-                  <Button
-                    variant="primary"
-                    size="lg"
-                    className="rounded-2xl"
-                    onPress={() => {
-                      closeSheet();
-                      navigation.navigate('Team');
-                    }}
-                  >
-                    <Button.Label>{t('exposants.myTeam')}</Button.Label>
-                  </Button>
-                ) : null}
-                {isConnected && !isMine ? (
-                  <Button
-                    variant="tertiary"
-                    size="lg"
-                    className="rounded-2xl"
-                    onPress={handleDeleteConnection}
-                    disabled={deletingConnection}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={18}
-                      color="#EF4444"
-                    />
-                    <Button.Label style={{ color: '#EF4444' }}>
-                      {deletingConnection ? t('exposants.removingConnection') : t('exposants.removeConnection')}
-                    </Button.Label>
                   </Button>
                 ) : null}
                 <Button

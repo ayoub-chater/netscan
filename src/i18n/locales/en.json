@@ -146,6 +146,8 @@
   "menu": {
     "open": "Open menu",
     "title": "Navigation",
+    "partners": "Partner directory",
+    "partnersDesc": "Speakers, sponsors, institutions",
     "exhibitors": "Exhibitor directory",
     "exhibitorsDesc": "Companies at the show",
     "scan": "Scan a badge",
@@ -258,14 +260,23 @@
     "close": "Close",
     "removeConnectionTitle": "Remove from log?",
     "removeConnectionBody": "Delete the connection with {{name}}?",
-    "removeConnectionError": "Unable to delete this connection.",
-    "filterAll": "All",
-    "filterTech": "Tech",
-    "filterStartups": "Startups",
-    "filterAi": "AI",
-    "filterFinance": "Finance",
-    "filterHealth": "Health",
-    "filterLogistics": "Logistics"
+    "removeConnectionError": "Unable to delete this connection."
+  },
+  "partenaires": {
+    "title": "Partners",
+    "searchPlaceholder": "Search for a partner...",
+    "organisation": "Organisation",
+    "emptyTitle": "No partner found",
+    "emptyBody": "Speakers, sponsors and partners will appear here."
+  },
+  "availability": {
+    "available": "Available",
+    "on_break": "On a break",
+    "unavailable": "Unavailable",
+    "institutional": "By invitation",
+    "on_breakMessage": "This contact has paused their agenda. Bookings will reopen later.",
+    "unavailableMessage": "This contact isn't taking meeting requests right now.",
+    "institutionalMessage": "Institutional meetings are arranged by the event."
   },
   "team": {
     "title": "My Team",

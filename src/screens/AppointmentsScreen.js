@@ -41,6 +41,7 @@ import { useTabBarScroll } from '../context/TabBarContext';
 import { MEETING_LOCATION } from '../constants/b2b';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
+import AvailabilityBadge, { AvailabilityNote } from '../components/AvailabilityBadge';
 import { forwardIcon, latinLabel } from '../utils/rtl';
 import { apiErrorMessage } from '../utils/apiError';
 
@@ -91,9 +92,18 @@ function NoteField({ value, onChangeText }) {
   );
 }
 
-// Status dot color for a persona.
-function statusDot(status) {
-  return status === 'active' ? '#22C55E' : status === 'on_break' ? '#F59E0B' : '#EF4444';
+// The state AvailabilityBadge speaks, derived from what /personas sends.
+// Mirrors App\Support\B2BAvailability on the server, plus the client-side rule
+// that `bookable` without real dates is not bookable.
+function personaAvailability(persona) {
+  const status = persona?.status || 'active';
+
+  if (status === 'on_break') return 'on_break';
+  if (status !== 'active') return 'unavailable';
+
+  const hasDates = (persona?.available_dates?.length || 0) > 0;
+
+  return (persona?.bookable ?? true) && hasDates ? 'available' : 'unavailable';
 }
 
 // A stand is listed under its organisation, so the backend sends the company
@@ -139,18 +149,27 @@ function PersonaCard({ item, onBook, onView }) {
               </Avatar>
             )}
             <View className="flex-1 items-start" style={{ gap: 4 }}>
-              <View className="flex-row items-center" style={{ gap: 8 }}>
-                <Text className="text-base font-bold text-foreground" numberOfLines={1}>
+              {/* The name is what gives: company names here run long enough to
+                  push the badge under the chevron and clip it. `w-full` so the
+                  row has a width to divide, the name shrinks and truncates,
+                  the badge never does. */}
+              <View className="flex-row items-center w-full" style={{ gap: 8 }}>
+                <Text
+                  className="text-base font-bold text-foreground"
+                  numberOfLines={1}
+                  style={{ flexShrink: 1 }}
+                >
                   {item.name}
                 </Text>
-                {off ? (
-                  <View className="flex-row items-center" style={{ gap: 4 }}>
-                    <View style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: statusDot(status) }} />
-                    <Text className="text-[10px] font-bold text-muted uppercase">
-                      {t(`speaker.statusValue.${status}`)}
-                    </Text>
-                  </View>
-                ) : null}
+                {/* Both states carry a badge now: an available contact used to
+                    be the one case that said nothing at all, which read the
+                    same as a card that had simply failed to load. */}
+                <View style={{ flexShrink: 0 }}>
+                  <AvailabilityBadge
+                    availability={personaAvailability(item)}
+                    size="sm"
+                  />
+                </View>
               </View>
               {personaSubtitle(item) ? (
                 <Text className="text-xs text-muted" numberOfLines={1}>
@@ -733,11 +752,9 @@ export default function AppointmentsScreen({ navigation, route }) {
                     {personaSubtitle(profilePersona)}
                   </Text>
                 ) : null}
-                <View className="flex-row items-center mt-2" style={{ gap: 6 }}>
-                  <View style={{ width: 8, height: 8, borderRadius: 4, backgroundColor: statusDot(profilePersona?.status || 'active') }} />
-                  <Text className="text-xs font-bold text-muted uppercase">
-                    {t(`speaker.statusValue.${profilePersona?.status || 'active'}`)}
-                  </Text>
+                <View className="mt-2 items-center" style={{ gap: 6 }}>
+                  <AvailabilityBadge availability={personaAvailability(profilePersona)} />
+                  <AvailabilityNote availability={personaAvailability(profilePersona)} />
                 </View>
                 {/* What the organisation does — the first thing someone
                     weighing a meeting wants, so it sits with the identity

@@ -146,6 +146,8 @@
   "menu": {
     "open": "Ouvrir le menu",
     "title": "Navigation",
+    "partners": "Annuaire partenaires",
+    "partnersDesc": "Intervenants, sponsors, institutions",
     "exhibitors": "Annuaire exposants",
     "exhibitorsDesc": "Entreprises présentes au salon",
     "scan": "Scanner un badge",
@@ -258,14 +260,23 @@
     "close": "Fermer",
     "removeConnectionTitle": "Retirer du journal ?",
     "removeConnectionBody": "Supprimer la connexion avec {{name}} ?",
-    "removeConnectionError": "Impossible de supprimer cette connexion.",
-    "filterAll": "Tous",
-    "filterTech": "Tech",
-    "filterStartups": "Startups",
-    "filterAi": "IA",
-    "filterFinance": "Finance",
-    "filterHealth": "Santé",
-    "filterLogistics": "Logistique"
+    "removeConnectionError": "Impossible de supprimer cette connexion."
+  },
+  "partenaires": {
+    "title": "Partenaires",
+    "searchPlaceholder": "Rechercher un partenaire...",
+    "organisation": "Organisation",
+    "emptyTitle": "Aucun partenaire trouvé",
+    "emptyBody": "Les intervenants, sponsors et partenaires apparaîtront ici."
+  },
+  "availability": {
+    "available": "Disponible",
+    "on_break": "En pause",
+    "unavailable": "Indisponible",
+    "institutional": "Sur invitation",
+    "on_breakMessage": "Ce contact a mis son agenda en pause. Ses rendez-vous rouvriront plus tard.",
+    "unavailableMessage": "Ce contact n'accepte pas de rendez-vous pour le moment.",
+    "institutionalMessage": "Les rencontres institutionnelles sont organisées par l'événement."
   },
   "team": {
     "title": "Mon Équipe",

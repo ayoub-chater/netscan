@@ -40,6 +40,10 @@ const ITEMS = [
   // Highlighted: this is how a plain visitor becomes an exposant, intervenant,
   // sponsor… so it sits first and gets accent styling.
   { key: 'participate', icon: PARTICIPATE_ICON, route: 'Participate', highlight: true },
+  // Everyone taking part who is not a stand — intervenants, sponsors,
+  // partenaires, institutions, presse. Sits above the exhibitor directory
+  // because it is the wider of the two.
+  { key: 'partners', icon: 'ribbon', route: 'Partenaires' },
   { key: 'exhibitors', icon: 'storefront', route: 'Exposants' },
   { key: 'scan', icon: 'qr-code', route: 'Scanner' },
   { key: 'network', icon: 'people', route: 'History' },

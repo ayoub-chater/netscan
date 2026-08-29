@@ -12,6 +12,7 @@ const TAB_ROUTES = new Set([
   'Plan',
   'Expos',
   'Exposants',
+  'Partenaires',
   'RDV',
   'Détails',
   'History',

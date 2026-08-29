@@ -102,6 +102,9 @@ export const deleteNetworkingRecord = (scanId, badgeNumber) =>
 // ─── Exposants ────────────────────────────────────────────────────────────────
 export const getExposants = () => api.get(ENDPOINTS.exposants);
 
+// ─── Partenaires (every participant who is not a stand) ───────────────────────
+export const getPartenaires = () => api.get(ENDPOINTS.partenaires);
+
 // ─── Appointments (bookable contacts / networking sessions) ────────────────────
 export const getPersonas = () => api.get(ENDPOINTS.personas);
 
