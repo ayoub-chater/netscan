@@ -33,8 +33,11 @@ const StyledIonicons = withUniwind(Ionicons);
 export default function LoginScreen({ navigation }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { width } = useWindowDimensions();
+  const { width, height } = useWindowDimensions();
   const isTablet = width >= 768;
+  // Short phones (and large system font sizes) are where the sign-up link
+  // used to fall below the fold, so the wordmark gives up some height there.
+  const isShort = height < 740;
   const scrollRef = useRef(null);
   const { signIn } = useAuth();
   const [email, setEmail] = useState('');
@@ -91,25 +94,28 @@ export default function LoginScreen({ navigation }) {
             flexGrow: 1,
             justifyContent: isTablet ? 'center' : 'flex-start',
             paddingHorizontal: isTablet ? '15%' : 24,
-            paddingTop: 40,
-            paddingBottom: 40,
+            paddingTop: isTablet ? 40 : 16,
+            // edgeToEdgeEnabled draws the screen under Android's navigation
+            // bar; without its inset the sign-up link sat behind the
+            // 3-button bar on the phones that have one.
+            paddingBottom: insets.bottom + 24,
           }}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="always"
         >
           {/* Wordmark */}
-          <View className="items-center mb-12">
+          <View className={isShort ? 'items-center mb-6' : 'items-center mb-8'}>
             <Image
               source={require('../../assets/Logo_Logiterre-colored.webp')}
-              style={{ width: 200, height: 82 }}
+              style={isShort ? { width: 160, height: 66 } : { width: 200, height: 82 }}
               resizeMode="contain"
             />
             {/* Amber divider */}
-            <View className="h-px w-16 bg-accent mt-4 opacity-60" />
+            <View className="h-px w-16 bg-accent mt-3 opacity-60" />
           </View>
 
           {/* Form card */}
-          <Surface className="rounded-2xl px-5 py-6 gap-5">
+          <Surface className="rounded-2xl px-5 py-5 gap-4">
 
             {/* Heading */}
             <View className="gap-1">
@@ -182,7 +188,7 @@ export default function LoginScreen({ navigation }) {
 
             {/* Forgot password on its own line, then remember me — side by side
                 they overlap on narrow screens / long translations. */}
-            <View className="gap-2">
+            <View className="gap-1">
               <View className="flex-row justify-end">
                 <LinkButton size="sm" onPress={() => navigation.navigate('ForgotPassword')}>
                   <LinkButton.Label className="text-accent font-semibold">
@@ -208,7 +214,7 @@ export default function LoginScreen({ navigation }) {
             <Button
               variant="primary"
               size="lg"
-              className="mt-2 rounded-2xl"
+              className="rounded-2xl"
               onPress={handleLogin}
               isDisabled={loading}
             >
@@ -219,7 +225,7 @@ export default function LoginScreen({ navigation }) {
           </Surface>
 
           {/* Register link */}
-          <View className="flex-row justify-center items-center mt-8 gap-1 flex-wrap">
+          <View className="flex-row justify-center items-center mt-5 gap-1 flex-wrap">
             <Text className="text-sm text-muted">{t('login.noAccount')}</Text>
             <LinkButton
               size="sm"

@@ -30,6 +30,8 @@ const TYPE_ICONS = {
   appointment_request: { icon: 'calendar', color: '#286EAD' },
   appointment_status: { icon: 'calendar', color: '#286EAD' },
   participation: { icon: 'ribbon', color: '#286EAD' },
+  // The organiser released badges: "your badge is ready".
+  badge_ready: { icon: 'id-card', color: '#2db067' },
   // Someone asked to join my stand, or a stand owner answered my request.
   team_join_request: { icon: 'person-add', color: '#286EAD' },
   team_join_reviewed: { icon: 'people-circle', color: '#2db067' },
@@ -97,6 +99,9 @@ function localizedMessage(item, t) {
         location: params.location,
         defaultValue: item.message,
       });
+
+    case 'badge_ready':
+      return t('notifications.body.badgeReady', { event: params.event, defaultValue: item.message });
 
     case 'participation':
       if (params.decision === 'rejected' && params.note) return params.note;
@@ -176,6 +181,8 @@ export default function NotificationsScreen() {
       navigation.navigate('Main', { screen: 'RDV' });
     } else if (item.type === 'participation') {
       navigation.navigate('Participate');
+    } else if (item.type === 'badge_ready') {
+      navigation.navigate('MyBadge');
     } else if (item.type === 'team_join_request') {
       navigation.navigate('Team');
     } else if (item.type === 'institutional_meeting') {

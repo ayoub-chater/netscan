@@ -71,8 +71,16 @@ export function roleLabel(name, language) {
 // it up again.
 const ORDER = [
   'partenaire',
+  // Commercial partnership tiers, highest first. Registered from the
+  // organiser's private links only, so they never show in the Participer
+  // picker — this order is for lists that display a role.
+  'partenaire premium',
+  'partenaire gold',
+  'partenaire silver',
   'sponsor',
   'partenaire institutionnel',
+  'delegate',
+  'vip',
   'exposant',
   'intervenant',
   'presse',
@@ -103,6 +111,11 @@ export const ROLE_ICONS = {
   presse: 'newspaper-outline',
   partenaire: 'people-outline',
   'partenaire institutionnel': 'business-outline',
+  'partenaire premium': 'trophy-outline',
+  'partenaire gold': 'medal-outline',
+  'partenaire silver': 'star-outline',
+  delegate: 'flag-outline',
+  vip: 'star',
   "comite d'organisation": 'briefcase-outline',
 };
 

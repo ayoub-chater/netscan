@@ -79,6 +79,10 @@ export const logout = () =>
 export const fetchMe = () => api.get(ENDPOINTS.me, { params: { event_slug: EVENT_SLUG } });
 
 // ─── Badge lookup ─────────────────────────────────────────────────────────────
+// My printable badge — { available, reason, format, pdf_url, … }. The PDF link
+// expires after 30 minutes, so fetch it again right before opening it.
+export const getMyBadge = () => api.get(ENDPOINTS.badgeMe);
+
 export const lookupBadge = (badgeNumber) => api.get(ENDPOINTS.badgeLookup(badgeNumber));
 
 // ─── Networking scan ─────────────────────────────────────────────────────────

@@ -1,4 +1,4 @@
-import { View, Text, Pressable } from 'react-native';
+import { View, Text, Pressable, Alert, ScrollView } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -6,9 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
 import QRCode from 'react-native-qrcode-svg';
-import { Chip } from 'heroui-native';
+import { Button, Chip, Spinner } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
 import MenuButton from '../components/MenuButton';
+import useMyBadge from '../hooks/useMyBadge';
 import { roleLabel } from '../constants/roles';
 import { backIcon, latinTracking, ltrValue } from '../utils/rtl';
 
@@ -37,6 +38,13 @@ export default function MyBadgeScreen() {
     ? `${BADGE_BASE_URL}/${encodeURIComponent(badgeNumber)}`
     : null;
 
+  // Printable PDF — only once the organiser has released badges.
+  const { badge, opening, open } = useMyBadge();
+  const onDownload = async () => {
+    const ok = await open();
+    if (!ok) Alert.alert(t('myBadge.downloadErrorTitle'), t('myBadge.downloadErrorBody'));
+  };
+
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
       <StatusBar style="light" />
@@ -64,7 +72,9 @@ export default function MyBadgeScreen() {
       </View>
 
       {/* ── Content ────────────────────────────────── */}
-      <View className="flex-1 items-center justify-center px-4" style={{ gap: 24 }}>
+      <ScrollView
+        contentContainerStyle={{ flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 16, paddingBottom: insets.bottom + 24, gap: 24 }}
+      >
         {hasBadge ? (
           <>
             {/* QR card — always light for reliable scanning in any theme */}
@@ -112,6 +122,39 @@ export default function MyBadgeScreen() {
                 {badgeNumber}
               </Text>
             </View>
+
+            {/* Printable badge (PDF) */}
+            {badge?.available ? (
+              <View className="w-full items-center" style={{ maxWidth: 340, gap: 8 }}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  className="rounded-2xl w-full"
+                  onPress={onDownload}
+                  isDisabled={opening}
+                >
+                  {opening ? (
+                    <Spinner size="sm" color="#FFFFFF" />
+                  ) : (
+                    <Ionicons name="download-outline" size={20} color="#FFFFFF" />
+                  )}
+                  <Button.Label>{t('myBadge.download')}</Button.Label>
+                </Button>
+                <Text className="text-xs text-muted text-center leading-4">
+                  {t(badge.format === 'a4' ? 'myBadge.formatA4' : 'myBadge.formatA6')}
+                </Text>
+              </View>
+            ) : badge?.reason === 'not_released' ? (
+              <View
+                className="w-full flex-row items-center bg-surface rounded-2xl px-4 py-3"
+                style={{ maxWidth: 340, gap: 10 }}
+              >
+                <StyledIonicons name="time-outline" size={18} className="text-muted" />
+                <Text className="flex-1 text-xs text-muted leading-4">
+                  {t('myBadge.notReleased')}
+                </Text>
+              </View>
+            ) : null}
           </>
         ) : (
           <View className="items-center px-4" style={{ gap: 16 }}>
@@ -130,7 +173,7 @@ export default function MyBadgeScreen() {
             </Text>
           </View>
         )}
-      </View>
+      </ScrollView>
     </View>
   );
 }

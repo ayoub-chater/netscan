@@ -429,7 +429,15 @@
     "title": "My Badge",
     "subtitle": "Have this code scanned to connect",
     "noBadgeTitle": "No badge linked",
-    "noBadgeBody": "Your badge is not available yet. It will be linked to your account before the event starts."
+    "noBadgeBody": "Your badge is not available yet. It will be linked to your account before the event starts.",
+    "download": "Download my badge (PDF)",
+    "formatA6": "A6 badge to print, or show it on your phone.",
+    "formatA4": "A4 badge: print it, fold it in 4, or show it on your phone.",
+    "notReleased": "Your printable badge will be available here as soon as the organiser publishes it. You will be notified.",
+    "downloadErrorTitle": "Badge unavailable",
+    "downloadErrorBody": "Your badge could not be opened right now. Check your connection and try again.",
+    "readyTitle": "Your badge is ready",
+    "readyBody": "Download it and show it at the entrance, printed or on your phone."
   },
   "terms": {
     "title": "Terms and Conditions",
@@ -563,7 +571,8 @@
         "confirmed": "Your meeting with {{company}} is confirmed — {{date}} {{time}}, {{location}}.",
         "cancelled": "Your meeting with {{company}} was cancelled by the organiser.",
         "updated": "Your meeting with {{company}} was updated — {{date}} {{time}}, {{location}}."
-      }
+      },
+      "badgeReady": "Your badge for {{event}} is ready. Download it and show it at the entrance."
     },
     "type": {
       "appointment_request": "Meeting request",
@@ -571,7 +580,8 @@
       "participation": "Participation",
       "connection": "New connection",
       "appointment": "Appointment",
-      "general": "Notification"
+      "general": "Notification",
+      "badge_ready": "Badge"
     }
   },
   "conference": {

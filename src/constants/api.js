@@ -22,6 +22,8 @@ export const ENDPOINTS = {
     accountClaimConfirm: `${BASE_URL}/account/claim/confirm`,
     me: `${BASE_URL}/me?event_slug=${EVENT_SLUG}`,
     event: `${BASE_URL}/event?slug=${EVENT_SLUG}`,
+    // The signed-in user's own badge: availability + short-lived PDF link
+    badgeMe: `${BASE_URL}/badge/me?event_slug=${EVENT_SLUG}`,
     badgeLookup: (badge) => `${BASE_URL}/badge/${encodeURIComponent(badge)}`,
     networkingScan: `${BASE_URL}/networking/scan`,
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,

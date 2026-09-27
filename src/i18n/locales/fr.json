@@ -429,7 +429,15 @@
     "title": "Mon Badge",
     "subtitle": "Faites scanner ce code pour vous connecter",
     "noBadgeTitle": "Aucun badge relié",
-    "noBadgeBody": "Votre badge n'est pas encore disponible. Il sera relié à votre compte avant le début de l'événement."
+    "noBadgeBody": "Votre badge n'est pas encore disponible. Il sera relié à votre compte avant le début de l'événement.",
+    "download": "Télécharger mon badge (PDF)",
+    "formatA6": "Badge A6 à imprimer, ou à présenter sur votre téléphone.",
+    "formatA4": "Badge A4 : imprimez-le, pliez-le en 4, ou présentez-le sur votre téléphone.",
+    "notReleased": "Votre badge imprimable sera disponible ici dès sa publication par l'organisateur. Vous serez notifié.",
+    "downloadErrorTitle": "Badge indisponible",
+    "downloadErrorBody": "Impossible d'ouvrir votre badge pour le moment. Vérifiez votre connexion et réessayez.",
+    "readyTitle": "Votre badge est disponible",
+    "readyBody": "Téléchargez-le et présentez-le à l'entrée, imprimé ou sur votre téléphone."
   },
   "terms": {
     "title": "Conditions Générales",
@@ -563,7 +571,8 @@
         "confirmed": "Votre rencontre avec {{company}} est confirmée — {{date}} {{time}}, {{location}}.",
         "cancelled": "Votre rencontre avec {{company}} a été annulée par l'organisateur.",
         "updated": "Votre rencontre avec {{company}} a été mise à jour — {{date}} {{time}}, {{location}}."
-      }
+      },
+      "badgeReady": "Votre badge pour {{event}} est disponible. Téléchargez-le et présentez-le à l'entrée."
     },
     "type": {
       "connection": "Nouvelle connexion",
@@ -571,7 +580,8 @@
       "appointment_request": "Demande de rendez-vous",
       "appointment_status": "Rendez-vous mis à jour",
       "participation": "Participation",
-      "general": "Notification"
+      "general": "Notification",
+      "badge_ready": "Badge"
     }
   },
   "conference": {

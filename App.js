@@ -127,6 +127,8 @@ function ConnectionNotifications() {
         navigationRef.navigate('Main', { screen: 'History' });
       } else if (data?.type === 'appointment') {
         navigationRef.navigate('Main', { screen: 'RDV' });
+      } else if (data?.type === 'badge_ready') {
+        navigationRef.navigate('MyBadge');
       }
     });
 

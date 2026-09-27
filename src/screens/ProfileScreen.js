@@ -5,6 +5,7 @@ import {
   ScrollView,
   Image,
   Linking,
+  Alert,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -25,6 +26,7 @@ import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useTabBarScroll } from '../context/TabBarContext';
 import MenuButton from '../components/MenuButton';
+import useMyBadge from '../hooks/useMyBadge';
 import { roleLabel } from '../constants/roles';
 import { forwardIcon, latinLabel, ltrValue } from '../utils/rtl';
 import {
@@ -70,6 +72,8 @@ export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
   const { scanner, badgeNumber, signOut, participationStatus, isExhibitorStaff, isExhibitorMember, refreshProfile } =
     useAuth();
+  // Printable badge — the row only appears once badges are released.
+  const { badge: printable, open: openBadge } = useMyBadge();
 
   // Refresh profile whenever the screen regains focus (approval status, edits).
   useFocusEffect(
@@ -235,6 +239,27 @@ export default function ProfileScreen() {
               <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
             </ListGroup.ItemSuffix>
           </ListGroup.Item>
+          {printable?.available ? (
+            <>
+              <Separator className="mx-4" />
+              <ListGroup.Item
+                onPress={async () => {
+                  const ok = await openBadge();
+                  if (!ok) Alert.alert(t('myBadge.downloadErrorTitle'), t('myBadge.downloadErrorBody'));
+                }}
+              >
+                <ListGroup.ItemPrefix>
+                  <Ionicons name="download-outline" size={18} color="#286EAD" />
+                </ListGroup.ItemPrefix>
+                <ListGroup.ItemContent>
+                  <ListGroup.ItemTitle>{t('myBadge.download')}</ListGroup.ItemTitle>
+                  <ListGroup.ItemDescription>
+                    {t(printable.format === 'a4' ? 'myBadge.formatA4' : 'myBadge.formatA6')}
+                  </ListGroup.ItemDescription>
+                </ListGroup.ItemContent>
+              </ListGroup.Item>
+            </>
+          ) : null}
         </ListGroup>
 
         {/* ── Apparence ────────────────────────────── */}

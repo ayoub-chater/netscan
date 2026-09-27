@@ -31,6 +31,7 @@ import { useTabBar, TAB_BAR_HIDDEN_OFFSET } from '../context/TabBarContext';
 import { networkingHistory, getUnreadNotificationCount } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
 import MenuButton from '../components/MenuButton';
+import BadgeReadyCard from '../components/BadgeReadyCard';
 import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
 import { arrowForwardIcon, forwardIcon, latinLabel } from '../utils/rtl';
 
@@ -390,6 +391,9 @@ export default function HomeScreen({ navigation }) {
               </View>
             </Pressable>
           </View>
+
+          {/* ── Badge ready (after the organiser releases badges) ── */}
+          <BadgeReadyCard style={{ marginBottom: 20 }} />
 
           {/* ── Day Selector ───────────────────────────── */}
           <ScrollView
