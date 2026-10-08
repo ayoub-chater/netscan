@@ -23,6 +23,7 @@ import {
   Card,
   Chip,
   Skeleton,
+  Spinner,
   Surface,
 } from 'heroui-native';
 import { useAuth } from '../context/AuthContext';
@@ -32,12 +33,28 @@ import { networkingHistory, getUnreadNotificationCount } from '../services/api';
 import NetworkingModal from '../components/NetworkingModal';
 import MenuButton from '../components/MenuButton';
 import BadgeReadyCard from '../components/BadgeReadyCard';
+import EventStatusAlert, { useEventStatus, EventStatusDevPanel } from '../components/EventStatusAlert';
+import useMyBadge from '../hooks/useMyBadge';
 import { roleLabel, PARTICIPATE_ICON } from '../constants/roles';
 import { arrowForwardIcon, forwardIcon, latinLabel } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
 const DAY_KEYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+// Set to true to show the DEV chips that freeze the event alert at any moment
+// of the event (development builds only — release builds never show them).
+const EVENT_STATUS_DEV_PANEL = false;
+
+// What the badge banner says when the PDF cannot be opened yet, by the
+// `reason` GET /badge/me gives. `no_badge`: the registration is still being
+// reviewed, nothing to wait for on the badge side. Everything else is the
+// organiser's release (switch, design) still to come. `error`: no answer.
+const BADGE_WAIT = {
+  no_badge: { icon: 'hourglass-outline', titleKey: 'home.badgeValidationTitle', bodyKey: 'home.badgeValidationBody' },
+  error: { icon: 'cloud-offline-outline', titleKey: 'home.badgeErrorTitle', bodyKey: 'home.badgeErrorBody' },
+  pending: { icon: 'ticket-outline', titleKey: 'home.badgeModalTitle', bodyKey: 'home.badgeModalBody' },
+};
 
 // Keep the banner's own proportions so nothing is cropped on any screen width.
 const BADGE_BANNER = require('../../assets/banner-badge.png');
@@ -234,9 +251,25 @@ export default function HomeScreen({ navigation }) {
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const [badgeModalVisible, setBadgeModalVisible] = useState(false);
+  // Why the badge could not be opened ('no_badge' | 'error' | 'pending'), or
+  // null while the explanation is closed.
+  const [badgeWait, setBadgeWait] = useState(null);
+  const { opening: openingBadge, tryOpen: tryOpenBadge } = useMyBadge();
+
+  // The banner hands out the printable badge as soon as the organiser has
+  // released it; until then it says what is still awaited.
+  const onBadgeBanner = async () => {
+    if (openingBadge) return;
+    const { opened, badge } = await tryOpenBadge();
+    if (opened) return;
+    setBadgeWait(!badge ? 'error' : badge.reason === 'no_badge' ? 'no_badge' : 'pending');
+  };
+  const badgeWaitInfo = badgeWait ? BADGE_WAIT[badgeWait] : null;
   const [unreadCount, setUnreadCount] = useState(0);
   const [timeLeft, setTimeLeft] = useState({ d: '00', h: '00', m: '00', s: '00' });
+  // Dev only: a frozen moment picked in EventStatusDevPanel ({ label, now }).
+  const [simulatedMoment, setSimulatedMoment] = useState(null);
+  const eventStatus = useEventStatus(simulatedMoment?.now ?? null);
 
   const loadHistory = async () => {
     if (!badgeNumber) return;
@@ -392,6 +425,16 @@ export default function HomeScreen({ navigation }) {
             </Pressable>
           </View>
 
+          {/* ── Event live / ended ─────────────────────── */}
+          <EventStatusAlert status={eventStatus} style={{ marginBottom: EVENT_STATUS_DEV_PANEL ? 12 : 20 }} />
+          {EVENT_STATUS_DEV_PANEL ? (
+            <EventStatusDevPanel
+              value={simulatedMoment}
+              onChange={setSimulatedMoment}
+              style={{ marginBottom: 16, flexGrow: 0 }}
+            />
+          ) : null}
+
           {/* ── Badge ready (after the organiser releases badges) ── */}
           <BadgeReadyCard style={{ marginBottom: 20 }} />
 
@@ -444,7 +487,10 @@ export default function HomeScreen({ navigation }) {
 
           {/* ── Badge Banner ───────────────────────────── */}
           <Pressable
-            onPress={() => setBadgeModalVisible(true)}
+            onPress={onBadgeBanner}
+            disabled={openingBadge}
+            accessibilityRole="button"
+            accessibilityLabel={t('myBadge.download')}
             className="mx-4 mb-5 rounded-2xl overflow-hidden active:opacity-80"
           >
             <Image
@@ -452,9 +498,18 @@ export default function HomeScreen({ navigation }) {
               style={{ width: '100%', height: undefined, aspectRatio: BADGE_BANNER_RATIO }}
               resizeMode="stretch"
             />
+            {openingBadge ? (
+              <View
+                style={[StyleSheet.absoluteFillObject, { backgroundColor: 'rgba(0,0,0,0.45)' }]}
+                className="items-center justify-center"
+              >
+                <Spinner size="lg" color="#FFFFFF" />
+              </View>
+            ) : null}
           </Pressable>
 
-          {/* ── Countdown ──────────────────────────────── */}
+          {/* ── Countdown (until the doors open) ───────── */}
+          {eventStatus.phase === 'before' ? (
           <Card className="mx-4 mb-4">
             <Card.Body>
               <Text className={`text-[10px] font-bold text-muted ${latinLabel()} mb-3`}>
@@ -471,6 +526,7 @@ export default function HomeScreen({ navigation }) {
               </View>
             </Card.Body>
           </Card>
+          ) : null}
 
           {/* ── Stats ──────────────────────────────────── */}
           <View className="flex-row px-4 mb-4" style={{ gap: 12 }}>
@@ -575,10 +631,10 @@ export default function HomeScreen({ navigation }) {
 
       {/* ── Badge Info Modal ───────────────────────── */}
       <Modal
-        visible={badgeModalVisible}
+        visible={!!badgeWaitInfo}
         transparent
         animationType="fade"
-        onRequestClose={() => setBadgeModalVisible(false)}
+        onRequestClose={() => setBadgeWait(null)}
       >
         <Pressable
           style={{
@@ -588,28 +644,60 @@ export default function HomeScreen({ navigation }) {
             alignItems: 'center',
             paddingHorizontal: 24,
           }}
-          onPress={() => setBadgeModalVisible(false)}
+          onPress={() => setBadgeWait(null)}
         >
-          <Pressable onPress={() => {}}>
+          <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 420 }}>
+            {badgeWaitInfo ? (
             <Surface className="rounded-2xl p-6 items-center" style={{ width: '100%' }}>
               <View className="w-14 h-14 rounded-full bg-accent-soft items-center justify-center mb-4">
-                <Ionicons name="ticket-outline" size={28} color="#286EAD" />
+                <Ionicons name={badgeWaitInfo.icon} size={28} color="#286EAD" />
               </View>
-              <Text className="text-lg font-extrabold text-foreground mb-2">
-                {t('home.badgeModalTitle')}
+              <Text className="text-lg font-extrabold text-foreground mb-2 text-center">
+                {t(badgeWaitInfo.titleKey)}
               </Text>
               <Text className="text-sm text-muted text-center leading-5 mb-6">
-                {t('home.badgeModalBody')}
+                {t(badgeWaitInfo.bodyKey)}
               </Text>
-              <Button
-                variant="primary"
-                size="md"
-                className="rounded-xl w-full"
-                onPress={() => setBadgeModalVisible(false)}
-              >
-                <Button.Label className="flex-1 text-center">{t('common.ok')}</Button.Label>
-              </Button>
+              <View className="self-stretch" style={{ gap: 10 }}>
+                {badgeWait === 'error' ? (
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="rounded-xl"
+                    onPress={() => {
+                      setBadgeWait(null);
+                      onBadgeBanner();
+                    }}
+                  >
+                    <Button.Label className="flex-1 text-center">{t('home.badgeRetry')}</Button.Label>
+                  </Button>
+                ) : badgeNumber ? (
+                  // The QR works at the entrance and for networking even
+                  // before the printable badge is released.
+                  <Button
+                    variant="primary"
+                    size="md"
+                    className="rounded-xl"
+                    onPress={() => {
+                      setBadgeWait(null);
+                      navigation.navigate('MyBadge');
+                    }}
+                  >
+                    <Ionicons name="qr-code-outline" size={18} color="#FFFFFF" />
+                    <Button.Label>{t('home.badgeShowQr')}</Button.Label>
+                  </Button>
+                ) : null}
+                <Button
+                  variant="secondary"
+                  size="md"
+                  className="rounded-xl"
+                  onPress={() => setBadgeWait(null)}
+                >
+                  <Button.Label className="flex-1 text-center">{t('common.ok')}</Button.Label>
+                </Button>
+              </View>
             </Surface>
+            ) : null}
           </Pressable>
         </Pressable>
       </Modal>

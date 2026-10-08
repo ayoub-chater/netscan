@@ -50,19 +50,24 @@ export default function useMyBadge() {
    * Opens the PDF in the phone's viewer (print / save / share from there).
    * Always asks for a fresh link: the previous one may have expired.
    */
-  const open = useCallback(async () => {
+  const tryOpen = useCallback(async () => {
     setOpening(true);
+    let fresh = null;
     try {
-      const fresh = await refresh();
-      if (!fresh?.available || !fresh.pdf_url) return false;
+      fresh = await refresh();
+      if (!fresh?.available || !fresh.pdf_url) return { opened: false, badge: fresh };
       await Linking.openURL(fresh.pdf_url);
-      return true;
+      return { opened: true, badge: fresh };
     } catch {
-      return false;
+      return { opened: false, badge: fresh };
     } finally {
       if (alive.current) setOpening(false);
     }
   }, [refresh]);
 
-  return { badge, loading, opening, error, refresh, open };
+  const open = useCallback(async () => (await tryOpen()).opened, [tryOpen]);
+
+  // `tryOpen` also hands back the state it fetched, so a caller can say why
+  // the badge did not open (null when the server could not be reached).
+  return { badge, loading, opening, error, refresh, open, tryOpen };
 }

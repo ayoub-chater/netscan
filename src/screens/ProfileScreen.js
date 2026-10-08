@@ -70,7 +70,7 @@ function formatEventDay(isoDate, locale) {
 
 export default function ProfileScreen() {
   const { t, i18n } = useTranslation();
-  const { scanner, badgeNumber, signOut, participationStatus, isExhibitorStaff, isExhibitorMember, refreshProfile } =
+  const { scanner, badgeNumber, signOut, participationStatus, isExhibitorStaff, isTeamMember, isExhibitorMember, refreshProfile } =
     useAuth();
   // Printable badge — the row only appears once badges are released.
   const { badge: printable, open: openBadge } = useMyBadge();
@@ -92,8 +92,9 @@ export default function ProfileScreen() {
   const scannerName = scanner?.name || t('profile.defaultName');
   const scannerEmail = scanner?.email || '';
   const scannerRole = scanner?.role || t('profile.defaultRole');
-  // A team member is labelled as one everywhere the role appears.
-  const displayRole = isExhibitorMember ? t('team.memberBadgeRole') : roleLabel(scannerRole);
+  // Stand staff keep the exposant status: they show as Exposant. Members of
+  // a sponsor / partner / speaker team are labelled as team members.
+  const displayRole = isTeamMember && !isExhibitorMember ? t('team.memberBadgeRole') : roleLabel(scannerRole);
   const isExposant = scannerRole.toLowerCase() === 'exposant';
   const initial = scannerName[0]?.toUpperCase() || '?';
   const profileImage = isExposant
@@ -341,6 +342,18 @@ export default function ProfileScreen() {
             </ListGroup.ItemPrefix>
             <ListGroup.ItemContent>
               <ListGroup.ItemTitle>{t('profile.legalMentions')}</ListGroup.ItemTitle>
+            </ListGroup.ItemContent>
+            <ListGroup.ItemSuffix>
+              <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />
+            </ListGroup.ItemSuffix>
+          </ListGroup.Item>
+          <Separator className="mx-4" />
+          <ListGroup.Item onPress={() => navigation.navigate('Privacy')}>
+            <ListGroup.ItemPrefix>
+              <Ionicons name="shield-checkmark-outline" size={18} color="#286EAD" />
+            </ListGroup.ItemPrefix>
+            <ListGroup.ItemContent>
+              <ListGroup.ItemTitle>{t('profile.privacyPolicy')}</ListGroup.ItemTitle>
             </ListGroup.ItemContent>
             <ListGroup.ItemSuffix>
               <Ionicons name={forwardIcon()} size={16} color="#9CA3AF" />

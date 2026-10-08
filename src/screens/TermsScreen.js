@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, Pressable } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,12 +10,16 @@ import { backIcon } from '../utils/rtl';
 
 const StyledIonicons = withUniwind(Ionicons);
 
+// Renders a legal document from the locale files: the terms ('terms', the
+// default) or the privacy policy ('privacy', the "Privacy" route).
 export default function TermsScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
+  const route = useRoute();
   const insets = useSafeAreaInsets();
 
-  const sections = t('terms.sections', { returnObjects: true });
+  const doc = route.params?.doc === 'privacy' ? 'privacy' : 'terms';
+  const sections = t(`${doc}.sections`, { returnObjects: true });
 
   return (
     <View className="flex-1 bg-background" style={{ paddingTop: insets.top }}>
@@ -33,9 +37,9 @@ export default function TermsScreen() {
           </Pressable>
           <View className="flex-1">
             <Text className="text-xl font-extrabold text-foreground">
-              {t('terms.title')}
+              {t(`${doc}.title`)}
             </Text>
-            <Text className="text-xs text-muted mt-0.5">{t('terms.subtitle')}</Text>
+            <Text className="text-xs text-muted mt-0.5">{t(`${doc}.subtitle`)}</Text>
           </View>
           <MenuButton />
         </View>
@@ -46,7 +50,7 @@ export default function TermsScreen() {
         contentContainerStyle={{ paddingBottom: 60 }}
       >
         <View className="px-4" style={{ gap: 20 }}>
-          <Text className="text-xs text-muted">{t('terms.lastUpdate')}</Text>
+          <Text className="text-xs text-muted">{t(`${doc}.lastUpdate`)}</Text>
 
           {(Array.isArray(sections) ? sections : []).map((section) => (
             <View key={section.title} style={{ gap: 6 }}>

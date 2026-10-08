@@ -221,6 +221,12 @@ export function AuthProvider({ children }) {
             // On the stand without running it. Attends as part of the
             // organisation; does not act for it.
             isExhibitorMember: scanner?.is_exhibitor_member === true,
+            // Same split for every kind of team — a stand, or a sponsor /
+            // partner / speaker / press / delegate team. The owner gets the
+            // Team screen; a member has no agenda of their own. Older backends
+            // send neither, so fall back to the stand flags.
+            isTeamOwner: scanner?.is_team_owner === true || scanner?.is_exhibitor_owner === true,
+            isTeamMember: scanner?.is_team_member === true || scanner?.is_exhibitor_member === true,
             // Waiting on the stand owner to accept them. Plain visitor until
             // then, badge included.
             membershipStatus: scanner?.membership_status ?? null,

@@ -96,7 +96,6 @@
     "countryPlaceholder": "Votre pays",
     "acceptPrefix": "J'accepte les ",
     "cgu": "Conditions Générales d'Utilisation",
-    "acceptSuffix": " et la politique de confidentialité.",
     "submit": "S'inscrire",
     "submitting": "Création...",
     "errorRequiredFields": "Veuillez remplir les champs obligatoires (nom, email, mot de passe).",
@@ -121,7 +120,10 @@
     "selectCity": "Choisir une ville",
     "searchCountry": "Rechercher un pays...",
     "searchCity": "Rechercher une ville...",
-    "cityNeedsCountry": "Sélectionnez d’abord un pays"
+    "cityNeedsCountry": "Sélectionnez d’abord un pays",
+    "acceptMiddle": " et la ",
+    "privacyPolicy": "politique de confidentialité",
+    "acceptEnd": "."
   },
   "pending": {
     "title": "Compte en attente de validation",
@@ -188,8 +190,8 @@
     "seeAll": "Voir tout",
     "emptyTitle": "Aucune connexion encore",
     "emptyBody": "Scannez votre premier badge pour démarrer votre réseau logistique.",
-    "badgeModalTitle": "Demande de Badge",
-    "badgeModalBody": "Votre badge sera disponible deux semaines avant le début de l'événement. Veuillez patienter encore un peu !",
+    "badgeModalTitle": "Badge en préparation",
+    "badgeModalBody": "Votre badge sera disponible ici dès son activation par l'organisateur. Vous recevrez une notification à ce moment-là.",
     "dayShort": {
       "mon": "Lun",
       "tue": "Mar",
@@ -198,7 +200,13 @@
       "fri": "Ven",
       "sat": "Sam",
       "sun": "Dim"
-    }
+    },
+    "badgeValidationTitle": "Inscription en cours de validation",
+    "badgeValidationBody": "Votre badge sera généré dès que l'organisateur aura validé votre inscription.",
+    "badgeErrorTitle": "Connexion impossible",
+    "badgeErrorBody": "Impossible de vérifier votre badge pour le moment. Vérifiez votre connexion et réessayez.",
+    "badgeRetry": "Réessayer",
+    "badgeShowQr": "Voir mon QR code"
   },
   "scanner": {
     "centerBadge": "Centrez le badge ici",
@@ -224,7 +232,9 @@
     "unknownCode": "inconnu",
     "reconnect": "Veuillez vous reconnecter.",
     "cameraRequiredTitle": "Caméra requise",
-    "cameraRequiredBody": "Veuillez autoriser l'accès à la caméra dans les réglages de votre téléphone."
+    "cameraRequiredBody": "Veuillez autoriser l'accès à la caméra dans les réglages de votre téléphone.",
+    "privacyNotice": "Scanner un badge partage vos coordonnées (nom, société, email, téléphone…) avec cette personne, et les siennes avec vous.",
+    "privacyLink": "Politique de confidentialité"
   },
   "history": {
     "title": "Journal",
@@ -298,8 +308,8 @@
     "cancel": "Annuler",
     "loading": "Chargement...",
     "removeTitle": "Retirer ce membre",
-    "removeBody": "Voulez-vous retirer {{name}} de l'équipe ?",
-    "removeError": "Impossible de supprimer ce membre.",
+    "removeBody": "Retirer {{name}} de l'équipe ? La personne reste inscrite à l'événement comme visiteur, avec son badge.",
+    "removeError": "Impossible de retirer ce membre.",
     "errorRequired": "Le nom et l'email sont obligatoires.",
     "errorAdd": "Erreur lors de l'ajout.",
     "errorEdit": "Erreur lors de la modification.",
@@ -337,10 +347,18 @@
     "email": "Email",
     "phone": "Téléphone",
     "city": "Ville",
-    "privacyNote": "Vos informations ont également été partagées avec cet interlocuteur.",
+    "privacyNote": "Vos coordonnées ont également été partagées avec cet interlocuteur, et les siennes avec vous.",
     "scanAnother": "Scanner un autre",
     "finish": "Terminer",
-    "close": "Fermer"
+    "close": "Fermer",
+    "noteTitle": "Note privée",
+    "noteHint": "Visible uniquement par vous et {{name}}. Elle n'est jamais affichée publiquement.",
+    "notePlaceholder": "Ex. : sujet abordé, suite à donner avec {{name}}…",
+    "noteByMe": "Écrite par vous · partagée avec ce contact uniquement",
+    "noteByOther": "Écrite par {{name}} · partagée avec vous uniquement",
+    "noteSave": "Enregistrer la note",
+    "noteSaving": "Enregistrement…",
+    "noteError": "Impossible d'enregistrer la note."
   },
   "appointments": {
     "title": "Rendez-vous",
@@ -391,7 +409,10 @@
     "alreadyBookedShort": "Déjà réservé",
     "alreadyBookedMsg": "Vous avez déjà un rendez-vous avec ce contact pour cet événement.",
     "requestSentTitle": "Demande envoyée",
-    "requestSentBody": "Votre demande de rendez-vous avec {{name}} a été envoyée. Vous serez notifié dès sa confirmation."
+    "requestSentBody": "Votre demande de rendez-vous avec {{name}} a été envoyée. Vous serez notifié dès sa confirmation.",
+    "searchPlaceholder": "Rechercher un nom, une société…",
+    "noResultsTitle": "Aucun résultat",
+    "noResultsBody": "Aucun contact ne correspond à « {{query}} »."
   },
   "profile": {
     "settings": "Paramètres",
@@ -423,7 +444,8 @@
     "stay": "Rester",
     "logoutConfirm": "Déconnexion",
     "defaultName": "Utilisateur",
-    "defaultRole": "Visiteur"
+    "defaultRole": "Visiteur",
+    "privacyPolicy": "Politique de confidentialité"
   },
   "myBadge": {
     "title": "Mon Badge",
@@ -704,5 +726,59 @@
     "organiserNote": "Note de l'organisateur",
     "statMine": "Mes rendez-vous à venir",
     "statProgramme": "Autres rendez-vous confirmés"
+  },
+  "privacy": {
+    "title": "Politique de confidentialité",
+    "subtitle": "Données personnelles · LOGITERRE",
+    "lastUpdate": "Dernière mise à jour : 5 octobre 2026",
+    "sections": [
+      {
+        "title": "1. Qui traite vos données",
+        "body": "L'application LOGITERRE est éditée pour l'organisateur de Logiterre Expo, responsable du traitement de vos données personnelles. Pour toute question : contact@logiterre-expo.com."
+      },
+      {
+        "title": "2. Données collectées",
+        "body": "Nous collectons les informations que vous fournissez à l'inscription ou dans votre profil (nom, email, téléphone, société, fonction, secteur, ville, pays, photo ou logo, site web), votre numéro de badge, votre historique de mise en réseau, vos rendez-vous B2B, les notes que vous rédigez, ainsi que des informations techniques sur votre appareil servant à sécuriser votre session et à vous envoyer des notifications."
+      },
+      {
+        "title": "3. Partage de vos coordonnées lors d'un scan de badge",
+        "body": "Lorsque vous scannez le badge d'un autre participant, ou qu'il scanne le vôtre, une connexion est créée dans les deux sens : vos informations de profil (nom, rôle, société, email, téléphone, secteur, ville, site web, photo) sont communiquées à cette personne et apparaissent dans son historique, et les siennes dans le vôtre. Présenter votre badge ou son QR code à quelqu'un revient donc à accepter de partager ces informations avec lui. Ne laissez scanner votre badge que par les personnes avec qui vous souhaitez échanger vos coordonnées."
+      },
+      {
+        "title": "4. Après un échange de contact",
+        "body": "Une fois partagées, vos coordonnées peuvent être consultées, notées ou conservées par la personne avec qui vous avez échangé. Supprimer un contact de votre historique le retire de votre liste, mais ne retire pas vos informations de celle de l'autre participant. L'organisateur n'est pas responsable de l'usage qu'un participant fait des coordonnées que vous lui avez communiquées."
+      },
+      {
+        "title": "5. Notes privées",
+        "body": "Après un scan, vous pouvez écrire une note sur ce contact. Cette note est partagée uniquement entre vous et cette personne : elle n'est jamais affichée publiquement, ni dans l'annuaire, ni aux autres participants. Elle est stockée sur nos serveurs pour le fonctionnement du service."
+      },
+      {
+        "title": "6. Annuaire B2B et exposants",
+        "body": "Si vous êtes participant approuvé (exposant, intervenant, partenaire…), votre profil professionnel (nom, fonction, société, photo, présentation) peut apparaître dans l'annuaire B2B et des exposants, visible par les autres participants de l'événement. Vous pouvez désactiver « Recevoir des demandes » pour ne plus apparaître dans l'annuaire B2B."
+      },
+      {
+        "title": "7. Utilisation de vos données",
+        "body": "Vos données servent uniquement au fonctionnement de l'application et de l'événement : badges et accès, mise en réseau, rendez-vous B2B, programme, notifications et communication liée à Logiterre Expo. Elles ne sont jamais vendues ni louées à des tiers."
+      },
+      {
+        "title": "8. Conservation et sécurité",
+        "body": "Vos données sont conservées le temps nécessaire à l'événement et à son suivi, puis supprimées ou anonymisées. Les échanges avec nos serveurs sont chiffrés et l'accès à votre compte est protégé par vos identifiants et lié à vos appareils."
+      },
+      {
+        "title": "9. Vos droits",
+        "body": "Conformément à la loi n° 09-08 relative à la protection des personnes physiques à l'égard du traitement des données à caractère personnel et, le cas échéant, au RGPD, vous disposez d'un droit d'accès, de rectification, d'opposition et de suppression de vos données. Vous pouvez modifier votre profil depuis l'application ou écrire à contact@logiterre-expo.com."
+      }
+    ]
+  },
+  "eventStatus": {
+    "dayLabel": "Jour {{day}}/{{total}}",
+    "firstDay": "C'est parti !",
+    "nextDay": "On continue !",
+    "lastDay": "Dernier jour !",
+    "opensAt": "Le salon ouvre aujourd'hui à {{time}}.",
+    "openUntil": "Le salon est ouvert jusqu'à {{time}}. Bonne visite !",
+    "closedToday": "Fermé pour aujourd'hui, à demain dès {{time}}.",
+    "endedTitle": "Le salon est terminé",
+    "endedBody": "Merci d'avoir participé, à la prochaine édition !"
   }
 }

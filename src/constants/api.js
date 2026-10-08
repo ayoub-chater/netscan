@@ -28,6 +28,8 @@ export const ENDPOINTS = {
     networkingScan: `${BASE_URL}/networking/scan`,
     networkingHistory: (badge) => `${BASE_URL}/networking/history?badge_number=${encodeURIComponent(badge)}`,
     networkingDelete: (id, badge) => `${BASE_URL}/networking/history/${id}?badge_number=${encodeURIComponent(badge)}`,
+    // Private note on a connection, shared only by its two people
+    networkingNote: `${BASE_URL}/networking/note`,
     exposants: `${BASE_URL}/exposants`,
     // Participants who are not a stand: intervenants, sponsors, partenaires,
     // institutions, presse, organisation.

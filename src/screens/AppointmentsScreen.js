@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -41,11 +41,15 @@ import { useTabBarScroll } from '../context/TabBarContext';
 import { MEETING_LOCATION } from '../constants/b2b';
 import useSheetGuard from '../components/useSheetGuard';
 import MenuButton from '../components/MenuButton';
+import SearchBar from '../components/SearchBar';
 import AvailabilityBadge, { AvailabilityNote } from '../components/AvailabilityBadge';
 import { forwardIcon, latinLabel } from '../utils/rtl';
 import { apiErrorMessage } from '../utils/apiError';
 
 const ACCENT = '#286EAD';
+// Contacts arrive a page at a time so the first cards show without waiting
+// for the whole directory; the next page loads as the list nears its end.
+const PER_PAGE = 15;
 
 const STATUS_COLOR = {
   confirmed: 'success',
@@ -364,11 +368,24 @@ export default function AppointmentsScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
   // B2B is peer-to-peer between approved participants — a plain visitor can
   // neither book nor be booked, and is sent to "Participer" instead.
-  const { isParticipant, isExhibitorMember, isInstitutional, b2bPendingCount, refreshProfile } =
+  const { isParticipant, isTeamMember, isInstitutional, b2bPendingCount, refreshProfile } =
     useAuth();
 
   const [tab, setTab] = useState('contacts'); // 'contacts' | 'mine'
   const [personas, setPersonas] = useState([]);
+  // Contacts paging + search (server side, see getPersonas)
+  const [search, setSearch] = useState('');
+  const [query, setQuery] = useState(''); // debounced `search`
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [searching, setSearching] = useState(false);
+  // Only the latest contacts request may write the list: a slow page of an
+  // old search must not land on top of the new one.
+  const personasRequest = useRef(0);
+  // The focus callback below is memoised, so it reads the live search here.
+  const queryRef = useRef(query);
+  queryRef.current = query;
   const [upcoming, setUpcoming] = useState([]);
   const [past, setPast] = useState([]);
   // Meetings the organiser arranged between institutions. They belong in this
@@ -391,17 +408,66 @@ export default function AppointmentsScreen({ navigation, route }) {
   const [note, setNote] = useState('');
   const [booking, setBooking] = useState(false);
 
+  // First page (replaces the list) or the next one (appends).
+  const loadPersonas = async (pageNum, term) => {
+    const requestId = ++personasRequest.current;
+    try {
+      const res = await getPersonas({ page: pageNum, perPage: PER_PAGE, search: term });
+      if (requestId !== personasRequest.current) return;
+      const rows = res?.data?.data || [];
+      setPersonas((prev) => {
+        if (pageNum === 1) return rows;
+        // A contact can shift pages between two requests; never list it twice.
+        const seen = new Set(prev.map((p) => p.id));
+        return [...prev, ...rows.filter((p) => !seen.has(p.id))];
+      });
+      setPage(pageNum);
+      setHasMore(!!res?.data?.meta?.has_more);
+    } catch {
+      if (requestId === personasRequest.current && pageNum === 1) setHasMore(false);
+    } finally {
+      if (requestId === personasRequest.current) {
+        setLoadingMore(false);
+        setSearching(false);
+      }
+    }
+  };
+
+  const loadMore = () => {
+    if (!hasMore || loadingMore || searching || loading) return;
+    setLoadingMore(true);
+    loadPersonas(page + 1, query);
+  };
+
+  // Typing settles for a moment before the server is asked.
+  useEffect(() => {
+    const term = search.trim();
+    if (term === query) return;
+    const timer = setTimeout(() => setQuery(term), 350);
+    return () => clearTimeout(timer);
+  }, [search]);
+
+  const firstQuery = useRef(true);
+  useEffect(() => {
+    // The focus load already fetches page 1 for the initial (empty) query.
+    if (firstQuery.current) {
+      firstQuery.current = false;
+      return;
+    }
+    setSearching(true);
+    loadPersonas(1, query);
+  }, [query]);
+
   const load = async () => {
     // Also re-reads `b2b_pending_count`, so the dot on the agenda button and
     // the tab bar reflects requests that arrived since the last visit.
     refreshProfile();
     try {
-      const [pRes, aRes, iRes] = await Promise.allSettled([
-        getPersonas(),
+      const [, aRes, iRes] = await Promise.allSettled([
+        loadPersonas(1, queryRef.current),
         getMyAppointments(),
         isInstitutional ? getInstitutionalAppointments() : Promise.resolve(null),
       ]);
-      if (pRes.status === 'fulfilled') setPersonas(pRes.value?.data?.data || []);
       if (aRes.status === 'fulfilled') {
         setUpcoming(aRes.value?.data?.upcoming || []);
         setPast(aRes.value?.data?.past || []);
@@ -464,8 +530,22 @@ export default function AppointmentsScreen({ navigation, route }) {
     if (!requestedSlug || loading) return;
     navigation.setParams({ bookPersonaSlug: undefined });
     setTab('contacts');
-    const persona = personas.find((p) => p.slug === requestedSlug);
-    if (!persona) return;
+    // The list is paged, so the contact may sit on a page not loaded yet —
+    // ask for it by slug then.
+    const found = personas.find((p) => p.slug === requestedSlug);
+    if (found) {
+      openRequested(found);
+      return;
+    }
+    getPersonas({ slug: requestedSlug })
+      .then((res) => {
+        const persona = res?.data?.data?.[0];
+        if (persona) openRequested(persona);
+      })
+      .catch(() => {});
+  }, [requestedSlug, personas, loading]);
+
+  const openRequested = (persona) => {
     const bookable = (persona.bookable ?? true) && (persona.available_dates?.length || 0) > 0;
     if (!bookable) {
       Alert.alert(
@@ -479,7 +559,7 @@ export default function AppointmentsScreen({ navigation, route }) {
       return;
     }
     openBooking(persona);
-  }, [requestedSlug, personas, loading]);
+  };
 
   const fetchSlots = async (slug, date) => {
     setLoadingSlots(true);
@@ -581,7 +661,7 @@ export default function AppointmentsScreen({ navigation, route }) {
           <Text className="text-sm text-muted mt-1">{t('b2b.subtitle')}</Text>
         </View>
 
-        {isParticipant && !isExhibitorMember && (
+        {isParticipant && !isTeamMember && (
           <Pressable
             onPress={() => navigation.navigate('B2BAgenda')}
             hitSlop={8}
@@ -655,6 +735,17 @@ export default function AppointmentsScreen({ navigation, route }) {
         </View>
       </View>
 
+      {/* ── Contacts search ──────────────────────────── */}
+      {tab === 'contacts' ? (
+        <View className="px-4 mb-3">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder={t('appointments.searchPlaceholder')}
+          />
+        </View>
+      ) : null}
+
       {loading ? (
         <View className="px-4" style={{ gap: 12 }}>
           {[0, 1, 2].map((i) => (
@@ -684,18 +775,49 @@ export default function AppointmentsScreen({ navigation, route }) {
           keyExtractor={(item) => String(item.id)}
           contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 4, paddingBottom: 120 }}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={ACCENT} />}
           renderItem={({ item }) => <PersonaCard item={item} onBook={openBooking} onView={openProfile} />}
+          onEndReached={loadMore}
+          onEndReachedThreshold={0.5}
+          initialNumToRender={PER_PAGE}
+          ListHeaderComponent={
+            searching ? (
+              <View className="py-3 items-center">
+                <ActivityIndicator color={ACCENT} />
+              </View>
+            ) : null
+          }
+          ListFooterComponent={
+            loadingMore ? (
+              <View className="py-4 items-center">
+                <ActivityIndicator color={ACCENT} />
+              </View>
+            ) : null
+          }
           ListEmptyComponent={
-            <View className="items-center py-16">
-              <Ionicons name="people-outline" size={48} color={ACCENT} />
-              <Text className="text-base font-bold text-foreground mt-4 mb-2">
-                {t('appointments.emptyContactsTitle')}
-              </Text>
-              <Text className="text-sm text-muted text-center leading-5 px-8">
-                {t('appointments.emptyContactsBody')}
-              </Text>
-            </View>
+            searching ? null : query ? (
+              <View className="items-center py-16">
+                <Ionicons name="search-outline" size={48} color={ACCENT} />
+                <Text className="text-base font-bold text-foreground mt-4 mb-2">
+                  {t('appointments.noResultsTitle')}
+                </Text>
+                <Text className="text-sm text-muted text-center leading-5 px-8">
+                  {t('appointments.noResultsBody', { query })}
+                </Text>
+              </View>
+            ) : (
+              <View className="items-center py-16">
+                <Ionicons name="people-outline" size={48} color={ACCENT} />
+                <Text className="text-base font-bold text-foreground mt-4 mb-2">
+                  {t('appointments.emptyContactsTitle')}
+                </Text>
+                <Text className="text-sm text-muted text-center leading-5 px-8">
+                  {t('appointments.emptyContactsBody')}
+                </Text>
+              </View>
+            )
           }
         />
       ) : (

@@ -101,6 +101,15 @@ export const networkingHistory = (badgeNumber) => api.get(ENDPOINTS.networkingHi
 export const deleteNetworkingRecord = (scanId, badgeNumber) =>
     api.delete(ENDPOINTS.networkingDelete(scanId, badgeNumber));
 
+// One note per connection, readable only by the two people in it. An empty
+// note removes it. personId is the contact's `person.id` from scan/history.
+export const saveNetworkingNote = (badgeNumber, personId, note) =>
+    api.put(ENDPOINTS.networkingNote, {
+        badge_number: badgeNumber,
+        person_id: personId,
+        note,
+    });
+
 
 
 // ─── Exposants ────────────────────────────────────────────────────────────────
@@ -110,7 +119,16 @@ export const getExposants = () => api.get(ENDPOINTS.exposants);
 export const getPartenaires = () => api.get(ENDPOINTS.partenaires);
 
 // ─── Appointments (bookable contacts / networking sessions) ────────────────────
-export const getPersonas = () => api.get(ENDPOINTS.personas);
+// Paged: { page, perPage, search, slug } → { data, meta: { has_more, total… } }.
+// `slug` fetches one contact (deep link) whatever page it sits on.
+export const getPersonas = ({ page, perPage, search, slug } = {}) =>
+    api.get(ENDPOINTS.personas, {
+        params: {
+            ...(page ? { page, per_page: perPage } : {}),
+            ...(search ? { search } : {}),
+            ...(slug ? { slug } : {}),
+        },
+    });
 
 export const getPersonaSlots = (slug, date) => api.get(ENDPOINTS.personaSlots(slug, date));
 

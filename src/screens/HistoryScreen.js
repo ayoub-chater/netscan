@@ -275,6 +275,11 @@ export default function HistoryScreen() {
         result={selectedItem}
         viewOnly
         onClose={() => setSelectedItem(null)}
+        onNoteSaved={(personId, note) =>
+          setHistory(prev =>
+            prev.map(h => (h.person?.id === personId ? { ...h, note } : h))
+          )
+        }
       />
     </View>
   );

@@ -186,6 +186,7 @@ function NavigationRoot() {
               <Stack.Screen name="Scanner" component={ScannerScreen} options={{ presentation: 'fullScreenModal' }} />
               <Stack.Screen name="Team" component={Team} />
               <Stack.Screen name="Terms" component={Terms} />
+              <Stack.Screen name="Privacy" component={Terms} initialParams={{ doc: 'privacy' }} />
               <Stack.Screen name="MyBadge" component={MyBadge} />
               <Stack.Screen name="EditProfile" component={EditProfile} />
               <Stack.Screen name="Sessions" component={Sessions} />

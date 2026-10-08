@@ -197,7 +197,8 @@ export default function AppMenu({ visible, onClose }) {
   const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
-  const { scanner, participationStatus, participationRole, isExhibitorStaff, isVip } = useAuth();
+  const { scanner, participationStatus, participationRole, isExhibitorStaff, isVip, isTeamOwner, isTeamMember } =
+    useAuth();
   const { translateY } = useTabBar();
 
   // Keep the panel mounted through the closing animation.
@@ -307,8 +308,10 @@ export default function AppMenu({ visible, onClose }) {
   // Staff already take part through the exhibitor that added them — hide the
   // Participer row for them, and Team stays owner-only.
   const items = ITEMS.filter((i) => {
-    if (i.key === 'participate' && (isExhibitorStaff || isVip)) return false;
-    return !i.exposantOnly || (isExposant && !isExhibitorStaff);
+    if (i.key === 'participate' && (isExhibitorStaff || isVip || isTeamMember)) return false;
+    // Team: whoever runs a team — a stand owner, or a sponsor / partner /
+    // speaker / press / delegate lead.
+    return !i.exposantOnly || isTeamOwner || (isExposant && !isExhibitorStaff && !isTeamMember);
   });
 
   // The Participer row carries the request's state so the drawer answers

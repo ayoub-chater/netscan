@@ -220,9 +220,27 @@ export default function ScannerScreen({ navigation }) {
               <Text className="text-2xl font-extrabold text-foreground text-center mb-3">
                 {t('scanner.readyTitle')}
               </Text>
-              <Text className="text-base text-muted text-center mb-10 leading-6">
+              <Text className="text-base text-muted text-center mb-6 leading-6">
                 {t('scanner.readyBody')}
               </Text>
+
+              {/* Said before the first scan, not after: scanning is what
+                  shares both people's details. */}
+              <Pressable
+                onPress={() => navigation.navigate('Privacy')}
+                className="w-full mb-8 active:opacity-70"
+                accessibilityRole="link"
+              >
+                <Surface className="rounded-2xl p-4 flex-row items-start" style={{ gap: 10 }}>
+                  <Ionicons name="shield-checkmark-outline" size={18} color={BLUE} style={{ marginTop: 1 }} />
+                  <Text className="text-xs text-muted leading-5 flex-1">
+                    {t('scanner.privacyNotice')}{' '}
+                    <Text className="text-xs font-semibold text-accent underline">
+                      {t('scanner.privacyLink')}
+                    </Text>
+                  </Text>
+                </Surface>
+              </Pressable>
 
               <Button
                 variant="primary"

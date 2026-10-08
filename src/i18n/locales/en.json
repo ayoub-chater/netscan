@@ -96,7 +96,6 @@
     "countryPlaceholder": "Your country",
     "acceptPrefix": "I accept the ",
     "cgu": "Terms and Conditions",
-    "acceptSuffix": " and the privacy policy.",
     "submit": "Sign up",
     "submitting": "Creating...",
     "errorRequiredFields": "Please fill in the required fields (name, email, password).",
@@ -121,7 +120,10 @@
     "selectCity": "Select a city",
     "searchCountry": "Search a country...",
     "searchCity": "Search a city...",
-    "cityNeedsCountry": "Select a country first"
+    "cityNeedsCountry": "Select a country first",
+    "acceptMiddle": " and the ",
+    "privacyPolicy": "privacy policy",
+    "acceptEnd": "."
   },
   "pending": {
     "title": "Account awaiting approval",
@@ -188,8 +190,8 @@
     "seeAll": "See all",
     "emptyTitle": "No connections yet",
     "emptyBody": "Scan your first badge to start building your logistics network.",
-    "badgeModalTitle": "Badge Request",
-    "badgeModalBody": "Your badge will be available two weeks before the event starts. Please hold on a little longer!",
+    "badgeModalTitle": "Badge being prepared",
+    "badgeModalBody": "Your badge will be available here as soon as the organizer activates it. You will get a notification when it is.",
     "dayShort": {
       "mon": "Mon",
       "tue": "Tue",
@@ -198,7 +200,13 @@
       "fri": "Fri",
       "sat": "Sat",
       "sun": "Sun"
-    }
+    },
+    "badgeValidationTitle": "Registration under review",
+    "badgeValidationBody": "Your badge will be generated as soon as the organizer approves your registration.",
+    "badgeErrorTitle": "Connection failed",
+    "badgeErrorBody": "We couldn't check your badge right now. Check your connection and try again.",
+    "badgeRetry": "Try again",
+    "badgeShowQr": "Show my QR code"
   },
   "scanner": {
     "centerBadge": "Center the badge here",
@@ -224,7 +232,9 @@
     "unknownCode": "unknown",
     "reconnect": "Please log in again.",
     "cameraRequiredTitle": "Camera required",
-    "cameraRequiredBody": "Please allow camera access in your phone settings."
+    "cameraRequiredBody": "Please allow camera access in your phone settings.",
+    "privacyNotice": "Scanning a badge shares your details (name, company, email, phone…) with that person, and theirs with you.",
+    "privacyLink": "Privacy Policy"
   },
   "history": {
     "title": "Log",
@@ -298,8 +308,8 @@
     "cancel": "Cancel",
     "loading": "Loading...",
     "removeTitle": "Remove this member",
-    "removeBody": "Do you want to remove {{name}} from the team?",
-    "removeError": "Unable to delete this member.",
+    "removeBody": "Remove {{name}} from the team? They stay registered for the event as a visitor, with their badge.",
+    "removeError": "Unable to remove this member.",
     "errorRequired": "Name and email are required.",
     "errorAdd": "An error occurred while adding.",
     "errorEdit": "An error occurred while editing.",
@@ -337,10 +347,18 @@
     "email": "Email",
     "phone": "Phone",
     "city": "City",
-    "privacyNote": "Your information was also shared with this contact.",
+    "privacyNote": "Your details were also shared with this contact, and theirs with you.",
     "scanAnother": "Scan another",
     "finish": "Done",
-    "close": "Close"
+    "close": "Close",
+    "noteTitle": "Private note",
+    "noteHint": "Visible only to you and {{name}}. It is never shown publicly.",
+    "notePlaceholder": "E.g. topic discussed, follow-up with {{name}}…",
+    "noteByMe": "Written by you · shared with this contact only",
+    "noteByOther": "Written by {{name}} · shared with you only",
+    "noteSave": "Save note",
+    "noteSaving": "Saving…",
+    "noteError": "Could not save the note."
   },
   "appointments": {
     "title": "Meetings",
@@ -391,7 +409,10 @@
     "alreadyBookedShort": "Already met",
     "alreadyBookedMsg": "You already have a meeting with this contact for this event.",
     "requestSentTitle": "Request sent",
-    "requestSentBody": "Your meeting request with {{name}} was sent. You'll be notified once they confirm."
+    "requestSentBody": "Your meeting request with {{name}} was sent. You'll be notified once they confirm.",
+    "searchPlaceholder": "Search a name, a company…",
+    "noResultsTitle": "No results",
+    "noResultsBody": "No contact matches “{{query}}”."
   },
   "profile": {
     "settings": "Settings",
@@ -423,7 +444,8 @@
     "stay": "Stay",
     "logoutConfirm": "Log out",
     "defaultName": "User",
-    "defaultRole": "Visitor"
+    "defaultRole": "Visitor",
+    "privacyPolicy": "Privacy Policy"
   },
   "myBadge": {
     "title": "My Badge",
@@ -704,5 +726,59 @@
     "organiserNote": "Organiser's note",
     "statMine": "My upcoming meetings",
     "statProgramme": "Other confirmed meetings"
+  },
+  "privacy": {
+    "title": "Privacy Policy",
+    "subtitle": "Personal data · LOGITERRE",
+    "lastUpdate": "Last updated: October 5, 2026",
+    "sections": [
+      {
+        "title": "1. Who processes your data",
+        "body": "The LOGITERRE app is published for the organizer of Logiterre Expo, who is the controller of your personal data. For any question: contact@logiterre-expo.com."
+      },
+      {
+        "title": "2. Data we collect",
+        "body": "We collect the information you provide at sign-up or in your profile (name, email, phone, company, job title, sector, city, country, photo or logo, website), your badge number, your networking history, your B2B meetings, the notes you write, and technical information about your device used to secure your session and send you notifications."
+      },
+      {
+        "title": "3. Sharing your details when a badge is scanned",
+        "body": "When you scan another participant's badge, or they scan yours, a connection is created both ways: your profile information (name, role, company, email, phone, sector, city, website, photo) is shared with that person and appears in their history, and theirs in yours. Showing your badge or its QR code to someone therefore means agreeing to share this information with them. Only let people you want to exchange details with scan your badge."
+      },
+      {
+        "title": "4. After a contact exchange",
+        "body": "Once shared, your details may be viewed, noted or kept by the person you exchanged with. Deleting a contact from your history removes it from your list, but does not remove your information from the other participant's list. The organizer is not responsible for how a participant uses the details you shared with them."
+      },
+      {
+        "title": "5. Private notes",
+        "body": "After a scan, you can write a note about that contact. The note is shared only between you and that person: it is never shown publicly, in the directory, or to other participants. It is stored on our servers for the service to work."
+      },
+      {
+        "title": "6. B2B and exhibitor directory",
+        "body": "If you are an approved participant (exhibitor, speaker, partner…), your professional profile (name, title, company, photo, bio) may appear in the B2B and exhibitor directory, visible to other event participants. You can turn off “Receive requests” to stop appearing in the B2B directory."
+      },
+      {
+        "title": "7. How your data is used",
+        "body": "Your data is used only to run the app and the event: badges and access, networking, B2B meetings, programme, notifications and communication about Logiterre Expo. It is never sold or rented to third parties."
+      },
+      {
+        "title": "8. Retention and security",
+        "body": "Your data is kept for as long as needed for the event and its follow-up, then deleted or anonymized. Traffic with our servers is encrypted, and access to your account is protected by your credentials and tied to your devices."
+      },
+      {
+        "title": "9. Your rights",
+        "body": "Under Moroccan Law No. 09-08 on the protection of individuals with regard to the processing of personal data and, where applicable, the GDPR, you have the right to access, correct, object to and delete your data. You can edit your profile in the app or write to contact@logiterre-expo.com."
+      }
+    ]
+  },
+  "eventStatus": {
+    "dayLabel": "Day {{day}}/{{total}}",
+    "firstDay": "Here we go!",
+    "nextDay": "Let's keep going!",
+    "lastDay": "Last day!",
+    "opensAt": "The show opens today at {{time}}.",
+    "openUntil": "The show is open until {{time}}. Enjoy your visit!",
+    "closedToday": "Closed for today, see you tomorrow from {{time}}.",
+    "endedTitle": "The show has ended",
+    "endedBody": "Thanks for taking part, see you at the next edition!"
   }
 }

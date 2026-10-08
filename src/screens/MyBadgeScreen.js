@@ -23,16 +23,15 @@ export default function MyBadgeScreen() {
   const { t } = useTranslation();
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { scanner, badgeNumber, isExhibitorStaff, isExhibitorMember } = useAuth();
+  const { scanner, badgeNumber, isExhibitorStaff, isTeamMember, isExhibitorMember } = useAuth();
 
   const scannerName = scanner?.name || t('profile.defaultName');
   const scannerRole = scanner?.role || t('profile.defaultRole');
   const isExposant = scannerRole.toLowerCase() === 'exposant';
-  // Members carry the stand's role for access and counting, but the badge
-  // says "Membre d'équipe" so the person at the door can tell them apart
-  // from whoever runs the organisation.
-  const badgeRole = isExhibitorMember ? t('team.memberBadgeRole') : roleLabel(scannerRole);
-  const company = isExhibitorStaff || isExhibitorMember || isExposant ? scanner?.company : null;
+  // Stand staff print as Exposant, like the badge the server renders; only
+  // sponsor / partner / speaker team members carry "Membre d'équipe".
+  const badgeRole = isTeamMember && !isExhibitorMember ? t('team.memberBadgeRole') : roleLabel(scannerRole);
+  const company = isExhibitorStaff || isTeamMember || isExposant ? scanner?.company : null;
   const hasBadge = !!badgeNumber;
   const qrValue = hasBadge
     ? `${BADGE_BASE_URL}/${encodeURIComponent(badgeNumber)}`

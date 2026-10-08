@@ -56,7 +56,8 @@ export default function RegisterScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState(null);
   const [acceptCgu, setAcceptCgu] = useState(false);
-  const [termsOpen, setTermsOpen] = useState(false);
+  // Legal document shown in the modal: 'terms' | 'privacy' | null
+  const [legalDoc, setLegalDoc] = useState(null);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmVisible, setConfirmVisible] = useState(false);
 
@@ -428,14 +429,18 @@ export default function RegisterScreen({ navigation }) {
             </ControlField.Indicator>
             <View className="flex-1 flex-row flex-wrap items-center">
               <Text className="text-sm text-muted">{t('register.acceptPrefix')}</Text>
-              <Pressable onPress={() => setTermsOpen(true)} hitSlop={4}>
+              <Pressable onPress={() => setLegalDoc('terms')} hitSlop={4}>
                 <Text className="text-sm font-semibold text-accent underline">
                   {t('register.cgu')}
                 </Text>
               </Pressable>
-              <Text className="text-sm text-muted">
-                {t('register.acceptSuffix')}
-              </Text>
+              <Text className="text-sm text-muted">{t('register.acceptMiddle')}</Text>
+              <Pressable onPress={() => setLegalDoc('privacy')} hitSlop={4}>
+                <Text className="text-sm font-semibold text-accent underline">
+                  {t('register.privacyPolicy')}
+                </Text>
+              </Pressable>
+              <Text className="text-sm text-muted">{t('register.acceptEnd')}</Text>
             </View>
           </ControlField>
 
@@ -464,12 +469,12 @@ export default function RegisterScreen({ navigation }) {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {/* Terms & Conditions modal */}
+      {/* Terms / privacy policy modal */}
       <Modal
-        visible={termsOpen}
+        visible={!!legalDoc}
         transparent
         animationType="fade"
-        onRequestClose={() => setTermsOpen(false)}
+        onRequestClose={() => setLegalDoc(null)}
         statusBarTranslucent
       >
         <View
@@ -484,14 +489,14 @@ export default function RegisterScreen({ navigation }) {
             <View className="flex-row items-center justify-between px-5 pt-5 pb-3 border-b border-separator">
               <View className="flex-1 pe-3">
                 <Text className="text-lg font-extrabold text-foreground">
-                  {t('terms.title')}
+                  {t(`${legalDoc || 'terms'}.title`)}
                 </Text>
                 <Text className="text-xs text-muted mt-0.5">
-                  {t('terms.subtitle')}
+                  {t(`${legalDoc || 'terms'}.subtitle`)}
                 </Text>
               </View>
               <Pressable
-                onPress={() => setTermsOpen(false)}
+                onPress={() => setLegalDoc(null)}
                 className="w-9 h-9 rounded-full bg-surface items-center justify-center"
                 hitSlop={8}
               >
@@ -503,9 +508,9 @@ export default function RegisterScreen({ navigation }) {
               contentContainerStyle={{ padding: 20, gap: 18 }}
               showsVerticalScrollIndicator={false}
             >
-              <Text className="text-xs text-muted">{t('terms.lastUpdate')}</Text>
+              <Text className="text-xs text-muted">{t(`${legalDoc || 'terms'}.lastUpdate`)}</Text>
               {(() => {
-                const sections = t('terms.sections', { returnObjects: true });
+                const sections = t(`${legalDoc || 'terms'}.sections`, { returnObjects: true });
                 return (Array.isArray(sections) ? sections : []).map(section => (
                   <View key={section.title} style={{ gap: 6 }}>
                     <Text className="text-base font-bold text-foreground">
@@ -525,7 +530,7 @@ export default function RegisterScreen({ navigation }) {
                 variant="primary"
                 size="md"
                 className="rounded-2xl"
-                onPress={() => setTermsOpen(false)}
+                onPress={() => setLegalDoc(null)}
               >
                 <Button.Label>{t('register.close')}</Button.Label>
               </Button>

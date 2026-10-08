@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image } from 'react-native';
+import { View, Text, Image, Alert } from 'react-native';
 import { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Ionicons } from '@expo/vector-icons';
 import { withUniwind } from 'uniwind';
@@ -12,14 +12,50 @@ import {
   ListGroup,
   Separator,
   Surface,
+  TextArea,
+  TextField,
+  useBottomSheetAwareHandlers,
 } from 'heroui-native';
 import { roleLabel } from '../constants/roles';
+import { useAuth } from '../context/AuthContext';
+import { saveNetworkingNote } from '../services/api';
+import { apiErrorMessage } from '../utils/apiError';
 import useSheetGuard from './useSheetGuard';
+
+const NOTE_MAX = 1000;
+
+// Lives inside the BottomSheet so it can use the sheet-aware focus handlers
+// (keeps the field above the keyboard).
+function NoteField({ value, onChangeText, placeholder }) {
+  const { onFocus, onBlur } = useBottomSheetAwareHandlers();
+  return (
+    <TextField>
+      <TextArea
+        placeholder={placeholder}
+        value={value}
+        onChangeText={onChangeText}
+        onFocus={onFocus}
+        onBlur={onBlur}
+        maxLength={NOTE_MAX}
+        numberOfLines={4}
+        style={{ minHeight: 88 }}
+      />
+    </TextField>
+  );
+}
 
 const StyledIonicons = withUniwind(Ionicons);
 
-export default function NetworkingModal({ visible, result, onClose, onScanAgain, viewOnly = false }) {
+export default function NetworkingModal({
+  visible,
+  result,
+  onClose,
+  onScanAgain,
+  onNoteSaved,
+  viewOnly = false,
+}) {
   const { t } = useTranslation();
+  const { badgeNumber } = useAuth();
 
   // The sheet lives in a global Portal, so anything mounted here floats above
   // every screen of the app — a sheet that opens without data (no scan) shows
@@ -40,16 +76,65 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
     if (hasPayload) setPayload(result);
   }, [hasPayload, result]);
 
+  const targetPerson = payload?.scanner_view?.person || payload?.person;
+
+  // ── Private note ───────────────────────────────────────────────────────
+  // One note per connection, readable only by its two people (the scan
+  // result carries none yet; a history entry carries the saved one).
+  const [savedNote, setSavedNote] = useState(payload?.note || null);
+  const [noteDraft, setNoteDraft] = useState(payload?.note?.text || '');
+  const [savingNote, setSavingNote] = useState(false);
+  useEffect(() => {
+    setSavedNote(payload?.note || null);
+    setNoteDraft(payload?.note?.text || '');
+  }, [payload]);
+
+  const noteDirty = noteDraft.trim() !== (savedNote?.text || '');
+  // Read from the dismiss callback, which the sheet guard keeps from its
+  // first render.
+  const noteRef = useRef({});
+  noteRef.current = { dirty: noteDirty, draft: noteDraft, personId: targetPerson?.id };
+
+  const saveNote = async ({ silent = false } = {}) => {
+    const { dirty, draft, personId } = noteRef.current;
+    if (!dirty || !personId || !badgeNumber) return true;
+    setSavingNote(true);
+    try {
+      const res = await saveNetworkingNote(badgeNumber, personId, draft.trim());
+      const note = res?.data?.note || null;
+      setSavedNote(note);
+      setNoteDraft(note?.text || '');
+      onNoteSaved?.(personId, note);
+      return true;
+    } catch (e) {
+      if (!silent) Alert.alert(t('common.error'), apiErrorMessage(e, t('networking.noteError')));
+      return false;
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
   // Same lifecycle as every other sheet in the app. The hand-rolled version
   // this replaces flipped `isOpen` on the next frame and relied on the library
   // catching that transition — which it misses when the portal publishes its
   // children late, leaving the sheet parked at the bottom of the screen (or not
   // appearing at all, depending on how the frames land on a given device).
+  // Closing with an unsaved note saves it rather than losing what was typed.
   const sheet = useSheetGuard(hasPayload, () => {
+    if (noteRef.current.dirty) saveNote({ silent: true });
     if (hasPayloadRef.current) onClose();
   });
 
-  const targetPerson = payload?.scanner_view?.person || payload?.person;
+  const finish = async () => {
+    if (!(await saveNote())) return;
+    onClose();
+  };
+
+  const scanAgain = async () => {
+    if (!(await saveNote())) return;
+    onScanAgain();
+  };
+
   const message = payload?.scanner_view?.message;
   const name = targetPerson?.name || t('common.unknown');
   const role = targetPerson?.role || t('profile.defaultRole');
@@ -87,6 +172,9 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
           snapPoints={['85%']}
           enableOverDrag={false}
           enableDynamicSizing={false}
+          keyboardBehavior="interactive"
+          keyboardBlurBehavior="restore"
+          android_keyboardInputMode="adjustResize"
           contentContainerClassName="h-full"
         >
           <BottomSheetScrollView contentContainerStyle={{ paddingBottom: 48 }}>
@@ -169,6 +257,49 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
               </Surface>
             </View>
 
+            {/* ── Private note (only these two people) ─ */}
+            {targetPerson?.id ? (
+              <View className="px-6 mb-4">
+                <Surface className="rounded-2xl p-5" style={{ gap: 10 }}>
+                  <View className="flex-row items-center" style={{ gap: 8 }}>
+                    <Ionicons name="lock-closed-outline" size={16} color="#286EAD" />
+                    <Text className="text-sm font-bold text-foreground flex-1">
+                      {t('networking.noteTitle')}
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-muted leading-4">
+                    {t('networking.noteHint', { name })}
+                  </Text>
+                  <NoteField
+                    value={noteDraft}
+                    onChangeText={setNoteDraft}
+                    placeholder={t('networking.notePlaceholder', { name })}
+                  />
+                  {savedNote && !noteDirty ? (
+                    <Text className="text-xs text-muted">
+                      {savedNote.by_me
+                        ? t('networking.noteByMe')
+                        : t('networking.noteByOther', { name })}
+                    </Text>
+                  ) : null}
+                  {noteDirty ? (
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      className="rounded-xl"
+                      onPress={() => saveNote()}
+                      isDisabled={savingNote}
+                    >
+                      <Ionicons name="save-outline" size={16} color="#286EAD" />
+                      <Button.Label>
+                        {savingNote ? t('networking.noteSaving') : t('networking.noteSave')}
+                      </Button.Label>
+                    </Button>
+                  ) : null}
+                </Surface>
+              </View>
+            ) : null}
+
             {/* ── Privacy note (scan flow) ───────────── */}
             {!viewOnly ? (
               <View className="px-6 mb-6">
@@ -187,7 +318,8 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
                   variant="secondary"
                   size="lg"
                   className="rounded-2xl"
-                  onPress={onScanAgain}
+                  onPress={scanAgain}
+                  isDisabled={savingNote}
                 >
                   <Ionicons name="qr-code-outline" size={18} color="#2db067" />
                   <Button.Label>{t('networking.scanAnother')}</Button.Label>
@@ -197,7 +329,8 @@ export default function NetworkingModal({ visible, result, onClose, onScanAgain,
                 variant="primary"
                 size="lg"
                 className="rounded-2xl"
-                onPress={onClose}
+                onPress={finish}
+                isDisabled={savingNote}
               >
                 <Ionicons name={viewOnly ? 'close-outline' : 'checkmark-outline'} size={18} color="#FFFFFF" />
                 <Button.Label>{viewOnly ? t('networking.close') : t('networking.finish')}</Button.Label>
