@@ -9,6 +9,13 @@ export const BASE_URL = 'https://admin.logiterre-expo.com/api/v1'; // Production
 
 export const EVENT_SLUG = 'logiterre-expo';
 
+// Dev builds only: read the conference from /conference/preview, which serves
+// the programme while it is still unpublished — to accounts listed in the
+// backend's CONFERENCE_PREVIEW_EMAILS. `__DEV__` is false in every release
+// build, so the store app always reads the public endpoint. Set to false to
+// see exactly what the published app sees.
+export const CONFERENCE_PREVIEW = __DEV__ && true;
+
 // Public event site. Opened in the phone's browser, not in an in-app WebView.
 export const EVENT_WEBSITE_URL = 'https://logiterre-expo.com/';
 
@@ -38,7 +45,7 @@ export const ENDPOINTS = {
     personaSlots: (slug, date) =>
         `${BASE_URL}/personas/${encodeURIComponent(slug)}/slots?event_slug=${EVENT_SLUG}&date=${encodeURIComponent(date)}`,
     appointments: `${BASE_URL}/appointments?event_slug=${EVENT_SLUG}`,
-    conference: `${BASE_URL}/conference?event_slug=${EVENT_SLUG}`,
+    conference: `${BASE_URL}/conference${CONFERENCE_PREVIEW ? '/preview' : ''}?event_slug=${EVENT_SLUG}`,
     conferencePanelReserve: (panelId) => `${BASE_URL}/conference/panels/${panelId}/reserve`,
     appointmentBook: `${BASE_URL}/appointments`,
     appointmentCancel: (id) => `${BASE_URL}/appointments/${id}`,

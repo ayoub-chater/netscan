@@ -35,7 +35,9 @@
     "noAccount": "ليس لديك حساب بعد؟",
     "signUp": "إنشاء حساب",
     "errorEmptyFields": "يرجى إدخال بريدك الإلكتروني وكلمة المرور.",
-    "errorInvalidCredentials": "بيانات غير صحيحة. يرجى المحاولة مرة أخرى."
+    "errorInvalidCredentials": "بيانات غير صحيحة. يرجى المحاولة مرة أخرى.",
+    "alreadyRegistered": "مسجّل بالفعل في الحدث؟",
+    "activateAccount": "تفعيل حسابي"
   },
   "forgotPassword": {
     "title": "نسيت كلمة المرور",
@@ -69,7 +71,9 @@
     "activating": "جارٍ التفعيل...",
     "keepsDataHint": "يتم الاحتفاظ بتسجيلك وشارتك وبياناتك.",
     "errorGeneric": "تعذّر تفعيل حسابك. يرجى المحاولة مرة أخرى.",
-    "errorAlreadyActivated": "تم تفعيل هذا الحساب من قبل. سجّل الدخول بكلمة مرورك."
+    "errorAlreadyActivated": "تم تفعيل هذا الحساب من قبل. سجّل الدخول بكلمة مرورك.",
+    "manualIntroBody": "هل سجّلت عبر موقع الحدث أو لدى المنظّم؟ أدخل البريد الإلكتروني الذي استخدمته عند التسجيل لتفعيل وصولك إلى التطبيق.",
+    "noCodeHint": "لم يصلك الرمز؟ تحقّق من مجلد الرسائل غير المرغوب فيها ومن أن هذا هو البريد الذي سجّلت به. إذا كانت لديك كلمة مرور، استخدم «نسيت كلمة المرور»."
   },
   "register": {
     "haveAccount": "لديك حساب بالفعل؟",
@@ -625,12 +629,51 @@
     "speakerCount_two": "متحدثان",
     "speakerCount_few": "{{count}} متحدثين",
     "speakerCount_many": "{{count}} متحدثًا",
-    "speakerCount_other": "{{count}} متحدث"
+    "speakerCount_other": "{{count}} متحدث",
+    "tabProgramme": "البرنامج",
+    "tabSpeakers": "المتدخلون",
+    "day": "اليوم {{n}}",
+    "moderation": "تسيير الجلسة",
+    "sessions": "الجلسات",
+    "sessionCount_zero": "لا جلسات",
+    "sessionCount_one": "جلسة واحدة",
+    "sessionCount_two": "جلستان",
+    "sessionCount_few": "{{count}} جلسات",
+    "sessionCount_many": "{{count}} جلسة",
+    "sessionCount_other": "{{count}} جلسة",
+    "minutes_zero": "{{count}} دقيقة",
+    "minutes_one": "دقيقة واحدة",
+    "minutes_two": "دقيقتان",
+    "minutes_few": "{{count}} دقائق",
+    "minutes_many": "{{count}} دقيقة",
+    "minutes_other": "{{count}} دقيقة",
+    "noReservation": "دخول حر — دون حجز",
+    "preview": "معاينة · غير منشور",
+    "speakersEmpty": "لا يوجد متدخلون حاليًا.",
+    "types": {
+      "ceremony": "حفل",
+      "keynote": "كلمة رئيسية",
+      "panel": "جلسة نقاش",
+      "networking": "تواصل",
+      "closing": "اختتام"
+    },
+    "roles": {
+      "moderator": "مسيّر الجلسة",
+      "moderator_female": "مسيّرة الجلسة",
+      "keynote": "متحدث رئيسي",
+      "keynote_female": "متحدثة رئيسية",
+      "speaker": "متدخل",
+      "speaker_female": "متدخلة",
+      "presenter": "عرض"
+    }
   },
   "programme": {
     "title": "برنامج الفعالية",
     "emptyTitle": "البرنامج متوفر قريبًا",
-    "emptySubtitle": "سيُنشر الجدول الكامل للفعالية هنا قريبًا."
+    "emptySubtitle": "سيُنشر الجدول الكامل للفعالية هنا قريبًا.",
+    "seeSessions": "عرض الجلسات والمتدخلين",
+    "dates": "التواريخ",
+    "venue": "المكان"
   },
   "b2b": {
     "title": "B2B",

@@ -46,7 +46,10 @@ export default function ClaimAccountScreen({ navigation, route }) {
   const scrollRef = useRef(null);
   const { applySession } = useAuth();
 
-  const [email] = useState(route?.params?.email?.trim() ?? '');
+  // Opened from the login screen's "Activate my account" link the address is
+  // typed here; sent by a 409 ACCOUNT_CLAIMABLE it is already known.
+  const manual = !!route?.params?.manual || !route?.params?.email;
+  const [email, setEmail] = useState(route?.params?.email?.trim() ?? '');
   const [step, setStep] = useState('intro'); // 'intro' | 'verify'
   const [code, setCode] = useState('');
   const [password, setPassword] = useState('');
@@ -65,7 +68,7 @@ export default function ClaimAccountScreen({ navigation, route }) {
   const apiError = (e, fallbackKey) => apiErrorMessage(e, t(fallbackKey));
 
   const handleSendCode = async (isResend = false) => {
-    if (!email) {
+    if (!email.trim()) {
       setErrorMsg(t('forgotPassword.errorEmailRequired'));
       return;
     }
@@ -73,7 +76,7 @@ export default function ClaimAccountScreen({ navigation, route }) {
     setErrorMsg(null);
     setResent(false);
     try {
-      await requestAccountClaimCode(email);
+      await requestAccountClaimCode(email.trim());
       startCooldown();
       setStep('verify');
       if (isResend) setResent(true);
@@ -106,7 +109,7 @@ export default function ClaimAccountScreen({ navigation, route }) {
     setLoading(true);
     setErrorMsg(null);
     try {
-      const res = await confirmAccountClaim(email, code.trim(), password, confirmPassword);
+      const res = await confirmAccountClaim(email.trim(), code.trim(), password, confirmPassword);
       // Backend returns a full session — same shape as login.
       await applySession(res.data);
     } catch (e) {
@@ -166,12 +169,14 @@ export default function ClaimAccountScreen({ navigation, route }) {
               </Text>
               <Text className="text-sm text-muted text-center leading-5">
                 {step === 'intro'
-                  ? t('claimAccount.introBody')
+                  ? t(manual ? 'claimAccount.manualIntroBody' : 'claimAccount.introBody')
                   : t('claimAccount.codeSentBody')}
               </Text>
-              <View className="px-3 py-1.5 rounded-xl bg-surface">
-                <Text className="text-sm font-semibold text-foreground">{email}</Text>
-              </View>
+              {step === 'intro' && manual ? null : (
+                <View className="px-3 py-1.5 rounded-xl bg-surface">
+                  <Text className="text-sm font-semibold text-foreground">{email.trim()}</Text>
+                </View>
+              )}
             </View>
 
             {errorMsg ? (
@@ -185,6 +190,20 @@ export default function ClaimAccountScreen({ navigation, route }) {
 
             {step === 'intro' ? (
               <>
+                {manual ? (
+                  <TextField isRequired isInvalid={!!errorMsg}>
+                    <Label>{t('login.email')}</Label>
+                    <Input
+                      placeholder={t('login.emailPlaceholder')}
+                      value={email}
+                      onChangeText={(v) => { setEmail(v); setErrorMsg(null); }}
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      editable={!loading}
+                    />
+                  </TextField>
+                ) : null}
                 <Button
                   variant="primary"
                   size="lg"
@@ -272,6 +291,14 @@ export default function ClaimAccountScreen({ navigation, route }) {
                     {loading ? t('claimAccount.activating') : t('claimAccount.activate')}
                   </Button.Label>
                 </Button>
+
+                {/* Typed by hand, so it may not be the registered address:
+                    the server answers the same either way and sends nothing. */}
+                {manual ? (
+                  <Text className="text-xs text-muted text-center">
+                    {t('claimAccount.noCodeHint')}
+                  </Text>
+                ) : null}
 
                 <View className="items-center mt-1">
                   <LinkButton

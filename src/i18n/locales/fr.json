@@ -35,7 +35,9 @@
     "noAccount": "Pas encore de compte ?",
     "signUp": "S'inscrire",
     "errorEmptyFields": "Veuillez saisir votre email et mot de passe.",
-    "errorInvalidCredentials": "Identifiants incorrects. Veuillez réessayer."
+    "errorInvalidCredentials": "Identifiants incorrects. Veuillez réessayer.",
+    "alreadyRegistered": "Déjà inscrit(e) à l'événement ?",
+    "activateAccount": "Activer mon compte"
   },
   "forgotPassword": {
     "title": "Mot de passe oublié",
@@ -69,7 +71,9 @@
     "activating": "Activation...",
     "keepsDataHint": "Votre inscription, votre badge et vos informations sont conservés.",
     "errorGeneric": "Impossible d'activer votre compte. Veuillez réessayer.",
-    "errorAlreadyActivated": "Ce compte a déjà été activé. Connectez-vous avec votre mot de passe."
+    "errorAlreadyActivated": "Ce compte a déjà été activé. Connectez-vous avec votre mot de passe.",
+    "manualIntroBody": "Inscrit(e) sur le site de l'événement ou par l'organisateur ? Saisissez l'adresse e-mail utilisée lors de votre inscription pour activer votre accès à l'application.",
+    "noCodeHint": "Pas de code reçu ? Vérifiez vos spams et que l'adresse est bien celle de votre inscription. Si vous avez déjà un mot de passe, utilisez « Mot de passe oublié »."
   },
   "register": {
     "haveAccount": "Déjà un compte ?",
@@ -621,12 +625,42 @@
     "seatsLeft_one": "{{count}} place restante",
     "seatsLeft_other": "{{count}} places restantes",
     "speakerCount_one": "{{count}} intervenant",
-    "speakerCount_other": "{{count}} intervenants"
+    "speakerCount_other": "{{count}} intervenants",
+    "tabProgramme": "Programme",
+    "tabSpeakers": "Intervenants",
+    "day": "J{{n}}",
+    "moderation": "Modération",
+    "sessions": "Sessions",
+    "sessionCount_one": "{{count}} session",
+    "sessionCount_other": "{{count}} sessions",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "noReservation": "Accès libre — sans réservation",
+    "preview": "Aperçu · non publié",
+    "speakersEmpty": "Aucun intervenant pour le moment.",
+    "types": {
+      "ceremony": "Cérémonie",
+      "keynote": "Keynote",
+      "panel": "Panel",
+      "networking": "Networking",
+      "closing": "Clôture"
+    },
+    "roles": {
+      "moderator": "Modérateur",
+      "moderator_female": "Modératrice",
+      "keynote": "Keynote speaker",
+      "speaker": "Intervenant",
+      "speaker_female": "Intervenante",
+      "presenter": "Présentation"
+    }
   },
   "programme": {
     "title": "Programme de l'événement",
     "emptyTitle": "Programme bientôt disponible",
-    "emptySubtitle": "Le déroulé complet de l'événement sera publié ici prochainement."
+    "emptySubtitle": "Le déroulé complet de l'événement sera publié ici prochainement.",
+    "seeSessions": "Voir les sessions et intervenants",
+    "dates": "Dates",
+    "venue": "Lieu"
   },
   "b2b": {
     "title": "B2B",

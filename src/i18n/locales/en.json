@@ -35,7 +35,9 @@
     "noAccount": "Don't have an account yet?",
     "signUp": "Sign up",
     "errorEmptyFields": "Please enter your email and password.",
-    "errorInvalidCredentials": "Incorrect credentials. Please try again."
+    "errorInvalidCredentials": "Incorrect credentials. Please try again.",
+    "alreadyRegistered": "Already registered for the event?",
+    "activateAccount": "Activate my account"
   },
   "forgotPassword": {
     "title": "Forgot password",
@@ -69,7 +71,9 @@
     "activating": "Activating...",
     "keepsDataHint": "Your registration, badge and details are kept.",
     "errorGeneric": "Could not activate your account. Please try again.",
-    "errorAlreadyActivated": "This account has already been activated. Sign in with your password."
+    "errorAlreadyActivated": "This account has already been activated. Sign in with your password.",
+    "manualIntroBody": "Registered on the event website or by the organiser? Enter the email address you registered with to activate your app access.",
+    "noCodeHint": "No code received? Check your spam folder and that this is the address you registered with. If you already have a password, use \"Forgot password\"."
   },
   "register": {
     "haveAccount": "Already have an account?",
@@ -621,12 +625,40 @@
     "seatsLeft_one": "{{count}} seat left",
     "seatsLeft_other": "{{count}} seats left",
     "speakerCount_one": "{{count}} speaker",
-    "speakerCount_other": "{{count}} speakers"
+    "speakerCount_other": "{{count}} speakers",
+    "tabProgramme": "Programme",
+    "tabSpeakers": "Speakers",
+    "day": "Day {{n}}",
+    "moderation": "Moderation",
+    "sessions": "Sessions",
+    "sessionCount_one": "{{count}} session",
+    "sessionCount_other": "{{count}} sessions",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "noReservation": "Open access — no reservation needed",
+    "preview": "Preview · unpublished",
+    "speakersEmpty": "No speakers yet.",
+    "types": {
+      "ceremony": "Ceremony",
+      "keynote": "Keynote",
+      "panel": "Panel",
+      "networking": "Networking",
+      "closing": "Closing"
+    },
+    "roles": {
+      "moderator": "Moderator",
+      "keynote": "Keynote speaker",
+      "speaker": "Speaker",
+      "presenter": "Presentation"
+    }
   },
   "programme": {
     "title": "Event programme",
     "emptyTitle": "Programme coming soon",
-    "emptySubtitle": "The full event schedule will be published here soon."
+    "emptySubtitle": "The full event schedule will be published here soon.",
+    "seeSessions": "See sessions and speakers",
+    "dates": "Dates",
+    "venue": "Venue"
   },
   "b2b": {
     "title": "B2B",

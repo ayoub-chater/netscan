@@ -247,8 +247,10 @@ export const register = (data) =>
     publicPost(ENDPOINTS.register, { ...data, event_slug: EVENT_SLUG });
 
 // ─── Forgot / reset password ────────────────────────────────────────────────
+// event_slug: an address registered for the event but never activated gets an
+// activation code instead, and the reset activates the account.
 export const sendPasswordResetCode = (email) =>
-    publicPost(ENDPOINTS.forgotPassword, { email });
+    publicPost(ENDPOINTS.forgotPassword, { email, event_slug: EVENT_SLUG });
 
 export const resetPasswordWithCode = (email, code, password, passwordConfirmation) =>
     publicPost(ENDPOINTS.resetPassword, {
@@ -256,6 +258,7 @@ export const resetPasswordWithCode = (email, code, password, passwordConfirmatio
         code,
         password,
         password_confirmation: passwordConfirmation,
+        event_slug: EVENT_SLUG,
     });
 
 // ─── Account claim ───────────────────────────────────────────────────────────

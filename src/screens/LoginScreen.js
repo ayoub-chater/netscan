@@ -236,6 +236,21 @@ export default function LoginScreen({ navigation }) {
               </LinkButton.Label>
             </LinkButton>
           </View>
+
+          {/* Registered on the event website / by the organiser, never had a
+              password: activate the existing registration instead of signing
+              up again. */}
+          <View className="flex-row justify-center items-center mt-1 gap-1 flex-wrap">
+            <Text className="text-sm text-muted">{t('login.alreadyRegistered')}</Text>
+            <LinkButton
+              size="sm"
+              onPress={() => navigation.navigate('ClaimAccount', { email: email.trim(), manual: true })}
+            >
+              <LinkButton.Label className="text-accent font-semibold">
+                {t('login.activateAccount')}
+              </LinkButton.Label>
+            </LinkButton>
+          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
